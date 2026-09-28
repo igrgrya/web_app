@@ -110,7 +110,7 @@ function footer() {
       <ul class="nav-list nav-list--footer">${FOOTER_LINKS.map((item) => navLink(item, active)).join('')}</ul>
     </nav>
     <p class="visit-counter">Всего просмотров страниц на сайте: <span data-visit-total>0</span></p>
-    <p class="author-note">Учебный проект по дисциплине «Интернет-технологии». Автор: студент группы ИАТЭ.</p>
+    <p class="author-note">Учебный проект по дисциплине «Веб-программирование». Автор: студент группы ИАТЭ.</p>
   </footer>`
 }
 
@@ -199,18 +199,9 @@ function forumItems(topics) {
   return topics
     .map(
       (topic) => `<li class="card">
-        <h2><a href="forum-${topic.id}.html">${esc(topic.title)}</a></h2>
+        <h2><a href="forum-topic.html?id=${topic.id}">${esc(topic.title)}</a></h2>
         <p class="muted">Автор: ${esc(topic.authorName)} &middot; ${esc(topic.createdAt)} &middot; Ответов: ${topic.replies ? topic.replies.length : 0}</p>
       </li>`,
-    )
-    .join('\n      ')
-}
-
-function replyItems(replies) {
-  return replies
-    .map(
-      (reply) => `<li class="card"><p>${esc(reply.message)}</p>
-        <p class="muted">${esc(reply.authorName)} &middot; ${esc(reply.createdAt)}</p></li>`,
     )
     .join('\n      ')
 }
@@ -258,7 +249,7 @@ function homePage() {
         <img src="assets/hero.png" alt="Иллюстрация: график роста биржевых инструментов" width="170" height="179" class="hero-image">
         <div>
           <h1>Funds Lab</h1>
-          <p class="lead">Учебный проект по дисциплине «Интернет-технологии»: интерактивный сайт о фондах, акциях и биржах, с каталогом инструментов, новостями и сервисами для сообщества инвесторов.</p>
+          <p class="lead">Учебный проект по дисциплине «Веб-программирование»: интерактивный сайт о фондах, акциях и биржах, с каталогом инструментов, новостями и сервисами для сообщества инвесторов.</p>
         </div>
       </div>
 
@@ -518,17 +509,15 @@ function forumPage() {
   })
 }
 
-function forumTopicPage(topic) {
+function forumTopicPage() {
   const body = `      <p class="breadcrumb"><a href="forum.html">← Все темы</a></p>
-      <h1>${esc(topic.title)}</h1>
-      <p class="muted">Автор темы: ${esc(topic.authorName)} &middot; ${esc(topic.createdAt)}</p>
+      <h1 data-topic-title>Тема форума</h1>
+      <p class="muted" data-topic-meta>Загрузка…</p>
 
-      <ul class="card-list" id="reply-list">
-      ${replyItems(topic.replies)}
-      </ul>
+      <ul class="card-list" id="reply-list"></ul>
 
-      <h2>Ответить</h2>
-      <form class="stacked-form" id="reply-form" data-topic-id="${topic.id}">
+      <h2 id="reply-heading">Ответить</h2>
+      <form class="stacked-form" id="reply-form" data-topic-id="">
         <label>Ваше имя
           <input name="authorName" required>
         </label>
@@ -536,13 +525,14 @@ function forumTopicPage(topic) {
           <textarea name="message" rows="4" required></textarea>
         </label>
         <button type="submit">Отправить ответ</button>
-      </form>`
+      </form>
+      <p class="empty-state" id="topic-missing" hidden>Тема не найдена. <a href="forum.html">Вернуться к списку тем</a>.</p>`
 
-  register(`forum-${topic.id}`, `Тема: ${topic.title}`, `forum-${topic.id}.html`)
+  register('forum-topic', 'Тема форума', 'forum-topic.html')
   return page({
-    id: `forum-${topic.id}`,
-    title: topic.title,
-    description: `Обсуждение на форуме Funds Lab: ${topic.title}`,
+    id: 'forum-topic',
+    title: 'Тема форума',
+    description: 'Обсуждение на форуме Funds Lab.',
     keywords: 'форум, тема, обсуждение',
     body,
   })
@@ -758,13 +748,12 @@ function statsPage() {
 
 function aboutPage() {
   const body = `      <h1 id="about-top">О проекте</h1>
-      <p class="lead">Funds Lab — учебный сайт, созданный в рамках лабораторных работ по дисциплине «Интернет-технологии». Тема сайта — фонды, акции и биржи.</p>
+      <p class="lead">Funds Lab — учебный сайт, созданный в рамках лабораторных работ по дисциплине «Веб-программирование». Тема сайта — фонды, акции и биржи.</p>
 
       <nav class="toc" aria-label="Содержание страницы">
         <h2>Содержание</h2>
         <ul>
           <li><a href="#technologies">Технологии</a></li>
-          <li><a href="#lab1">Лабораторная работа №1</a></li>
           <li><a href="#services">Реализованные сервисы</a></li>
         </ul>
       </nav>
@@ -776,11 +765,6 @@ function aboutPage() {
           <li>Backend (со следующих лабораторных работ): FastAPI + SQLAlchemy</li>
           <li>База данных: PostgreSQL</li>
         </ul>
-      </section>
-
-      <section id="lab1">
-        <h2>Лабораторная работа №1</h2>
-        <p>В текущей версии сайт работает на заранее подготовленных (seed) данных без подключения к базе данных. База данных уже спроектирована и создана (см. <code>db/schema.sql</code>), но backend будет подключён в следующих лабораторных работах.</p>
       </section>
 
       <section id="services">
@@ -806,8 +790,8 @@ function aboutPage() {
   return page({
     id: 'about',
     title: 'О проекте',
-    description: 'Funds Lab — учебный проект по дисциплине «Интернет-технологии», лабораторная работа №1.',
-    keywords: 'о проекте, лабораторная работа, интернет-технологии',
+    description: 'Funds Lab — учебный проект по дисциплине «Веб-программирование», лабораторная работа №1.',
+    keywords: 'о проекте, лабораторная работа, веб-программирование',
     body,
   })
 }
@@ -870,9 +854,7 @@ function main() {
     files[`news-${item.id}.html`] = newsDetailPage(item)
   })
   files['forum.html'] = forumPage()
-  initialForumTopics.forEach((topic) => {
-    files[`forum-${topic.id}.html`] = forumTopicPage(topic)
-  })
+  files['forum-topic.html'] = forumTopicPage()
   files['guestbook.html'] = guestbookPage()
   files['search.html'] = searchPage()
   files['poll.html'] = pollPage()
