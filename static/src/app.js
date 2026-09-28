@@ -13,7 +13,6 @@
   var PAGES = window.FUNDS_LAB_PAGES || []
   var KEYS = {
     visits: 'funds_lab_visits',
-    lastVisitAt: 'funds_lab_last_visit_at',
     pageViews: 'funds_lab_page_views',
     guestbook: 'funds_lab_guestbook',
     forumTopics: 'funds_lab_forum_topics',
@@ -22,9 +21,10 @@
     pollVoted: 'funds_lab_poll_voted',
     subscribers: 'funds_lab_subscribers'
   }
-  // Новое посещение засчитывается, только если с прошлой активности прошло
-  // больше этого времени. Переходы между страницами окно лишь продлевают.
-  var VISIT_WINDOW_MS = 30 * 60 * 1000
+  // Признак "в этом заходе уже посчитано" живёт в sessionStorage: он
+  // сбрасывается при закрытии вкладки/браузера, поэтому каждый новый
+  // заход считается заново, а переходы внутри сайта — нет.
+  var VISIT_FLAG = 'funds_lab_visit_counted'
 
   function readJSON(key, fallback) {
     try {
@@ -79,18 +79,20 @@
     return Object.keys(views).reduce(function (sum, key) { return sum + views[key] }, 0)
   }
 
-  // Счётчик посещений сайта: увеличивается один раз за визит, а не при
-  // каждом переходе между страницами. Визит считается продолжающимся,
-  // пока с прошлой активности не прошло VISIT_WINDOW_MS.
+  // Счётчик посещений сайта: увеличивается один раз за заход (сессию
+  // вкладки). Закрыл вкладку/браузер и зашёл снова — новый заход.
+  // Переходы между страницами в рамках одного захода счётчик не меняют.
   function getTotalVisits() {
     return readJSON(KEYS.visits, 0)
   }
 
   function recordVisit() {
-    var now = Date.now()
-    var last = readJSON(KEYS.lastVisitAt, 0)
-    writeJSON(KEYS.lastVisitAt, now)
-    if (last && now - last < VISIT_WINDOW_MS) return
+    try {
+      if (window.sessionStorage.getItem(VISIT_FLAG)) return
+      window.sessionStorage.setItem(VISIT_FLAG, '1')
+    } catch (e) {
+      /* sessionStorage недоступен — считаем заход при каждой загрузке */
+    }
     writeJSON(KEYS.visits, getTotalVisits() + 1)
   }
 
