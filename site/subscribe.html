@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Подписка на рассылку — Funds Lab</title>
+  <meta name="description" content="Подпишитесь на рассылку новостей о фондах и акциях от Funds Lab.">
+  <meta name="keywords" content="рассылка, подписка, новости, email">
+  <meta name="author" content="Funds Lab">
+  <meta property="og:title" content="Подписка на рассылку — Funds Lab">
+  <meta property="og:description" content="Подпишитесь на рассылку новостей о фондах и акциях от Funds Lab.">
+  <meta property="og:type" content="website">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="subscribe">
+  <div class="site-shell">
+    <header class="site-header">
+    <div class="site-header-inner">
+      <a class="brand" href="index.html">Funds Lab</a>
+      <nav aria-label="Основная навигация">
+        <ul class="nav-list"><li><a href="index.html">Главная</a></li><li><a href="catalog.html">Каталог</a></li><li><a href="exchanges.html">Биржи</a></li><li><a href="news.html">Новости</a></li><li><a href="search.html">Поиск</a></li></ul>
+      </nav>
+    </div>
+  </header>
+    <main class="site-main">
+      <h1>Подписка на рассылку</h1>
+      <p class="lead">Оставьте email, чтобы получать сводку новостей рынка (в рамках лабораторной — без реальной отправки писем).</p>
+
+      <form class="stacked-form" id="subscribe-form">
+        <label>Email
+          <input type="email" name="email" required>
+        </label>
+        <button type="submit">Подписаться</button>
+      </form>
+
+      <p class="success-state" id="subscribe-success" hidden>Спасибо! Вы подписаны на рассылку.</p>
+      <p class="muted">Всего подписчиков: <span id="subscriber-count">0</span></p>
+    </main>
+    <footer class="site-footer">
+    <nav aria-label="Дополнительные разделы">
+      <ul class="nav-list nav-list--footer"><li><a href="forum.html">Форум</a></li><li><a href="guestbook.html">Гостевая книга</a></li><li><a href="poll.html">Опрос</a></li><li><a href="subscribe.html" aria-current="page">Рассылка</a></li><li><a href="links.html">Полезные ссылки</a></li><li><a href="calendar.html">Календарь</a></li><li><a href="stats.html">Статистика посещений</a></li><li><a href="about.html">О проекте</a></li></ul>
+    </nav>
+    <p class="visit-counter">Всего просмотров страниц на сайте: <span data-visit-total>0</span></p>
+    <p class="author-note">Учебный проект по дисциплине «Интернет-технологии». Автор: студент группы ИАТЭ.</p>
+  </footer>
+  </div>
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
