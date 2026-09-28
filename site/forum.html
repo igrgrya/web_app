@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Форум — Funds Lab</title>
+  <meta name="description" content="Обсуждения инвесторов: темы про фонды, акции и стратегии на сайте Funds Lab.">
+  <meta name="keywords" content="форум, обсуждение, инвестиции, фонды, акции">
+  <meta name="author" content="Funds Lab">
+  <meta property="og:title" content="Форум — Funds Lab">
+  <meta property="og:description" content="Обсуждения инвесторов: темы про фонды, акции и стратегии на сайте Funds Lab.">
+  <meta property="og:type" content="website">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="forum">
+  <div class="site-shell">
+    <header class="site-header">
+    <div class="site-header-inner">
+      <a class="brand" href="index.html">Funds Lab</a>
+      <nav aria-label="Основная навигация">
+        <ul class="nav-list"><li><a href="index.html">Главная</a></li><li><a href="catalog.html">Каталог</a></li><li><a href="exchanges.html">Биржи</a></li><li><a href="news.html">Новости</a></li><li><a href="search.html">Поиск</a></li></ul>
+      </nav>
+    </div>
+  </header>
+    <main class="site-main">
+      <h1>Форум</h1>
+      <p class="lead">Обсуждайте фонды, акции и инвестиционные стратегии с другими читателями сайта.</p>
+
+      <ul class="card-list" id="forum-list">
+      <li class="card">
+        <h2><a href="forum-1.html">Как выбрать первый ETF?</a></h2>
+        <p class="muted">Автор: Дмитрий &middot; 2026-09-14 &middot; Ответов: 2</p>
+      </li>
+      </ul>
+
+      <h2>Создать новую тему</h2>
+      <form class="stacked-form" id="forum-form">
+        <label>Ваше имя
+          <input name="authorName" required>
+        </label>
+        <label>Заголовок темы
+          <input name="title" required>
+        </label>
+        <button type="submit">Создать тему</button>
+      </form>
+    </main>
+    <footer class="site-footer">
+    <nav aria-label="Дополнительные разделы">
+      <ul class="nav-list nav-list--footer"><li><a href="forum.html" aria-current="page">Форум</a></li><li><a href="guestbook.html">Гостевая книга</a></li><li><a href="poll.html">Опрос</a></li><li><a href="subscribe.html">Рассылка</a></li><li><a href="links.html">Полезные ссылки</a></li><li><a href="calendar.html">Календарь</a></li><li><a href="stats.html">Статистика посещений</a></li><li><a href="about.html">О проекте</a></li></ul>
+    </nav>
+    <p class="visit-counter">Всего просмотров страниц на сайте: <span data-visit-total>0</span></p>
+    <p class="author-note">Учебный проект по дисциплине «Интернет-технологии». Автор: студент группы ИАТЭ.</p>
+  </footer>
+  </div>
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
