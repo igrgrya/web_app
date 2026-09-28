@@ -482,30 +482,88 @@
 
   /* --- Внешние сервисы: погода и курсы валют ------------------------- */
 
+  // Запрос JSON с таймаутом: не даём виджету "висеть", если сервис
+  // недоступен (например, заблокирован провайдером).
+  function fetchJSON(url, timeoutMs) {
+    var options = {}
+    var controller = null
+    var timer = null
+    if (typeof AbortController !== 'undefined') {
+      controller = new AbortController()
+      options.signal = controller.signal
+      timer = setTimeout(function () { controller.abort() }, timeoutMs)
+    }
+    return fetch(url, options)
+      .then(function (response) {
+        if (!response.ok) throw new Error('HTTP ' + response.status)
+        return response.json()
+      })
+      .then(
+        function (data) { if (timer) clearTimeout(timer); return data },
+        function (error) { if (timer) clearTimeout(timer); throw error },
+      )
+  }
+
+  function formatNumber(value, digits) {
+    return Number(value).toFixed(digits)
+  }
+
   function initWeather() {
     var box = byId('weather-widget')
     if (!box) return
-    fetch('https://api.open-meteo.com/v1/forecast?latitude=55.0968&longitude=36.6103&current=temperature_2m,wind_speed_10m&timezone=Europe/Moscow')
-      .then(function (response) { return response.json() })
+    box.textContent = 'Загрузка…'
+    // Основной источник — open-meteo, запасной — wttr.in.
+    fetchJSON('https://api.open-meteo.com/v1/forecast?latitude=55.0968&longitude=36.6103&current=temperature_2m,wind_speed_10m&timezone=Europe/Moscow', 8000)
       .then(function (data) {
         var current = data && data.current
         if (!current) throw new Error('no data')
         box.textContent = 'Обнинск: ' + current.temperature_2m + ' °C, ветер ' + current.wind_speed_10m + ' м/с'
       })
-      .catch(function () { box.textContent = 'Не удалось загрузить погоду (нет соединения).' })
+      .catch(function () {
+        return fetchJSON('https://wttr.in/Obninsk?format=j1', 8000).then(function (data) {
+          var current = data && data.current_condition && data.current_condition[0]
+          if (!current) throw new Error('no data')
+          box.textContent = 'Обнинск: ' + current.temp_C + ' °C, ветер ' + current.windspeedKmph + ' км/ч'
+        })
+      })
+      .catch(function () { box.textContent = 'Не удалось загрузить погоду.' })
   }
 
   function initCurrency() {
     var box = byId('currency-widget')
     if (!box) return
-    fetch('https://api.frankfurter.app/latest?from=USD&to=RUB,EUR,CNY')
-      .then(function (response) { return response.json() })
+    box.textContent = 'Загрузка…'
+    // Основной источник — курс ЦБ РФ (доступен из России, поддерживает рубль),
+    // запасной — open.er-api.com.
+    fetchJSON('https://www.cbr-xml-daily.ru/daily_json.js', 8000)
       .then(function (data) {
-        var rates = data && data.rates
-        if (!rates) throw new Error('no data')
-        box.innerHTML = 'За 1 USD: ' + rates.RUB + ' ₽ · ' + rates.EUR + ' € · ' + rates.CNY + ' ¥'
+        var valute = data && data.Valute
+        if (!valute) throw new Error('no data')
+        function rubPerUnit(code) {
+          var value = valute[code]
+          if (!value || typeof value.Value !== 'number') return null
+          return value.Value / (value.Nominal || 1)
+        }
+        var usd = rubPerUnit('USD')
+        var eur = rubPerUnit('EUR')
+        var cny = rubPerUnit('CNY')
+        if (usd === null) throw new Error('no data')
+        var date = data.Date ? new Date(data.Date).toLocaleDateString('ru-RU') : ''
+        box.textContent = 'ЦБ РФ' + (date ? ' на ' + date : '') + ': ' +
+          '1 USD — ' + formatNumber(usd, 2) + ' ₽, ' +
+          '1 EUR — ' + (eur === null ? '—' : formatNumber(eur, 2) + ' ₽') + ', ' +
+          '1 CNY — ' + (cny === null ? '—' : formatNumber(cny, 2) + ' ₽')
       })
-      .catch(function () { box.textContent = 'Не удалось загрузить курсы (нет соединения).' })
+      .catch(function () {
+        return fetchJSON('https://open.er-api.com/v6/latest/USD', 8000).then(function (data) {
+          var rates = data && data.rates
+          if (!rates || typeof rates.RUB !== 'number') throw new Error('no data')
+          box.textContent = '1 USD — ' + formatNumber(rates.RUB, 2) + ' ₽, ' +
+            '1 EUR — ' + formatNumber(rates.RUB / rates.EUR, 2) + ' ₽, ' +
+            '1 CNY — ' + formatNumber(rates.RUB / rates.CNY, 2) + ' ₽'
+        })
+      })
+      .catch(function () { box.textContent = 'Не удалось загрузить курсы валют.' })
   }
 
   /* --- Запуск --------------------------------------------------------- */
