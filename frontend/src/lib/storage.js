@@ -60,21 +60,45 @@ export function getTotalViews() {
   return Object.values(views).reduce((sum, count) => sum + count, 0)
 }
 
-// Счётчик посещений сайта: увеличивается один раз за заход (сессию
-// вкладки). Закрыл вкладку/браузер и зашёл снова — новый заход.
-// Переходы между страницами в рамках одного захода счётчик не меняют.
+// Счётчик посещений сайта. Правила:
+//   +1  — заход на сайт (набрал адрес, открыл вкладку, пришёл снаружи)
+//         и обновление страницы (F5);
+//    0  — переход по ссылке внутри сайта, кнопки "назад/вперёд".
 export function getTotalVisits() {
   return readJSON(KEYS.visits, 0)
 }
 
-export function recordVisit() {
+// Защита от повторного срабатывания эффекта (React StrictMode в dev).
+let visitRecorded = false
+
+function shouldCountVisit() {
   try {
-    if (window.sessionStorage.getItem('funds_lab_visit_counted')) return
-    window.sessionStorage.setItem('funds_lab_visit_counted', '1')
+    const entries = window.performance && window.performance.getEntriesByType
+      ? window.performance.getEntriesByType('navigation')
+      : []
+    const type = entries && entries[0] ? entries[0].type : ''
+    if (type === 'reload') return true
+    if (type === 'navigate') {
+      const referrer = document.referrer || ''
+      return referrer.indexOf(window.location.origin) !== 0
+    }
+    if (!type) {
+      if (window.sessionStorage.getItem('funds_lab_visit_counted')) return false
+      window.sessionStorage.setItem('funds_lab_visit_counted', '1')
+      return true
+    }
+    return false
   } catch {
-    // sessionStorage недоступен — считаем заход при каждой загрузке.
+    return true
   }
-  writeJSON(KEYS.visits, getTotalVisits() + 1)
+}
+
+export function recordVisit() {
+  if (visitRecorded) return
+  visitRecorded = true
+  if (shouldCountVisit()) {
+    writeJSON(KEYS.visits, getTotalVisits() + 1)
+  }
 }
 
 // --- Гостевая книга (обязательный сервис) -----------------------------
