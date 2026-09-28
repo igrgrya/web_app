@@ -3,17 +3,17 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Как выбрать первый ETF? — Funds Lab</title>
-  <meta name="description" content="Обсуждение на форуме Funds Lab: Как выбрать первый ETF?">
+  <title>Тема форума — Funds Lab</title>
+  <meta name="description" content="Обсуждение на форуме Funds Lab.">
   <meta name="keywords" content="форум, тема, обсуждение">
   <meta name="author" content="Funds Lab">
-  <meta property="og:title" content="Как выбрать первый ETF? — Funds Lab">
-  <meta property="og:description" content="Обсуждение на форуме Funds Lab: Как выбрать первый ETF?">
+  <meta property="og:title" content="Тема форума — Funds Lab">
+  <meta property="og:description" content="Обсуждение на форуме Funds Lab.">
   <meta property="og:type" content="website">
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
   <link rel="stylesheet" href="styles.css">
 </head>
-<body data-page="forum-1">
+<body data-page="forum-topic">
   <div class="site-shell">
     <header class="site-header">
     <div class="site-header-inner">
@@ -25,18 +25,13 @@
   </header>
     <main class="site-main">
       <p class="breadcrumb"><a href="forum.html">← Все темы</a></p>
-      <h1>Как выбрать первый ETF?</h1>
-      <p class="muted">Автор темы: Дмитрий &middot; 2026-09-14</p>
+      <h1 data-topic-title>Тема форума</h1>
+      <p class="muted" data-topic-meta>Загрузка…</p>
 
-      <ul class="card-list" id="reply-list">
-      <li class="card"><p>Начните с широких индексных фондов вроде SPY.</p>
-        <p class="muted">Ирина &middot; 2026-09-14</p></li>
-      <li class="card"><p>Спасибо, посмотрю подробнее про диверсификацию.</p>
-        <p class="muted">Дмитрий &middot; 2026-09-15</p></li>
-      </ul>
+      <ul class="card-list" id="reply-list"></ul>
 
-      <h2>Ответить</h2>
-      <form class="stacked-form" id="reply-form" data-topic-id="1">
+      <h2 id="reply-heading">Ответить</h2>
+      <form class="stacked-form" id="reply-form" data-topic-id="">
         <label>Ваше имя
           <input name="authorName" required>
         </label>
@@ -45,13 +40,14 @@
         </label>
         <button type="submit">Отправить ответ</button>
       </form>
+      <p class="empty-state" id="topic-missing" hidden>Тема не найдена. <a href="forum.html">Вернуться к списку тем</a>.</p>
     </main>
     <footer class="site-footer">
     <nav aria-label="Дополнительные разделы">
       <ul class="nav-list nav-list--footer"><li><a href="forum.html">Форум</a></li><li><a href="guestbook.html">Гостевая книга</a></li><li><a href="poll.html">Опрос</a></li><li><a href="subscribe.html">Рассылка</a></li><li><a href="links.html">Полезные ссылки</a></li><li><a href="calendar.html">Календарь</a></li><li><a href="stats.html">Статистика посещений</a></li><li><a href="about.html">О проекте</a></li></ul>
     </nav>
     <p class="visit-counter">Всего просмотров страниц на сайте: <span data-visit-total>0</span></p>
-    <p class="author-note">Учебный проект по дисциплине «Интернет-технологии». Автор: студент группы ИАТЭ.</p>
+    <p class="author-note">Учебный проект по дисциплине «Веб-программирование». Автор: студент группы ИАТЭ.</p>
   </footer>
   </div>
   <script src="data.js"></script>

@@ -162,7 +162,7 @@
     if (!list) return
     var topics = getForumTopics()
     list.innerHTML = topics.map(function (topic) {
-      return '<li class="card"><h2><a href="forum-' + topic.id + '.html">' + esc(topic.title) + '</a></h2>' +
+      return '<li class="card"><h2><a href="forum-topic.html?id=' + topic.id + '">' + esc(topic.title) + '</a></h2>' +
         '<p class="muted">Автор: ' + esc(topic.authorName) + ' &middot; ' + esc(topic.createdAt) +
         ' &middot; Ответов: ' + (topic.replies ? topic.replies.length : 0) + '</p></li>'
     }).join('')
@@ -187,11 +187,27 @@
     var list = byId('reply-list')
     var form = byId('reply-form')
     if (!list || !form) return
-    var topicId = form.getAttribute('data-topic-id')
+    var topicId = Number(new URLSearchParams(window.location.search).get('id'))
+    var titleEl = document.querySelector('[data-topic-title]')
+    var metaEl = document.querySelector('[data-topic-meta]')
+    var heading = byId('reply-heading')
+    var missing = byId('topic-missing')
+    form.setAttribute('data-topic-id', String(topicId))
 
     function render() {
-      var topic = getForumTopics().filter(function (t) { return t.id === Number(topicId) })[0]
-      var replies = topic && topic.replies ? topic.replies : []
+      var topic = getForumTopics().filter(function (t) { return t.id === topicId })[0]
+      if (!topic) {
+        if (titleEl) titleEl.textContent = 'Тема не найдена'
+        if (metaEl) metaEl.hidden = true
+        if (heading) heading.hidden = true
+        form.hidden = true
+        if (missing) missing.hidden = false
+        return
+      }
+      if (titleEl) titleEl.textContent = topic.title
+      if (metaEl) metaEl.textContent = 'Автор темы: ' + topic.authorName + ' · ' + topic.createdAt
+      document.title = topic.title + ' — Funds Lab'
+      var replies = topic.replies ? topic.replies : []
       if (!replies.length) {
         list.innerHTML = '<li class="empty-state">Ответов пока нет.</li>'
         return

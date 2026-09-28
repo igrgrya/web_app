@@ -150,9 +150,9 @@ window.FUNDS_LAB_PAGES = [
     "url": "forum.html"
   },
   {
-    "id": "forum-1",
-    "label": "Тема: Как выбрать первый ETF?",
-    "url": "forum-1.html"
+    "id": "forum-topic",
+    "label": "Тема форума",
+    "url": "forum-topic.html"
   },
   {
     "id": "guestbook",
