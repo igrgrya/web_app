@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Каталог инструментов — Funds Lab</title>
+  <meta name="description" content="Полный список фондов, акций и ETF, доступных на сайте Funds Lab, с фильтром по бирже и сектору.">
+  <meta name="keywords" content="каталог, акции, ETF, фонды, биржа, сектор">
+  <meta name="author" content="Funds Lab">
+  <meta property="og:title" content="Каталог инструментов — Funds Lab">
+  <meta property="og:description" content="Полный список фондов, акций и ETF, доступных на сайте Funds Lab, с фильтром по бирже и сектору.">
+  <meta property="og:type" content="website">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="catalog">
+  <div class="site-shell">
+    <header class="site-header">
+    <div class="site-header-inner">
+      <a class="brand" href="index.html">Funds Lab</a>
+      <nav aria-label="Основная навигация">
+        <ul class="nav-list"><li><a href="index.html">Главная</a></li><li><a href="catalog.html" aria-current="page">Каталог</a></li><li><a href="exchanges.html">Биржи</a></li><li><a href="news.html">Новости</a></li><li><a href="search.html">Поиск</a></li></ul>
+      </nav>
+    </div>
+  </header>
+    <main class="site-main">
+      <h1 id="catalog-top">Каталог инструментов</h1>
+      <p class="lead">Список фондов и акций, представленных на сайте. Отфильтруйте по бирже или сектору.</p>
+
+      <div class="filter-bar">
+        <label>Биржа:
+          <select id="exchange-filter">
+            <option value="all">Все</option>
+            <option value="1">MOEX</option><option value="2">NASDAQ</option><option value="3">NYSE</option>
+          </select>
+        </label>
+        <label>Сектор:
+          <select id="sector-filter">
+            <option value="all">Все</option>
+            <option value="1">Технологии</option><option value="2">Финансы</option><option value="3">Энергетика</option><option value="4">Потребительский сектор</option><option value="5">Здравоохранение</option>
+          </select>
+        </label>
+      </div>
+
+      <table class="data-table" id="catalog-table">
+        <caption>Инструменты каталога Funds Lab</caption>
+        <thead>
+          <tr>
+            <th scope="col">Тикер</th>
+            <th scope="col">Название</th>
+            <th scope="col">Биржа</th>
+            <th scope="col">Сектор</th>
+            <th scope="col">Цена</th>
+            <th scope="col">Изменение</th>
+          </tr>
+        </thead>
+        <tbody>
+        <tr data-exchange="1" data-sector="2">
+          <td><a href="instrument-SBER.html">SBER</a></td>
+          <td>Сбербанк</td>
+          <td>MOEX</td>
+          <td>Финансы</td>
+          <td>285.5 RUB</td>
+          <td><span class="change--up">+1.2%</span></td>
+        </tr>
+        <tr data-exchange="1" data-sector="3">
+          <td><a href="instrument-GAZP.html">GAZP</a></td>
+          <td>Газпром</td>
+          <td>MOEX</td>
+          <td>Энергетика</td>
+          <td>168.2 RUB</td>
+          <td><span class="change--down">-0.85%</span></td>
+        </tr>
+        <tr data-exchange="1" data-sector="3">
+          <td><a href="instrument-LKOH.html">LKOH</a></td>
+          <td>Лукойл</td>
+          <td>MOEX</td>
+          <td>Энергетика</td>
+          <td>7150 RUB</td>
+          <td><span class="change--up">+0.4%</span></td>
+        </tr>
+        <tr data-exchange="1" data-sector="1">
+          <td><a href="instrument-FXIT.html">FXIT</a></td>
+          <td>FinEx Технологии ETF</td>
+          <td>MOEX</td>
+          <td>Технологии</td>
+          <td>42.3 RUB</td>
+          <td><span class="change--up">+2.1%</span></td>
+        </tr>
+        <tr data-exchange="2" data-sector="1">
+          <td><a href="instrument-AAPL.html">AAPL</a></td>
+          <td>Apple Inc.</td>
+          <td>NASDAQ</td>
+          <td>Технологии</td>
+          <td>227.8 USD</td>
+          <td><span class="change--up">+0.55%</span></td>
+        </tr>
+        <tr data-exchange="2" data-sector="1">
+          <td><a href="instrument-MSFT.html">MSFT</a></td>
+          <td>Microsoft Corporation</td>
+          <td>NASDAQ</td>
+          <td>Технологии</td>
+          <td>415.1 USD</td>
+          <td><span class="change--up">+0.9%</span></td>
+        </tr>
+        <tr data-exchange="3" data-sector="2">
+          <td><a href="instrument-SPY.html">SPY</a></td>
+          <td>SPDR S&amp;P 500 ETF Trust</td>
+          <td>NYSE</td>
+          <td>Финансы</td>
+          <td>560.75 USD</td>
+          <td><span class="change--up">+0.3%</span></td>
+        </tr>
+        <tr data-exchange="3" data-sector="5">
+          <td><a href="instrument-JNJ.html">JNJ</a></td>
+          <td>Johnson &amp; Johnson</td>
+          <td>NYSE</td>
+          <td>Здравоохранение</td>
+          <td>158.4 USD</td>
+          <td><span class="change--down">-0.15%</span></td>
+        </tr>
+        </tbody>
+      </table>
+      <p><a href="#catalog-top">↑ Вверх к началу таблицы</a></p>
+    </main>
+    <footer class="site-footer">
+    <nav aria-label="Дополнительные разделы">
+      <ul class="nav-list nav-list--footer"><li><a href="forum.html">Форум</a></li><li><a href="guestbook.html">Гостевая книга</a></li><li><a href="poll.html">Опрос</a></li><li><a href="subscribe.html">Рассылка</a></li><li><a href="links.html">Полезные ссылки</a></li><li><a href="calendar.html">Календарь</a></li><li><a href="stats.html">Статистика посещений</a></li><li><a href="about.html">О проекте</a></li></ul>
+    </nav>
+    <p class="visit-counter">Всего просмотров страниц на сайте: <span data-visit-total>0</span></p>
+    <p class="author-note">Учебный проект по дисциплине «Интернет-технологии». Автор: студент группы ИАТЭ.</p>
+  </footer>
+  </div>
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

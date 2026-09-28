@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://igrgrya.github.io/web_app/sitemap.xml
