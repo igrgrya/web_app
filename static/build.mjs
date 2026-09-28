@@ -109,7 +109,7 @@ function footer() {
     <nav aria-label="Дополнительные разделы">
       <ul class="nav-list nav-list--footer">${FOOTER_LINKS.map((item) => navLink(item, active)).join('')}</ul>
     </nav>
-    <p class="visit-counter">Всего просмотров страниц на сайте: <span data-visit-total>0</span></p>
+    <p class="visit-counter">Всего посещений сайта: <span data-visit-total>0</span></p>
     <p class="author-note">Учебный проект по дисциплине «Веб-программирование». Автор: студент группы БИЗ-Б23, Корнюшкин Игорь.</p>
   </footer>`
 }
