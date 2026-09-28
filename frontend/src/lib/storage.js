@@ -10,7 +10,6 @@ import { initialForumTopics, initialGuestbookEntries, initialPoll } from '../dat
 
 const KEYS = {
   visits: 'funds_lab_visits',
-  lastVisitAt: 'funds_lab_last_visit_at',
   pageViews: 'funds_lab_page_views',
   guestbook: 'funds_lab_guestbook',
   forumTopics: 'funds_lab_forum_topics',
@@ -61,18 +60,20 @@ export function getTotalViews() {
   return Object.values(views).reduce((sum, count) => sum + count, 0)
 }
 
-// Счётчик посещений сайта: увеличивается один раз за визит, а не при
-// каждом переходе между страницами. Визит считается продолжающимся, пока
-// с прошлой активности не прошло 30 минут.
+// Счётчик посещений сайта: увеличивается один раз за заход (сессию
+// вкладки). Закрыл вкладку/браузер и зашёл снова — новый заход.
+// Переходы между страницами в рамках одного захода счётчик не меняют.
 export function getTotalVisits() {
   return readJSON(KEYS.visits, 0)
 }
 
 export function recordVisit() {
-  const now = Date.now()
-  const last = readJSON(KEYS.lastVisitAt, 0)
-  writeJSON(KEYS.lastVisitAt, now)
-  if (last && now - last < 30 * 60 * 1000) return
+  try {
+    if (window.sessionStorage.getItem('funds_lab_visit_counted')) return
+    window.sessionStorage.setItem('funds_lab_visit_counted', '1')
+  } catch {
+    // sessionStorage недоступен — считаем заход при каждой загрузке.
+  }
   writeJSON(KEYS.visits, getTotalVisits() + 1)
 }
 
