@@ -1,0 +1,10 @@
+README.md
+CLAUDE.md
+.claude/
+lab_instructions.md
+
+# Python backend
+.venv/
+__pycache__/
+*.pyc
+backend/.env
