@@ -9,6 +9,7 @@
 import { initialForumTopics, initialGuestbookEntries, initialPoll } from '../data/seed'
 
 const KEYS = {
+  visits: 'funds_lab_visits',
   pageViews: 'funds_lab_page_views',
   guestbook: 'funds_lab_guestbook',
   forumTopics: 'funds_lab_forum_topics',
@@ -57,6 +58,23 @@ export function getPageViews() {
 export function getTotalViews() {
   const views = getPageViews()
   return Object.values(views).reduce((sum, count) => sum + count, 0)
+}
+
+// Счётчик посещений сайта: увеличивается один раз за визит, а не при
+// каждом переходе между страницами. Признак "уже посчитано" живёт в
+// sessionStorage до закрытия вкладки/браузера.
+export function getTotalVisits() {
+  return readJSON(KEYS.visits, 0)
+}
+
+export function recordVisit() {
+  try {
+    if (window.sessionStorage.getItem('funds_lab_visit_counted')) return
+    window.sessionStorage.setItem('funds_lab_visit_counted', '1')
+  } catch {
+    // sessionStorage недоступен — считаем визит при каждой загрузке.
+  }
+  writeJSON(KEYS.visits, getTotalVisits() + 1)
 }
 
 // --- Гостевая книга (обязательный сервис) -----------------------------

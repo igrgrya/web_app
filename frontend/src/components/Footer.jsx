@@ -1,10 +1,10 @@
 // Подвал сайта: ссылки на второстепенные разделы/сервисы + глобальный
-// счётчик посещений (обязательный сервис). useLocation() заставляет
-// Footer перерендериться при каждом переходе между страницами, поэтому
-// getTotalViews() достаточно читать прямо в теле компонента — читаем
-// localStorage синхронно, состояние/эффект тут не нужны.
+// счётчик посещений (обязательный сервис). Сам визит учитывается один раз
+// в Layout (см. recordVisit), здесь только показываем накопленное значение.
+// useLocation() заставляет Footer перерендериться при переходах, поэтому
+// getTotalVisits() достаточно читать прямо в теле компонента.
 import { Link, useLocation } from 'react-router-dom'
-import { getTotalViews } from '../lib/storage'
+import { getTotalVisits } from '../lib/storage'
 
 const secondaryLinks = [
   { to: '/forum', label: 'Форум' },
@@ -19,7 +19,7 @@ const secondaryLinks = [
 
 function Footer() {
   useLocation()
-  const totalViews = getTotalViews()
+  const totalVisits = getTotalVisits()
 
   return (
     <footer className="site-footer">
@@ -32,7 +32,7 @@ function Footer() {
           ))}
         </ul>
       </nav>
-      <p className="visit-counter">Всего просмотров страниц на сайте: {totalViews}</p>
+      <p className="visit-counter">Всего посещений сайта: {totalVisits}</p>
     </footer>
   )
 }

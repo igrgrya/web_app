@@ -12,6 +12,7 @@
   var SEED = window.FUNDS_LAB_SEED || { forumTopics: [], guestbookEntries: [], poll: null }
   var PAGES = window.FUNDS_LAB_PAGES || []
   var KEYS = {
+    visits: 'funds_lab_visits',
     pageViews: 'funds_lab_page_views',
     guestbook: 'funds_lab_guestbook',
     forumTopics: 'funds_lab_forum_topics',
@@ -20,6 +21,7 @@
     pollVoted: 'funds_lab_poll_voted',
     subscribers: 'funds_lab_subscribers'
   }
+  var VISIT_FLAG = 'funds_lab_visit_counted'
 
   function readJSON(key, fallback) {
     try {
@@ -74,8 +76,25 @@
     return Object.keys(views).reduce(function (sum, key) { return sum + views[key] }, 0)
   }
 
+  // Счётчик посещений сайта: увеличивается один раз за визит, а не при
+  // каждом переходе между страницами. Признак "уже посчитано" хранится в
+  // sessionStorage и живёт до закрытия вкладки/браузера.
+  function getTotalVisits() {
+    return readJSON(KEYS.visits, 0)
+  }
+
+  function recordVisit() {
+    try {
+      if (window.sessionStorage.getItem(VISIT_FLAG)) return
+      window.sessionStorage.setItem(VISIT_FLAG, '1')
+    } catch (e) {
+      /* sessionStorage недоступен — считаем визит при каждой загрузке */
+    }
+    writeJSON(KEYS.visits, getTotalVisits() + 1)
+  }
+
   function renderCounter() {
-    var total = getTotalViews()
+    var total = getTotalVisits()
     var nodes = document.querySelectorAll('[data-visit-total]')
     for (var i = 0; i < nodes.length; i++) {
       nodes[i].textContent = total
@@ -470,6 +489,7 @@
   function init() {
     var pageId = document.body.getAttribute('data-page')
     recordPageView(pageId)
+    recordVisit()
 
     initGuestbook()
     initForum()
