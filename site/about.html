@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>О проекте — Funds Lab</title>
+  <meta name="description" content="Funds Lab — учебный проект по дисциплине «Интернет-технологии», лабораторная работа №1.">
+  <meta name="keywords" content="о проекте, лабораторная работа, интернет-технологии">
+  <meta name="author" content="Funds Lab">
+  <meta property="og:title" content="О проекте — Funds Lab">
+  <meta property="og:description" content="Funds Lab — учебный проект по дисциплине «Интернет-технологии», лабораторная работа №1.">
+  <meta property="og:type" content="website">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="about">
+  <div class="site-shell">
+    <header class="site-header">
+    <div class="site-header-inner">
+      <a class="brand" href="index.html">Funds Lab</a>
+      <nav aria-label="Основная навигация">
+        <ul class="nav-list"><li><a href="index.html">Главная</a></li><li><a href="catalog.html">Каталог</a></li><li><a href="exchanges.html">Биржи</a></li><li><a href="news.html">Новости</a></li><li><a href="search.html">Поиск</a></li></ul>
+      </nav>
+    </div>
+  </header>
+    <main class="site-main">
+      <h1 id="about-top">О проекте</h1>
+      <p class="lead">Funds Lab — учебный сайт, созданный в рамках лабораторных работ по дисциплине «Интернет-технологии». Тема сайта — фонды, акции и биржи.</p>
+
+      <nav class="toc" aria-label="Содержание страницы">
+        <h2>Содержание</h2>
+        <ul>
+          <li><a href="#technologies">Технологии</a></li>
+          <li><a href="#lab1">Лабораторная работа №1</a></li>
+          <li><a href="#services">Реализованные сервисы</a></li>
+        </ul>
+      </nav>
+
+      <section id="technologies">
+        <h2>Технологии</h2>
+        <ul>
+          <li>Frontend: HTML5, CSS3, JavaScript (статические страницы)</li>
+          <li>Backend (со следующих лабораторных работ): FastAPI + SQLAlchemy</li>
+          <li>База данных: PostgreSQL</li>
+        </ul>
+      </section>
+
+      <section id="lab1">
+        <h2>Лабораторная работа №1</h2>
+        <p>В текущей версии сайт работает на заранее подготовленных (seed) данных без подключения к базе данных. База данных уже спроектирована и создана (см. <code>db/schema.sql</code>), но backend будет подключён в следующих лабораторных работах.</p>
+      </section>
+
+      <section id="services">
+        <h2>Реализованные сервисы</h2>
+        <ul>
+          <li>Счётчик посещаемости сайта и разбивка по разделам</li>
+          <li>Рейтинг инструментов (оценка звёздами)</li>
+          <li>Форум</li>
+          <li>Гостевая книга</li>
+          <li>Поиск по сайту по ключевым словам</li>
+          <li>Лента новостей</li>
+          <li>Опрос (голосование)</li>
+          <li>Подписка на рассылку</li>
+          <li>Календарь событий</li>
+          <li>Коллекция полезных ссылок</li>
+          <li>Баннеры: поиск, погода, курсы валют</li>
+        </ul>
+      </section>
+
+      <p><a href="#about-top">↑ Вверх</a></p>
+    </main>
+    <footer class="site-footer">
+    <nav aria-label="Дополнительные разделы">
+      <ul class="nav-list nav-list--footer"><li><a href="forum.html">Форум</a></li><li><a href="guestbook.html">Гостевая книга</a></li><li><a href="poll.html">Опрос</a></li><li><a href="subscribe.html">Рассылка</a></li><li><a href="links.html">Полезные ссылки</a></li><li><a href="calendar.html">Календарь</a></li><li><a href="stats.html">Статистика посещений</a></li><li><a href="about.html" aria-current="page">О проекте</a></li></ul>
+    </nav>
+    <p class="visit-counter">Всего просмотров страниц на сайте: <span data-visit-total>0</span></p>
+    <p class="author-note">Учебный проект по дисциплине «Интернет-технологии». Автор: студент группы ИАТЭ.</p>
+  </footer>
+  </div>
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
