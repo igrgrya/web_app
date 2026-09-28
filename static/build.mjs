@@ -6,6 +6,7 @@
    React-версией), поэтому страницы всегда совпадают по содержанию.
    ===================================================================== */
 
+import { createHash } from 'node:crypto'
 import { copyFileSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -27,6 +28,21 @@ const OUT = join(ROOT, 'site')
 const SRC = join(__dirname, 'src')
 
 const SITE_URL = process.env.SITE_URL || 'https://igrgrya.github.io/web_app/'
+
+// Версия ассетов (app.js/styles.css/data.js): меняется при изменении
+// содержимого, поэтому браузер не подхватит устаревший файл из кэша
+// GitHub Pages (иначе счётчик и другие правки "не применялись").
+const ASSET_VERSION = createHash('sha1')
+  .update(
+    JSON.stringify({
+      exchanges, sectors, instruments, news, externalLinks, events,
+      initialForumTopics, initialGuestbookEntries, initialPoll,
+    }),
+  )
+  .update(readFileSync(join(SRC, 'app.js'), 'utf8'))
+  .update(readFileSync(join(SRC, 'styles.css'), 'utf8'))
+  .digest('hex')
+  .slice(0, 10)
 
 /* --- Вспомогательные функции ----------------------------------------- */
 
@@ -131,7 +147,7 @@ function page({ id, title, description, keywords, body, extraScripts = '' }) {
   <meta property="og:description" content="${esc(description)}">
   <meta property="og:type" content="website">
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=${ASSET_VERSION}">
 </head>
 <body data-page="${esc(id)}">
   <div class="site-shell">
@@ -141,8 +157,8 @@ ${body}
     </main>
     ${footer()}
   </div>
-  <script src="data.js"></script>
-${extraScripts}  <script src="app.js"></script>
+  <script src="data.js?v=${ASSET_VERSION}"></script>
+${extraScripts}  <script src="app.js?v=${ASSET_VERSION}"></script>
 </body>
 </html>
 `
@@ -589,7 +605,7 @@ function searchPage() {
     description: 'Поиск по каталогу инструментов и новостям Funds Lab по ключевому слову.',
     keywords: 'поиск, поиск по сайту, каталог, новости',
     body,
-    extraScripts: '  <script src="search-index.js"></script>\n',
+    extraScripts: `  <script src="search-index.js?v=${ASSET_VERSION}"></script>\n`,
   })
 }
 
