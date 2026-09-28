@@ -25,7 +25,13 @@ for (const name of files) {
       headers: { 'Content-Type': 'text/html; charset=utf-8' },
       body: html,
     })
-    const result = await response.json()
+    const text = await response.text()
+    let result
+    try {
+      result = JSON.parse(text)
+    } catch {
+      throw new Error(`валидатор вернул не JSON (возможно, лимит запросов): ${text.slice(0, 80)}`)
+    }
     const errors = (result.messages || []).filter((m) => m.type === 'error')
     if (errors.length) {
       failed++
@@ -37,6 +43,7 @@ for (const name of files) {
   } catch (error) {
     console.log(`[СЕТЬ]   ${name}: ${error.message}`)
   }
+  await new Promise((resolve) => setTimeout(resolve, 1500))
 }
 
 console.log(`\nПроверено файлов: ${files.length}, с ошибками: ${failed}`)

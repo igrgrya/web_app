@@ -187,9 +187,9 @@ window.FUNDS_LAB_SEARCH = [
   },
   {
     "type": "Страница",
-    "title": "Тема: Как выбрать первый ETF?",
-    "url": "forum-1.html",
-    "text": "Тема: Как выбрать первый ETF?"
+    "title": "Тема форума",
+    "url": "forum-topic.html",
+    "text": "Тема форума"
   },
   {
     "type": "Страница",
