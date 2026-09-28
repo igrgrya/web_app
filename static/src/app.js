@@ -79,21 +79,42 @@
     return Object.keys(views).reduce(function (sum, key) { return sum + views[key] }, 0)
   }
 
-  // Счётчик посещений сайта: увеличивается один раз за заход (сессию
-  // вкладки). Закрыл вкладку/браузер и зашёл снова — новый заход.
-  // Переходы между страницами в рамках одного захода счётчик не меняют.
+  // Счётчик посещений сайта. Правила:
+  //   +1  — заход на сайт (набрал адрес, открыл вкладку, пришёл снаружи)
+  //         и обновление страницы (F5);
+  //    0  — переход по ссылке внутри сайта, кнопки "назад/вперёд".
+  // Тип перехода берём из Navigation Timing API, а для старых браузеров
+  // оставляем запасной вариант через sessionStorage.
   function getTotalVisits() {
     return readJSON(KEYS.visits, 0)
   }
 
-  function recordVisit() {
+  function shouldCountVisit() {
     try {
-      if (window.sessionStorage.getItem(VISIT_FLAG)) return
-      window.sessionStorage.setItem(VISIT_FLAG, '1')
+      var entries = window.performance && window.performance.getEntriesByType
+        ? window.performance.getEntriesByType('navigation')
+        : []
+      var type = entries && entries[0] ? entries[0].type : ''
+      if (type === 'reload') return true
+      if (type === 'navigate') {
+        var referrer = document.referrer || ''
+        return referrer.indexOf(window.location.origin) !== 0
+      }
+      if (!type) {
+        if (window.sessionStorage.getItem(VISIT_FLAG)) return false
+        window.sessionStorage.setItem(VISIT_FLAG, '1')
+        return true
+      }
+      return false
     } catch (e) {
-      /* sessionStorage недоступен — считаем заход при каждой загрузке */
+      return true
     }
-    writeJSON(KEYS.visits, getTotalVisits() + 1)
+  }
+
+  function recordVisit() {
+    if (shouldCountVisit()) {
+      writeJSON(KEYS.visits, getTotalVisits() + 1)
+    }
   }
 
   function renderCounter() {
