@@ -266,18 +266,6 @@ function pollInitial() {
 /* --- Страницы --------------------------------------------------------- */
 
 function homePage() {
-  const topMovers = [...instruments].sort((a, b) => b.changePercent - a.changePercent).slice(0, 3)
-  const movers = topMovers
-    .map((item) => {
-      const cls = item.changePercent >= 0 ? 'change--up' : 'change--down'
-      const sign = item.changePercent >= 0 ? '+' : ''
-      return `<li class="card">
-          <strong>${esc(item.ticker)}</strong> — ${esc(item.name)}
-          <p class="${cls}">${sign}${esc(item.changePercent)}%</p>
-        </li>`
-    })
-    .join('\n          ')
-
   const latestNews = news
     .slice(0, 3)
     .map(
@@ -299,27 +287,17 @@ function homePage() {
       <nav class="toc" aria-label="Содержание страницы">
         <h2>Содержание</h2>
         <ul>
-          <li><a href="#top-movers">Растут быстрее всех сегодня</a></li>
           <li><a href="#latest-news">Последние новости</a></li>
         </ul>
       </nav>
 
-      <div class="section-grid">
-        <section id="top-movers">
-          <h2>Растут быстрее всех сегодня</h2>
-          <ul class="card-list">
-          ${movers}
-          </ul>
-        </section>
-
-        <section id="latest-news">
-          <h2>Последние новости</h2>
-          <ul class="card-list">
-          ${latestNews}
-          </ul>
-          <p><a href="news.html">Все новости →</a></p>
-        </section>
-      </div>`
+      <section id="latest-news">
+        <h2>Последние новости</h2>
+        <ul class="card-list">
+        ${latestNews}
+        </ul>
+        <p><a href="news.html">Все новости →</a></p>
+      </section>`
 
   register('index', 'Главная', 'index.html')
   return page({
@@ -378,22 +356,19 @@ function exchangesPage() {
 
 function newsListPage() {
   const items = news
-    .map((item) => {
-      const related = item.relatedInstrumentId ? findInstrument(item.relatedInstrumentId) : null
-      const relatedHtml = related
-        ? `<p>Связанный инструмент: <strong>${esc(related.ticker)}</strong> — ${esc(related.name)}</p>`
-        : ''
-      return `<details class="news-item" id="news-${esc(item.id)}">
+    .map(
+      (item) => `<details class="news-item" id="news-${esc(item.id)}">
           <summary><strong>${esc(item.title)}</strong> <span class="muted">${esc(item.publishedAt)}</span></summary>
           <p>${esc(item.body)}</p>
-          ${relatedHtml}
-        </details>`
-    })
+        </details>`,
+    )
     .join('\n      ')
 
   const body = `      <h1>Новости</h1>
       <p class="lead">Новости рынка фондов и акций: отчётности компаний, дивиденды, обзоры рынка.</p>
+      <div id="news-list">
       ${items}
+      </div>
 
       <h2>Подписка на рассылку</h2>
       <p class="lead">Оставьте email, чтобы получать сводку новостей рынка (в рамках лабораторной — без реальной отправки писем).</p>
@@ -714,7 +689,7 @@ ${sample}
 </catalog>`
 
   const body = `      <h1>XML-данные каталога</h1>
-      <p class="lead">Каталог инструментов — это плоский статический список-реестр. В лабораторной работе №2 такие данные будут храниться в XML-файле и загружаться на страницу средствами JavaScript.</p>
+      <p class="lead">Раздел „Каталог инструментов" появится на сайте в лабораторной работе №2: реестр инструментов будет храниться в XML-файле и загружаться на страницу средствами JavaScript.</p>
 
       <h2>Планируемая структура XML-документа</h2>
       <p>Пример XML-описания инструментов каталога (фрагмент):</p>
@@ -792,7 +767,7 @@ function rssPage() {
   return page({
     id: 'rss',
     title: 'RSS',
-    description: 'RSS-лента новостей Funds Lab — заглушка следующей лабораторной работы.',
+    description: 'RSS-лента новостей Funds Lab — заглушка лабораторной работы №4.',
     keywords: 'RSS, лента новостей, подписка',
     body,
   })
