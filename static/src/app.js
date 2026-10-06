@@ -16,6 +16,7 @@
     pageViews: 'funds_lab_page_views',
     guestbook: 'funds_lab_guestbook',
     forumTopics: 'funds_lab_forum_topics',
+    news: 'funds_lab_news',
     poll: 'funds_lab_poll',
     pollVoted: 'funds_lab_poll_voted',
     subscribers: 'funds_lab_subscribers'
@@ -254,6 +255,54 @@
     })
   }
 
+  /* --- Форма добавления новости (дополнительный сервис) -------------- */
+
+  function getUserNews() {
+    return readJSON(KEYS.news, [])
+  }
+
+  function addUserNews(entry) {
+    var list = getUserNews()
+    list.unshift(entry)
+    writeJSON(KEYS.news, list)
+    return list
+  }
+
+  function userNewsItemHtml(item) {
+    return '<details class="news-item news-item--user" id="news-' + esc(item.id) + '">' +
+      '<summary><strong>' + esc(item.title) + '</strong> <span class="muted">' + esc(item.publishedAt) + '</span></summary>' +
+      '<p>' + esc(item.body) + '</p>' +
+      '<p class="muted">добавлено через форму</p>' +
+      '</details>'
+  }
+
+  function renderUserNews() {
+    var list = byId('news-list')
+    if (!list) return
+    var rendered = list.querySelectorAll('.news-item--user')
+    for (var i = 0; i < rendered.length; i++) {
+      rendered[i].remove()
+    }
+    getUserNews().forEach(function (item) {
+      list.insertAdjacentHTML('afterbegin', userNewsItemHtml(item))
+    })
+  }
+
+  function initNewsForm() {
+    var form = byId('news-form')
+    if (!form) return
+    renderUserNews()
+    form.addEventListener('submit', function (event) {
+      event.preventDefault()
+      var title = form.elements.title.value.trim()
+      var body = form.elements.body.value.trim()
+      if (!title || !body) return
+      addUserNews({ id: 'user-' + Date.now(), title: title, body: body, publishedAt: today(), user: true })
+      renderUserNews()
+      form.reset()
+    })
+  }
+
   /* --- Опрос (дополнительный сервис) --------------------------------- */
 
   function getPoll() {
@@ -351,7 +400,11 @@
     var input = byId('search-input')
     var results = byId('search-results')
     if (!input || !results) return
-    var index = window.FUNDS_LAB_SEARCH || []
+    // Статичный индекс дополняется новостями, добавленными через форму.
+    var userNews = getUserNews().map(function (item) {
+      return { type: 'Новость', title: item.title, url: 'news.html#news-' + item.id, text: item.title + ' ' + item.body }
+    })
+    var index = (window.FUNDS_LAB_SEARCH || []).concat(userNews)
 
     function render() {
       var q = input.value.trim().toLowerCase()
@@ -617,6 +670,62 @@
     })
   }
 
+  /* --- Мировые часы бирж (дополнительный сервис) --------------------- */
+
+  function initExchangeClock() {
+    var cards = document.querySelectorAll('.clock-card')
+    if (!cards.length) return
+
+    function pad(value) {
+      return (value < 10 ? '0' : '') + value
+    }
+
+    function toMinutes(hhmm) {
+      var parts = hhmm.split(':')
+      return Number(parts[0]) * 60 + Number(parts[1])
+    }
+
+    function render() {
+      var now = new Date()
+      for (var i = 0; i < cards.length; i++) {
+        var card = cards[i]
+        var timeEl = card.querySelector('.clock-time')
+        var badgeEl = card.querySelector('.session-badge')
+        try {
+          var parts = new Intl.DateTimeFormat('en-US', {
+            timeZone: card.getAttribute('data-tz'),
+            hour: '2-digit',
+            minute: '2-digit',
+            weekday: 'short',
+            hour12: false,
+          }).formatToParts(now)
+          var part = function (type) {
+            for (var j = 0; j < parts.length; j++) {
+              if (parts[j].type === type) return parts[j].value
+            }
+            return ''
+          }
+          var weekday = part('weekday')
+          var minutes = (Number(part('hour')) % 24) * 60 + Number(part('minute'))
+          if (timeEl) timeEl.textContent = pad(Math.floor(minutes / 60)) + ':' + pad(minutes % 60)
+          var isWorkday = weekday !== 'Sat' && weekday !== 'Sun'
+          var isOpen = isWorkday &&
+            minutes >= toMinutes(card.getAttribute('data-open')) &&
+            minutes < toMinutes(card.getAttribute('data-close'))
+          if (badgeEl) {
+            badgeEl.textContent = isOpen ? 'сессия открыта' : 'сессия закрыта'
+            badgeEl.className = 'session-badge ' + (isOpen ? 'session-badge--open' : 'session-badge--closed')
+          }
+        } catch (e) {
+          if (timeEl) timeEl.textContent = '--:--'
+        }
+      }
+    }
+
+    render()
+    setInterval(render, 60000)
+  }
+
   /* --- Запуск --------------------------------------------------------- */
 
   function init() {
@@ -624,16 +733,9 @@
     recordPageView(pageId)
     recordVisit()
 
-    // Ссылки вида news.html#news-2 ведут на свёрнутый <details> —
-    // раскрываем целевой блок.
-    var hash = window.location.hash
-    if (hash) {
-      var anchor = document.getElementById(decodeURIComponent(hash.slice(1)))
-      if (anchor && anchor.tagName === 'DETAILS') anchor.open = true
-    }
-
     initGuestbook()
     initForum()
+    initNewsForm()
     initPoll()
     initSubscribe()
     initSearch()
@@ -642,6 +744,17 @@
     initCurrency()
     initConverter()
     initCalculator()
+    initExchangeClock()
+
+    // Ссылки вида news.html#news-2 ведут на свёрнутый <details> —
+    // раскрываем целевой блок. Важно: после initNewsForm(), чтобы
+    // якоря пользовательских новостей уже существовали в DOM.
+    var hash = window.location.hash
+    if (hash) {
+      var anchor = document.getElementById(decodeURIComponent(hash.slice(1)))
+      if (anchor && anchor.tagName === 'DETAILS') anchor.open = true
+    }
+
     renderCounter()
   }
 

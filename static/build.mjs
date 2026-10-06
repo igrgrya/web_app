@@ -310,6 +310,13 @@ function homePage() {
   })
 }
 
+/* Часы торгов сессий: MOEX — пн–пт 10:00–18:45, NASDAQ и NYSE — пн–пт 9:30–16:00 (местное время биржи). */
+const SESSION_HOURS = {
+  MOEX: ['10:00', '18:45'],
+  NASDAQ: ['09:30', '16:00'],
+  NYSE: ['09:30', '16:00'],
+}
+
 function exchangesPage() {
   const rows = exchanges
     .map((exchange) => {
@@ -325,8 +332,27 @@ function exchangesPage() {
     })
     .join('\n        ')
 
+  const clockCards = exchanges
+    .map((exchange) => {
+      const hours = SESSION_HOURS[exchange.code] || ['00:00', '00:00']
+      return `<li class="card clock-card" data-tz="${esc(exchange.timezone)}" data-open="${hours[0]}" data-close="${hours[1]}">
+          <h3>${esc(exchange.name)}</h3>
+          <p class="clock-time">--:--</p>
+          <p class="session-badge">…</p>
+        </li>`
+    })
+    .join('\n        ')
+
   const body = `      <h1>Биржи</h1>
       <p class="lead">Площадки, на которых торгуются инструменты из каталога сайта.</p>
+
+      <section id="clocks">
+        <h2>Сейчас на биржах</h2>
+        <ul class="clock-grid">
+        ${clockCards}
+        </ul>
+      </section>
+
       <table class="data-table">
         <caption>Биржи каталога</caption>
         <thead>
@@ -369,6 +395,18 @@ function newsListPage() {
       <div id="news-list">
       ${items}
       </div>
+
+      <h2 id="add-news">Добавить новость</h2>
+      <form class="stacked-form" id="news-form">
+        <label>Заголовок
+          <input name="title" required>
+        </label>
+        <label>Текст
+          <textarea name="body" rows="4" required></textarea>
+        </label>
+        <button type="submit">Опубликовать</button>
+      </form>
+      <p class="muted">Новость сохраняется в вашем браузере; в лабораторной работе №3 новости переедут в базу данных.</p>
 
       <h2>Подписка на рассылку</h2>
       <p class="lead">Оставьте email, чтобы получать сводку новостей рынка (в рамках лабораторной — без реальной отправки писем).</p>
