@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>XML — Funds Lab</title>
+  <meta name="description" content="XML-хранение данных каталога Funds Lab — заглушка лабораторной работы №2.">
+  <meta name="keywords" content="XML, данные, каталог, разметка">
+  <meta name="author" content="Funds Lab">
+  <meta property="og:title" content="XML — Funds Lab">
+  <meta property="og:description" content="XML-хранение данных каталога Funds Lab — заглушка лабораторной работы №2.">
+  <meta property="og:type" content="website">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=70e997b8a2">
+  <link rel="stylesheet" href="styles.css?v=70e997b8a2">
+</head>
+<body data-page="xml">
+  <div class="site-shell">
+    <header class="site-header">
+    <div class="site-header-inner">
+      <a class="brand" href="index.html">Funds Lab</a>
+      <nav aria-label="Основная навигация">
+        <ul class="nav-list"><li><a href="index.html">Главная</a></li><li><a href="catalog.html">Каталог</a></li><li><a href="exchanges.html">Биржи</a></li><li><a href="news.html">Новости</a></li><li><a href="xml.html" aria-current="page">XML</a></li><li><a href="db.html">БД</a></li><li><a href="rss.html">RSS</a></li><li><a href="search.html">Поиск</a></li><li><a href="forum.html">Форум</a></li><li><a href="about.html">О проекте</a></li></ul>
+      </nav>
+    </div>
+    <form class="site-search" action="search.html" method="get" role="search">
+      <input type="search" name="q" placeholder="Поиск по сайту: Сбербанк, ETF, дивиденды…" aria-label="Поиск по сайту">
+      <button type="submit">Найти</button>
+    </form>
+    <div class="informers">
+      <div class="informer informer--weather" id="weather-widget">Погода: загрузка…</div>
+      <div class="informer informer--currency" id="currency-widget">Курсы валют: загрузка…</div>
+    </div>
+  </header>
+    <main class="site-main">
+      <h1>XML-данные каталога</h1>
+      <p class="lead">Каталог инструментов — это плоский статический список-реестр. В лабораторной работе №2 такие данные будут храниться в XML-файле и загружаться на страницу средствами JavaScript.</p>
+
+      <h2>Планируемая структура XML-документа</h2>
+      <p>Пример XML-описания инструментов каталога (фрагмент):</p>
+      <pre class="code-block"><code>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;catalog&gt;
+  &lt;instrument ticker=&quot;SBER&quot;&gt;
+    &lt;name&gt;Сбербанк&lt;/name&gt;
+    &lt;type&gt;stock&lt;/type&gt;
+    &lt;exchange&gt;MOEX&lt;/exchange&gt;
+    &lt;price currency=&quot;RUB&quot;&gt;285.5&lt;/price&gt;
+    &lt;changePercent&gt;1.2&lt;/changePercent&gt;
+  &lt;/instrument&gt;
+  &lt;instrument ticker=&quot;GAZP&quot;&gt;
+    &lt;name&gt;Газпром&lt;/name&gt;
+    &lt;type&gt;stock&lt;/type&gt;
+    &lt;exchange&gt;MOEX&lt;/exchange&gt;
+    &lt;price currency=&quot;RUB&quot;&gt;168.2&lt;/price&gt;
+    &lt;changePercent&gt;-0.85&lt;/changePercent&gt;
+  &lt;/instrument&gt;
+&lt;/catalog&gt;</code></pre>
+
+      <h2>Что будет реализовано</h2>
+      <ul>
+        <li>XML-файл с полным каталогом инструментов (элементы, атрибуты, вложенность).</li>
+        <li>Загрузка и разбор XML на клиенте (DOM Parser / fetch).</li>
+        <li>Отрисовка таблицы каталога из XML-данных с фильтрацией по бирже и сектору.</li>
+      </ul>
+
+      <p class="muted">Страница-заглушка: раздел будет реализован в лабораторной работе №2.</p>
+    </main>
+    <footer class="site-footer">
+    <nav aria-label="Дополнительные разделы">
+      <ul class="nav-list nav-list--footer"><li><a href="guestbook.html">Гостевая книга</a></li><li><a href="poll.html">Опрос</a></li><li><a href="converter.html">Конвертер валют</a></li><li><a href="calculator.html">Инвестиционный калькулятор</a></li><li><a href="links.html">Полезные ссылки</a></li><li><a href="calendar.html">Календарь событий</a></li><li><a href="stats.html">Статистика посещений</a></li></ul>
+    </nav>
+    <p class="visit-counter">Всего посещений сайта: <span data-visit-total>0</span></p>
+    <p class="author-note">Учебный проект по дисциплине «Веб-программирование». Автор: студент группы БИЗ-Б23, Корнюшкин Игорь.</p>
+  </footer>
+  </div>
+  <script src="data.js?v=70e997b8a2"></script>
+  <script src="app.js?v=70e997b8a2"></script>
+</body>
+</html>

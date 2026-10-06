@@ -70,46 +70,6 @@ window.FUNDS_LAB_PAGES = [
     "url": "catalog.html"
   },
   {
-    "id": "instrument-SBER",
-    "label": "SBER — Сбербанк",
-    "url": "instrument-SBER.html"
-  },
-  {
-    "id": "instrument-GAZP",
-    "label": "GAZP — Газпром",
-    "url": "instrument-GAZP.html"
-  },
-  {
-    "id": "instrument-LKOH",
-    "label": "LKOH — Лукойл",
-    "url": "instrument-LKOH.html"
-  },
-  {
-    "id": "instrument-FXIT",
-    "label": "FXIT — FinEx Технологии ETF",
-    "url": "instrument-FXIT.html"
-  },
-  {
-    "id": "instrument-AAPL",
-    "label": "AAPL — Apple Inc.",
-    "url": "instrument-AAPL.html"
-  },
-  {
-    "id": "instrument-MSFT",
-    "label": "MSFT — Microsoft Corporation",
-    "url": "instrument-MSFT.html"
-  },
-  {
-    "id": "instrument-SPY",
-    "label": "SPY — SPDR S&P 500 ETF Trust",
-    "url": "instrument-SPY.html"
-  },
-  {
-    "id": "instrument-JNJ",
-    "label": "JNJ — Johnson & Johnson",
-    "url": "instrument-JNJ.html"
-  },
-  {
     "id": "exchanges",
     "label": "Биржи",
     "url": "exchanges.html"
@@ -120,44 +80,19 @@ window.FUNDS_LAB_PAGES = [
     "url": "news.html"
   },
   {
-    "id": "news-1",
-    "label": "Новость: Сбербанк отчитался о рекордной прибыли",
-    "url": "news-1.html"
+    "id": "xml",
+    "label": "XML",
+    "url": "xml.html"
   },
   {
-    "id": "news-2",
-    "label": "Новость: Газпром объявил дивиденды",
-    "url": "news-2.html"
+    "id": "db",
+    "label": "БД",
+    "url": "db.html"
   },
   {
-    "id": "news-3",
-    "label": "Новость: Apple представила новый продукт",
-    "url": "news-3.html"
-  },
-  {
-    "id": "news-4",
-    "label": "Новость: S&P 500 обновил исторический максимум",
-    "url": "news-4.html"
-  },
-  {
-    "id": "news-5",
-    "label": "Новость: Обзор рынка: итоги недели",
-    "url": "news-5.html"
-  },
-  {
-    "id": "forum",
-    "label": "Форум",
-    "url": "forum.html"
-  },
-  {
-    "id": "forum-topic",
-    "label": "Тема форума",
-    "url": "forum-topic.html"
-  },
-  {
-    "id": "guestbook",
-    "label": "Гостевая книга",
-    "url": "guestbook.html"
+    "id": "rss",
+    "label": "RSS",
+    "url": "rss.html"
   },
   {
     "id": "search",
@@ -165,14 +100,29 @@ window.FUNDS_LAB_PAGES = [
     "url": "search.html"
   },
   {
+    "id": "forum",
+    "label": "Форум",
+    "url": "forum.html"
+  },
+  {
+    "id": "guestbook",
+    "label": "Гостевая книга",
+    "url": "guestbook.html"
+  },
+  {
     "id": "poll",
     "label": "Опрос",
     "url": "poll.html"
   },
   {
-    "id": "subscribe",
-    "label": "Подписка на рассылку",
-    "url": "subscribe.html"
+    "id": "converter",
+    "label": "Конвертер валют",
+    "url": "converter.html"
+  },
+  {
+    "id": "calculator",
+    "label": "Инвестиционный калькулятор",
+    "url": "calculator.html"
   },
   {
     "id": "links",

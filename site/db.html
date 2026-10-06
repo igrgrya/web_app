@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>БД — Funds Lab</title>
+  <meta name="description" content="База данных PostgreSQL для каталога и новостей Funds Lab — заглушка лабораторной работы №3.">
+  <meta name="keywords" content="база данных, PostgreSQL, SQLAlchemy, FastAPI">
+  <meta name="author" content="Funds Lab">
+  <meta property="og:title" content="БД — Funds Lab">
+  <meta property="og:description" content="База данных PostgreSQL для каталога и новостей Funds Lab — заглушка лабораторной работы №3.">
+  <meta property="og:type" content="website">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=70e997b8a2">
+  <link rel="stylesheet" href="styles.css?v=70e997b8a2">
+</head>
+<body data-page="db">
+  <div class="site-shell">
+    <header class="site-header">
+    <div class="site-header-inner">
+      <a class="brand" href="index.html">Funds Lab</a>
+      <nav aria-label="Основная навигация">
+        <ul class="nav-list"><li><a href="index.html">Главная</a></li><li><a href="catalog.html">Каталог</a></li><li><a href="exchanges.html">Биржи</a></li><li><a href="news.html">Новости</a></li><li><a href="xml.html">XML</a></li><li><a href="db.html" aria-current="page">БД</a></li><li><a href="rss.html">RSS</a></li><li><a href="search.html">Поиск</a></li><li><a href="forum.html">Форум</a></li><li><a href="about.html">О проекте</a></li></ul>
+      </nav>
+    </div>
+    <form class="site-search" action="search.html" method="get" role="search">
+      <input type="search" name="q" placeholder="Поиск по сайту: Сбербанк, ETF, дивиденды…" aria-label="Поиск по сайту">
+      <button type="submit">Найти</button>
+    </form>
+    <div class="informers">
+      <div class="informer informer--weather" id="weather-widget">Погода: загрузка…</div>
+      <div class="informer informer--currency" id="currency-widget">Курсы валют: загрузка…</div>
+    </div>
+  </header>
+    <main class="site-main">
+      <h1>База данных</h1>
+      <p class="lead">Сейчас данные сайта встроены в статические страницы. В лабораторной работе №3 каталог, новости и события переедут в базу данных PostgreSQL, а доступ к ним появится через backend на FastAPI + SQLAlchemy.</p>
+
+      <h2>Планируемая структура таблиц</h2>
+      <table class="data-table">
+        <caption>Проект схемы базы данных</caption>
+        <thead>
+          <tr>
+            <th scope="col">Таблица</th>
+            <th scope="col">Содержимое</th>
+            <th scope="col">Связи</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>exchanges</td><td>Биржи: код, название, страна, часовой пояс</td><td>1—M instruments</td></tr>
+          <tr><td>sectors</td><td>Секторы экономики</td><td>1—M instruments</td></tr>
+          <tr><td>instruments</td><td>Каталог: тикер, название, тип, цена, объём торгов</td><td>FK → exchanges, sectors</td></tr>
+          <tr><td>news</td><td>Новости рынка, связь с инструментами</td><td>FK → instruments</td></tr>
+          <tr><td>events</td><td>Календарь событий (отчётности, дивиденды)</td><td>FK → instruments</td></tr>
+          <tr><td>ratings</td><td>Оценки инструментов пользователями</td><td>FK → instruments</td></tr>
+        </tbody>
+      </table>
+
+      <p class="muted">Страница-заглушка: раздел будет реализован в лабораторной работе №3.</p>
+    </main>
+    <footer class="site-footer">
+    <nav aria-label="Дополнительные разделы">
+      <ul class="nav-list nav-list--footer"><li><a href="guestbook.html">Гостевая книга</a></li><li><a href="poll.html">Опрос</a></li><li><a href="converter.html">Конвертер валют</a></li><li><a href="calculator.html">Инвестиционный калькулятор</a></li><li><a href="links.html">Полезные ссылки</a></li><li><a href="calendar.html">Календарь событий</a></li><li><a href="stats.html">Статистика посещений</a></li></ul>
+    </nav>
+    <p class="visit-counter">Всего посещений сайта: <span data-visit-total>0</span></p>
+    <p class="author-note">Учебный проект по дисциплине «Веб-программирование». Автор: студент группы БИЗ-Б23, Корнюшкин Игорь.</p>
+  </footer>
+  </div>
+  <script src="data.js?v=70e997b8a2"></script>
+  <script src="app.js?v=70e997b8a2"></script>
+</body>
+</html>

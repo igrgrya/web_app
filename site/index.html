@@ -10,8 +10,8 @@
   <meta property="og:title" content="Главная — Funds Lab">
   <meta property="og:description" content="Funds Lab — учебный сайт о фондах, акциях и биржах: каталог инструментов, новости рынка и сервисы для инвесторов.">
   <meta property="og:type" content="website">
-  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
-  <link rel="stylesheet" href="styles.css?v=155a22951f">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=70e997b8a2">
+  <link rel="stylesheet" href="styles.css?v=70e997b8a2">
 </head>
 <body data-page="index">
   <div class="site-shell">
@@ -19,13 +19,21 @@
     <div class="site-header-inner">
       <a class="brand" href="index.html">Funds Lab</a>
       <nav aria-label="Основная навигация">
-        <ul class="nav-list"><li><a href="index.html" aria-current="page">Главная</a></li><li><a href="catalog.html">Каталог</a></li><li><a href="exchanges.html">Биржи</a></li><li><a href="news.html">Новости</a></li><li><a href="search.html">Поиск</a></li></ul>
+        <ul class="nav-list"><li><a href="index.html" aria-current="page">Главная</a></li><li><a href="catalog.html">Каталог</a></li><li><a href="exchanges.html">Биржи</a></li><li><a href="news.html">Новости</a></li><li><a href="xml.html">XML</a></li><li><a href="db.html">БД</a></li><li><a href="rss.html">RSS</a></li><li><a href="search.html">Поиск</a></li><li><a href="forum.html">Форум</a></li><li><a href="about.html">О проекте</a></li></ul>
       </nav>
+    </div>
+    <form class="site-search" action="search.html" method="get" role="search">
+      <input type="search" name="q" placeholder="Поиск по сайту: Сбербанк, ETF, дивиденды…" aria-label="Поиск по сайту">
+      <button type="submit">Найти</button>
+    </form>
+    <div class="informers">
+      <div class="informer informer--weather" id="weather-widget">Погода: загрузка…</div>
+      <div class="informer informer--currency" id="currency-widget">Курсы валют: загрузка…</div>
     </div>
   </header>
     <main class="site-main">
       <div class="hero-block">
-        <img src="assets/hero.png" alt="Иллюстрация: график роста биржевых инструментов" width="170" height="179" class="hero-image">
+        <img src="assets/hero.png?v=70e997b8a2" alt="Иллюстрация: график роста биржевых инструментов" width="170" height="179" class="hero-image">
         <div>
           <h1>Funds Lab</h1>
           <p class="lead">Учебный проект по дисциплине «Веб-программирование»: интерактивный сайт о фондах, акциях и биржах, с каталогом инструментов, новостями и сервисами для сообщества инвесторов.</p>
@@ -37,7 +45,6 @@
         <ul>
           <li><a href="#top-movers">Растут быстрее всех сегодня</a></li>
           <li><a href="#latest-news">Последние новости</a></li>
-          <li><a href="#banners">Дополнительные сервисы</a></li>
         </ul>
       </nav>
 
@@ -46,15 +53,15 @@
           <h2>Растут быстрее всех сегодня</h2>
           <ul class="card-list">
           <li class="card">
-          <a href="instrument-FXIT.html"><strong>FXIT</strong> — FinEx Технологии ETF</a>
+          <a href="catalog.html#FXIT"><strong>FXIT</strong> — FinEx Технологии ETF</a>
           <p class="change--up">+2.1%</p>
         </li>
           <li class="card">
-          <a href="instrument-SBER.html"><strong>SBER</strong> — Сбербанк</a>
+          <a href="catalog.html#SBER"><strong>SBER</strong> — Сбербанк</a>
           <p class="change--up">+1.2%</p>
         </li>
           <li class="card">
-          <a href="instrument-MSFT.html"><strong>MSFT</strong> — Microsoft Corporation</a>
+          <a href="catalog.html#MSFT"><strong>MSFT</strong> — Microsoft Corporation</a>
           <p class="change--up">+0.9%</p>
         </li>
           </ul>
@@ -65,52 +72,31 @@
           <h2>Последние новости</h2>
           <ul class="card-list">
           <li class="card">
-          <a href="news-1.html">Сбербанк отчитался о рекордной прибыли</a>
+          <a href="news.html#news-1">Сбербанк отчитался о рекордной прибыли</a>
           <p class="muted">2026-09-20</p>
         </li>
           <li class="card">
-          <a href="news-2.html">Газпром объявил дивиденды</a>
+          <a href="news.html#news-2">Газпром объявил дивиденды</a>
           <p class="muted">2026-09-18</p>
         </li>
           <li class="card">
-          <a href="news-3.html">Apple представила новый продукт</a>
+          <a href="news.html#news-3">Apple представила новый продукт</a>
           <p class="muted">2026-09-15</p>
         </li>
           </ul>
           <p><a href="news.html">Все новости →</a></p>
         </section>
       </div>
-
-      <section id="banners">
-        <h2>Дополнительные сервисы</h2>
-        <div class="banner-grid">
-          <div class="banner">
-            <h3>Поиск в Яндексе</h3>
-            <form action="https://yandex.ru/search/" method="get" target="_blank" rel="noopener">
-              <input type="text" name="text" placeholder="Что найти?" aria-label="Поисковый запрос">
-              <button type="submit">Искать</button>
-            </form>
-          </div>
-          <div class="banner">
-            <h3>Погода</h3>
-            <p id="weather-widget">Загрузка…</p>
-          </div>
-          <div class="banner">
-            <h3>Курсы валют</h3>
-            <p id="currency-widget">Загрузка…</p>
-          </div>
-        </div>
-      </section>
     </main>
     <footer class="site-footer">
     <nav aria-label="Дополнительные разделы">
-      <ul class="nav-list nav-list--footer"><li><a href="forum.html">Форум</a></li><li><a href="guestbook.html">Гостевая книга</a></li><li><a href="poll.html">Опрос</a></li><li><a href="subscribe.html">Рассылка</a></li><li><a href="links.html">Полезные ссылки</a></li><li><a href="calendar.html">Календарь</a></li><li><a href="stats.html">Статистика посещений</a></li><li><a href="about.html">О проекте</a></li></ul>
+      <ul class="nav-list nav-list--footer"><li><a href="guestbook.html">Гостевая книга</a></li><li><a href="poll.html">Опрос</a></li><li><a href="converter.html">Конвертер валют</a></li><li><a href="calculator.html">Инвестиционный калькулятор</a></li><li><a href="links.html">Полезные ссылки</a></li><li><a href="calendar.html">Календарь событий</a></li><li><a href="stats.html">Статистика посещений</a></li></ul>
     </nav>
     <p class="visit-counter">Всего посещений сайта: <span data-visit-total>0</span></p>
     <p class="author-note">Учебный проект по дисциплине «Веб-программирование». Автор: студент группы БИЗ-Б23, Корнюшкин Игорь.</p>
   </footer>
   </div>
-  <script src="data.js?v=155a22951f"></script>
-  <script src="app.js?v=155a22951f"></script>
+  <script src="data.js?v=70e997b8a2"></script>
+  <script src="app.js?v=70e997b8a2"></script>
 </body>
 </html>
