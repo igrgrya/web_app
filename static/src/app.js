@@ -200,15 +200,44 @@
     return updated.filter(function (topic) { return topic.id === Number(topicId) })[0]
   }
 
-  function renderForumList() {
+  function renderForumList(openTopicId) {
     var list = byId('forum-list')
     if (!list) return
     var topics = getForumTopics()
     list.innerHTML = topics.map(function (topic) {
-      return '<li class="card"><h2><a href="forum-topic.html?id=' + topic.id + '">' + esc(topic.title) + '</a></h2>' +
-        '<p class="muted">Автор: ' + esc(topic.authorName) + ' &middot; ' + esc(topic.createdAt) +
-        ' &middot; Ответов: ' + (topic.replies ? topic.replies.length : 0) + '</p></li>'
+      var replies = topic.replies || []
+      var replyItems = replies.length
+        ? replies.map(function (reply) {
+            return '<li class="card"><p>' + esc(reply.message) + '</p>' +
+              '<p class="muted">' + esc(reply.authorName) + ' &middot; ' + esc(reply.createdAt) + '</p></li>'
+          }).join('')
+        : '<li class="empty-state">Ответов пока нет.</li>'
+      return '<details class="forum-topic-block" id="topic-' + topic.id + '"' +
+          (openTopicId === topic.id ? ' open' : '') + '>' +
+        '<summary><strong>' + esc(topic.title) + '</strong> — ' + esc(topic.authorName) + ', ' +
+          esc(topic.createdAt) + ' &middot; ответов: ' + replies.length + '</summary>' +
+        '<ul class="card-list">' + replyItems + '</ul>' +
+        '<form class="stacked-form reply-form" data-topic-id="' + topic.id + '">' +
+          '<label>Ваше имя <input name="authorName" required></label>' +
+          '<label>Сообщение <textarea name="message" rows="3" required></textarea></label>' +
+          '<button type="submit">Ответить</button>' +
+        '</form>' +
+      '</details>'
     }).join('')
+
+    // Формы ответов: одна внутри каждой темы.
+    var forms = list.querySelectorAll('.reply-form')
+    for (var i = 0; i < forms.length; i++) {
+      forms[i].addEventListener('submit', function (event) {
+        event.preventDefault()
+        var form = event.currentTarget
+        var authorName = form.elements.authorName.value.trim()
+        var message = form.elements.message.value.trim()
+        if (!authorName || !message) return
+        addForumReply(form.getAttribute('data-topic-id'), { authorName: authorName, message: message })
+        renderForumList(Number(form.getAttribute('data-topic-id')))
+      })
+    }
   }
 
   function initForum() {
@@ -220,55 +249,8 @@
       var authorName = form.elements.authorName.value.trim()
       var title = form.elements.title.value.trim()
       if (!authorName || !title) return
-      addForumTopic({ title: title, authorName: authorName })
-      renderForumList()
-      form.reset()
-    })
-  }
-
-  function initForumTopic() {
-    var list = byId('reply-list')
-    var form = byId('reply-form')
-    if (!list || !form) return
-    var topicId = Number(new URLSearchParams(window.location.search).get('id'))
-    var titleEl = document.querySelector('[data-topic-title]')
-    var metaEl = document.querySelector('[data-topic-meta]')
-    var heading = byId('reply-heading')
-    var missing = byId('topic-missing')
-    form.setAttribute('data-topic-id', String(topicId))
-
-    function render() {
-      var topic = getForumTopics().filter(function (t) { return t.id === topicId })[0]
-      if (!topic) {
-        if (titleEl) titleEl.textContent = 'Тема не найдена'
-        if (metaEl) metaEl.hidden = true
-        if (heading) heading.hidden = true
-        form.hidden = true
-        if (missing) missing.hidden = false
-        return
-      }
-      if (titleEl) titleEl.textContent = topic.title
-      if (metaEl) metaEl.textContent = 'Автор темы: ' + topic.authorName + ' · ' + topic.createdAt
-      document.title = topic.title + ' — Funds Lab'
-      var replies = topic.replies ? topic.replies : []
-      if (!replies.length) {
-        list.innerHTML = '<li class="empty-state">Ответов пока нет.</li>'
-        return
-      }
-      list.innerHTML = replies.map(function (reply) {
-        return '<li class="card"><p>' + esc(reply.message) + '</p>' +
-          '<p class="muted">' + esc(reply.authorName) + ' &middot; ' + esc(reply.createdAt) + '</p></li>'
-      }).join('')
-    }
-
-    render()
-    form.addEventListener('submit', function (event) {
-      event.preventDefault()
-      var authorName = form.elements.authorName.value.trim()
-      var message = form.elements.message.value.trim()
-      if (!authorName || !message) return
-      addForumReply(topicId, { authorName: authorName, message: message })
-      render()
+      var topic = addForumTopic({ title: title, authorName: authorName })
+      renderForumList(topic.id)
       form.reset()
     })
   }
@@ -287,12 +269,18 @@
     return all[ticker]
   }
 
-  function initRating() {
-    var widget = byId('rating')
-    if (!widget) return
+  function initRatings() {
+    var widgets = document.querySelectorAll('.rating')
+    for (var i = 0; i < widgets.length; i++) {
+      attachRating(widgets[i])
+    }
+  }
+
+  function attachRating(widget) {
     var ticker = widget.getAttribute('data-ticker')
     var starsBox = widget.querySelector('.star-rating-stars')
     var summary = widget.querySelector('[data-rating-summary]')
+    if (!ticker || !starsBox || !summary) return
 
     function average(values) {
       if (!values.length) return null
@@ -440,6 +428,13 @@
     }
 
     input.addEventListener('input', render)
+
+    // Запрос из формы поиска в шапке: search.html?q=...
+    var initialQuery = new URLSearchParams(window.location.search).get('q')
+    if (initialQuery) {
+      input.value = initialQuery
+      render()
+    }
   }
 
   /* --- Фильтр каталога ----------------------------------------------- */
@@ -508,22 +503,34 @@
     return Number(value).toFixed(digits)
   }
 
+  // Подбор иконки по коду погоды WMO (open-meteo).
+  function weatherIcon(code) {
+    if (code >= 95) return '⛈'
+    if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return '🌧'
+    if ((code >= 71 && code <= 77) || code === 85 || code === 86) return '❄'
+    if (code <= 1) return '☀'
+    if (code === 2) return '🌤'
+    if (code <= 48) return '☁'
+    return '🌡'
+  }
+
   function initWeather() {
     var box = byId('weather-widget')
     if (!box) return
-    box.textContent = 'Загрузка…'
     // Основной источник — open-meteo, запасной — wttr.in.
-    fetchJSON('https://api.open-meteo.com/v1/forecast?latitude=55.0968&longitude=36.6103&current=temperature_2m,wind_speed_10m&timezone=Europe/Moscow', 8000)
+    fetchJSON('https://api.open-meteo.com/v1/forecast?latitude=55.0968&longitude=36.6103&current=temperature_2m,wind_speed_10m,weather_code&timezone=Europe/Moscow', 8000)
       .then(function (data) {
         var current = data && data.current
         if (!current) throw new Error('no data')
-        box.textContent = 'Обнинск: ' + current.temperature_2m + ' °C, ветер ' + current.wind_speed_10m + ' м/с'
+        box.innerHTML = '<span>' + weatherIcon(current.weather_code) + '</span> Обнинск: <strong>' +
+          current.temperature_2m + ' °C</strong>, ветер ' + current.wind_speed_10m + ' м/с'
       })
       .catch(function () {
         return fetchJSON('https://wttr.in/Obninsk?format=j1', 8000).then(function (data) {
           var current = data && data.current_condition && data.current_condition[0]
           if (!current) throw new Error('no data')
-          box.textContent = 'Обнинск: ' + current.temp_C + ' °C, ветер ' + current.windspeedKmph + ' км/ч'
+          box.innerHTML = '<span>☁</span> Обнинск: <strong>' + current.temp_C +
+            ' °C</strong>, ветер ' + current.windspeedKmph + ' км/ч'
         })
       })
       .catch(function () { box.textContent = 'Не удалось загрузить погоду.' })
@@ -532,7 +539,6 @@
   function initCurrency() {
     var box = byId('currency-widget')
     if (!box) return
-    box.textContent = 'Загрузка…'
     // Основной источник — курс ЦБ РФ (доступен из России, поддерживает рубль),
     // запасной — open.er-api.com.
     fetchJSON('https://www.cbr-xml-daily.ru/daily_json.js', 8000)
@@ -544,26 +550,149 @@
           if (!value || typeof value.Value !== 'number') return null
           return value.Value / (value.Nominal || 1)
         }
+        // Стрелка изменения курса к предыдущему дню.
+        function rateArrow(code) {
+          var value = valute[code]
+          if (!value || typeof value.Value !== 'number') return ''
+          var diff = value.Value - (value.Previous || value.Value)
+          if (diff > 0) return '<span class="rate-up">▲</span>'
+          if (diff < 0) return '<span class="rate-down">▼</span>'
+          return ''
+        }
         var usd = rubPerUnit('USD')
         var eur = rubPerUnit('EUR')
         var cny = rubPerUnit('CNY')
         if (usd === null) throw new Error('no data')
         var date = data.Date ? new Date(data.Date).toLocaleDateString('ru-RU') : ''
-        box.textContent = 'ЦБ РФ' + (date ? ' на ' + date : '') + ': ' +
-          '1 USD — ' + formatNumber(usd, 2) + ' ₽, ' +
-          '1 EUR — ' + (eur === null ? '—' : formatNumber(eur, 2) + ' ₽') + ', ' +
-          '1 CNY — ' + (cny === null ? '—' : formatNumber(cny, 2) + ' ₽')
+        box.innerHTML = 'ЦБ РФ' + (date ? ' на ' + date : '') + ': ' +
+          '1 USD — <strong>' + formatNumber(usd, 2) + ' ₽</strong>' + rateArrow('USD') + ', ' +
+          '1 EUR — <strong>' + (eur === null ? '—' : formatNumber(eur, 2) + ' ₽') + '</strong>' + rateArrow('EUR') + ', ' +
+          '1 CNY — <strong>' + (cny === null ? '—' : formatNumber(cny, 2) + ' ₽') + '</strong>' + rateArrow('CNY')
       })
       .catch(function () {
         return fetchJSON('https://open.er-api.com/v6/latest/USD', 8000).then(function (data) {
           var rates = data && data.rates
           if (!rates || typeof rates.RUB !== 'number') throw new Error('no data')
-          box.textContent = '1 USD — ' + formatNumber(rates.RUB, 2) + ' ₽, ' +
-            '1 EUR — ' + formatNumber(rates.RUB / rates.EUR, 2) + ' ₽, ' +
-            '1 CNY — ' + formatNumber(rates.RUB / rates.CNY, 2) + ' ₽'
+          box.innerHTML = '1 USD — <strong>' + formatNumber(rates.RUB, 2) + ' ₽</strong>, ' +
+            '1 EUR — <strong>' + formatNumber(rates.RUB / rates.EUR, 2) + ' ₽</strong>, ' +
+            '1 CNY — <strong>' + formatNumber(rates.RUB / rates.CNY, 2) + ' ₽</strong>'
         })
       })
       .catch(function () { box.textContent = 'Не удалось загрузить курсы валют.' })
+  }
+
+  /* --- Конвертер валют (дополнительный сервис) ----------------------- */
+
+  function initConverter() {
+    var form = byId('converter-form')
+    if (!form) return
+    var resultBox = byId('converter-result')
+    var rateBox = byId('converter-rate')
+    var cachedRates = null
+
+    // Курс ЦБ РФ: рублей за единицу валюты (RUB = 1).
+    function rubRates(data) {
+      var valute = data && data.Valute
+      if (!valute) return null
+      var rates = { RUB: 1 }
+      ;['USD', 'EUR', 'CNY'].forEach(function (code) {
+        var value = valute[code]
+        if (value && typeof value.Value === 'number') {
+          rates[code] = value.Value / (value.Nominal || 1)
+        }
+      })
+      return rates.USD && rates.EUR && rates.CNY ? rates : null
+    }
+
+    function show(amount, from, to, rates) {
+      // Русский формат: 1 000,00 (десятичная запятая).
+      function fmt(value) {
+        return value.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+      }
+      resultBox.textContent = fmt(amount) + ' ' + from + ' = ' + fmt((amount * rates[from]) / rates[to]) + ' ' + to
+      resultBox.hidden = false
+      var date = cachedRates.date ? new Date(cachedRates.date).toLocaleDateString('ru-RU') : ''
+      rateBox.textContent = 'Курс ЦБ РФ' + (date ? ' на ' + date : '') + ': 1 USD — ' +
+        fmt(rates.USD) + ' ₽, 1 EUR — ' + fmt(rates.EUR) + ' ₽, 1 CNY — ' + fmt(rates.CNY) + ' ₽'
+    }
+
+    function convert() {
+      var amount = Number(form.elements.amount.value)
+      var from = form.elements.from.value
+      var to = form.elements.to.value
+      if (!amount || amount < 0) return
+      if (cachedRates) {
+        show(amount, from, to, cachedRates.rates)
+        return
+      }
+      resultBox.textContent = 'Загрузка курсов…'
+      resultBox.hidden = false
+      fetchJSON('https://www.cbr-xml-daily.ru/daily_json.js', 8000)
+        .then(function (data) {
+          var rates = rubRates(data)
+          if (!rates) throw new Error('no data')
+          cachedRates = { rates: rates, date: data.Date }
+          show(amount, from, to, rates)
+        })
+        .catch(function () {
+          resultBox.textContent = 'Курсы временно недоступны'
+        })
+    }
+
+    form.addEventListener('submit', function (event) {
+      event.preventDefault()
+      convert()
+    })
+  }
+
+  /* --- Инвестиционный калькулятор (дополнительный сервис) ------------ */
+
+  function initCalculator() {
+    var form = byId('calculator-form')
+    if (!form) return
+    var resultBox = byId('calculator-result')
+    var table = byId('calculator-years')
+    var tbody = table ? table.querySelector('tbody') : null
+
+    function money(value) {
+      return Math.round(value).toLocaleString('ru-RU') + ' ₽'
+    }
+
+    function yearsWord(n) {
+      var mod10 = n % 10
+      var mod100 = n % 100
+      if (mod10 === 1 && mod100 !== 11) return 'год'
+      if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return 'года'
+      return 'лет'
+    }
+
+    form.addEventListener('submit', function (event) {
+      event.preventDefault()
+      var balance = Number(form.elements.initial.value)
+      var monthly = Number(form.elements.monthly.value)
+      var rate = Number(form.elements.rate.value)
+      var years = Number(form.elements.years.value)
+      if (isNaN(balance) || isNaN(monthly) || isNaN(rate) || !years || years < 1) return
+      if (balance < 0 || monthly < 0 || rate < 0) return
+
+      // Сложный процент с ежегодной капитализацией: за год баланс
+      // растёт на rate% и на 12 ежемесячных пополнений.
+      var invested = balance
+      var rows = ''
+      for (var year = 1; year <= years; year++) {
+        balance = balance * (1 + rate / 100) + monthly * 12
+        invested += monthly * 12
+        rows += '<tr><td>' + year + '</td><td>' + money(balance) + '</td><td>' + money(invested) + '</td></tr>'
+      }
+
+      resultBox.textContent = 'Итого через ' + years + ' ' + yearsWord(years) + ': ' + money(balance) +
+        ' (вложено ' + money(invested) + ', доход ' + money(balance - invested) + ')'
+      resultBox.hidden = false
+      if (tbody) {
+        tbody.innerHTML = rows
+        table.hidden = false
+      }
+    })
   }
 
   /* --- Запуск --------------------------------------------------------- */
@@ -573,10 +702,17 @@
     recordPageView(pageId)
     recordVisit()
 
+    // Ссылки вида catalog.html#SBER или news.html#news-2 ведут на
+    // свёрнутый <details> — раскрываем целевой блок.
+    var hash = window.location.hash
+    if (hash) {
+      var anchor = document.getElementById(decodeURIComponent(hash.slice(1)))
+      if (anchor && anchor.tagName === 'DETAILS') anchor.open = true
+    }
+
     initGuestbook()
     initForum()
-    initForumTopic()
-    initRating()
+    initRatings()
     initPoll()
     initSubscribe()
     initSearch()
@@ -584,6 +720,8 @@
     initStats()
     initWeather()
     initCurrency()
+    initConverter()
+    initCalculator()
     renderCounter()
   }
 

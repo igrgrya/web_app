@@ -3,23 +3,23 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Страница не найдена — Funds Lab</title>
-  <meta name="description" content="Запрошенная страница не найдена на сайте Funds Lab.">
-  <meta name="keywords" content="404, страница не найдена">
+  <title>RSS — Funds Lab</title>
+  <meta name="description" content="RSS-лента новостей Funds Lab — заглушка следующей лабораторной работы.">
+  <meta name="keywords" content="RSS, лента новостей, подписка">
   <meta name="author" content="Funds Lab">
-  <meta property="og:title" content="Страница не найдена — Funds Lab">
-  <meta property="og:description" content="Запрошенная страница не найдена на сайте Funds Lab.">
+  <meta property="og:title" content="RSS — Funds Lab">
+  <meta property="og:description" content="RSS-лента новостей Funds Lab — заглушка следующей лабораторной работы.">
   <meta property="og:type" content="website">
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=70e997b8a2">
   <link rel="stylesheet" href="styles.css?v=70e997b8a2">
 </head>
-<body data-page="404">
+<body data-page="rss">
   <div class="site-shell">
     <header class="site-header">
     <div class="site-header-inner">
       <a class="brand" href="index.html">Funds Lab</a>
       <nav aria-label="Основная навигация">
-        <ul class="nav-list"><li><a href="index.html">Главная</a></li><li><a href="catalog.html">Каталог</a></li><li><a href="exchanges.html">Биржи</a></li><li><a href="news.html">Новости</a></li><li><a href="xml.html">XML</a></li><li><a href="db.html">БД</a></li><li><a href="rss.html">RSS</a></li><li><a href="search.html">Поиск</a></li><li><a href="forum.html">Форум</a></li><li><a href="about.html">О проекте</a></li></ul>
+        <ul class="nav-list"><li><a href="index.html">Главная</a></li><li><a href="catalog.html">Каталог</a></li><li><a href="exchanges.html">Биржи</a></li><li><a href="news.html">Новости</a></li><li><a href="xml.html">XML</a></li><li><a href="db.html">БД</a></li><li><a href="rss.html" aria-current="page">RSS</a></li><li><a href="search.html">Поиск</a></li><li><a href="forum.html">Форум</a></li><li><a href="about.html">О проекте</a></li></ul>
       </nav>
     </div>
     <form class="site-search" action="search.html" method="get" role="search">
@@ -32,9 +32,17 @@
     </div>
   </header>
     <main class="site-main">
-      <h1>Страница не найдена</h1>
-      <p class="lead">Такой страницы не существует или она была перемещена.</p>
-      <p><a href="index.html">Вернуться на главную</a></p>
+      <h1>RSS-лента</h1>
+      <p class="lead">Лента новостей сайта в формате RSS позволит подписываться на обновления «Последних новостей» через любой RSS-ридер.</p>
+
+      <h2>Как это будет работать</h2>
+      <ul>
+        <li>При сборке сайта будет генерироваться файл <code>rss.xml</code> с последними новостями каталога.</li>
+        <li>В заголовке страниц появится ссылка <code>&lt;link rel="alternate" type="application/rss+xml"&gt;</code>.</li>
+        <li>Адрес ленты: <code>rss.xml</code> — её можно добавить в любой агрегатор новостей.</li>
+      </ul>
+
+      <p class="muted">Страница-заглушка: лента будет реализована в лабораторной работе №4.</p>
     </main>
     <footer class="site-footer">
     <nav aria-label="Дополнительные разделы">

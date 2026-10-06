@@ -4,15 +4,15 @@
    ===================================================================== */
 
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #ffffff;
-  --panel: #faf9fb;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #7c2cd6;
-  --accent-bg: rgba(124, 44, 214, 0.1);
-  --accent-border: rgba(124, 44, 214, 0.5);
+  --text: #475569;
+  --text-h: #0f172a;
+  --bg: #f6f9fd;
+  --panel: #ffffff;
+  --border: #d8e1ec;
+  --code-bg: #eef3f9;
+  --accent: #2563eb;
+  --accent-bg: rgba(37, 99, 235, 0.09);
+  --accent-border: rgba(37, 99, 235, 0.4);
   --up: #16a34a;
   --down: #dc2626;
   --shadow: rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
@@ -21,21 +21,7 @@
   font: 18px/145% var(--sans);
   color: var(--text);
   background: var(--bg);
-  color-scheme: light dark;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --panel: #1c1d24;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-  }
+  color-scheme: light;
 }
 
 @media (max-width: 1024px) {
@@ -193,7 +179,7 @@ code {
   color: var(--down);
 }
 
-/* --- Главная: hero, сетка, баннеры ---------------------------------- */
+/* --- Главная: hero, сетка -------------------------------------------- */
 
 .hero-block {
   display: flex;
@@ -243,56 +229,124 @@ code {
   padding-left: 20px;
 }
 
-.banner-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-top: 32px;
-}
+/* --- Поиск и информеры в шапке -------------------------------------- */
 
-@media (max-width: 768px) {
-  .banner-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.banner {
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 16px;
-  background: var(--panel);
-}
-
-.banner h2 {
-  margin: 0 0 8px;
-  font-size: 17px;
-}
-
-.banner form {
+.site-search {
   display: flex;
   gap: 8px;
+  padding: 0 32px 12px;
 }
 
-.banner input,
-.banner select {
+.site-search input {
   font: inherit;
-  padding: 6px 8px;
+  padding: 6px 10px;
   border: 1px solid var(--border);
   border-radius: 6px;
-  background: var(--bg);
+  background: var(--panel);
   color: var(--text-h);
   min-width: 0;
   flex: 1;
+  max-width: 420px;
 }
 
-.banner button {
+.site-search button {
   font: inherit;
-  padding: 6px 12px;
+  padding: 6px 14px;
   border-radius: 6px;
   border: 1px solid var(--accent-border);
   background: var(--accent-bg);
   color: var(--accent);
   cursor: pointer;
+}
+
+.informers {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 0 32px 14px;
+}
+
+.informer {
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.informer strong {
+  font-size: 17px;
+}
+
+.informer--weather {
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+  color: #0c4a6e;
+}
+
+.informer--currency {
+  background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+  color: #14532d;
+}
+
+.rate-up {
+  color: var(--up);
+}
+
+.rate-down {
+  color: var(--down);
+}
+
+@media (max-width: 640px) {
+  .site-search,
+  .informers {
+    padding-inline: 16px;
+  }
+}
+
+/* --- Раскрывающиеся блоки: каталог, новости, форум ------------------- */
+
+.instrument-card,
+.news-item,
+.forum-topic-block {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+  margin-bottom: 12px;
+}
+
+.instrument-card summary,
+.news-item summary,
+.forum-topic-block summary {
+  cursor: pointer;
+  padding: 14px 16px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.instrument-card summary:hover,
+.news-item summary:hover,
+.forum-topic-block summary:hover {
+  color: var(--accent);
+}
+
+.instrument-card:target,
+.news-item:target,
+.forum-topic-block:target {
+  border-color: var(--accent-border);
+}
+
+.instrument-card > :not(summary),
+.news-item > :not(summary),
+.forum-topic-block > :not(summary) {
+  margin-inline: 16px;
+}
+
+.code-block {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  overflow-x: auto;
+  font: 14px/150% var(--mono);
 }
 
 /* --- Карточки -------------------------------------------------------- */
