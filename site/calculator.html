@@ -10,8 +10,8 @@
   <meta property="og:title" content="Инвестиционный калькулятор — Funds Lab">
   <meta property="og:description" content="Расчёт доходности инвестиций с ежемесячными пополнениями и сложным процентом.">
   <meta property="og:type" content="website">
-  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=6a6b1aeba1">
-  <link rel="stylesheet" href="styles.css?v=6a6b1aeba1">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=6d713a9c4b">
+  <link rel="stylesheet" href="styles.css?v=6d713a9c4b">
 </head>
 <body data-page="calculator">
   <div class="site-shell">
@@ -33,16 +33,16 @@
   </header>
     <main class="site-main">
       <h1>Инвестиционный калькулятор</h1>
-      <p class="lead">Расчёт будущей суммы вклада с учётом ежемесячных пополнений и сложного процента.</p>
+      <p class="lead">Расчёт будущей суммы вклада с учётом ежемесячных пополнений и сложного процента (капитализация раз в год).</p>
 
       <form class="stacked-form" id="calculator-form">
-        <label>Начальная сумма, ₽
+        <label>Начальная сумма
           <input type="number" name="initial" value="100000" min="0" step="any" required>
         </label>
-        <label>Пополнение в месяц, ₽
+        <label>Ежемесячное пополнение
           <input type="number" name="monthly" value="10000" min="0" step="any" required>
         </label>
-        <label>Годовая доходность, %
+        <label>Доходность, % годовых
           <input type="number" name="rate" value="10" min="0" max="100" step="any" required>
         </label>
         <label>Срок, лет
@@ -51,11 +51,19 @@
         <button type="submit">Рассчитать</button>
       </form>
 
-      <dl class="fact-list" id="calculator-result" hidden>
-        <div><dt>Будущая сумма</dt><dd id="calc-total"></dd></div>
-        <div><dt>Всего вложено</dt><dd id="calc-invested"></dd></div>
-        <div><dt>Доход</dt><dd id="calc-profit"></dd></div>
-      </dl>
+      <p id="calculator-result" hidden></p>
+
+      <table class="data-table" id="calculator-years" hidden>
+        <caption>Баланс по годам</caption>
+        <thead>
+          <tr>
+            <th scope="col">Год</th>
+            <th scope="col">Баланс</th>
+            <th scope="col">Вложено</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
     </main>
     <footer class="site-footer">
     <nav aria-label="Дополнительные разделы">
@@ -65,7 +73,7 @@
     <p class="author-note">Учебный проект по дисциплине «Веб-программирование». Автор: студент группы БИЗ-Б23, Корнюшкин Игорь.</p>
   </footer>
   </div>
-  <script src="data.js?v=6a6b1aeba1"></script>
-  <script src="app.js?v=6a6b1aeba1"></script>
+  <script src="data.js?v=6d713a9c4b"></script>
+  <script src="app.js?v=6d713a9c4b"></script>
 </body>
 </html>

@@ -605,14 +605,15 @@
     }
 
     function show(amount, from, to, rates) {
-      var total = (amount * rates[from]) / rates[to]
-      resultBox.textContent = formatNumber(amount, 2) + ' ' + from + ' = ' +
-        formatNumber(total, 2) + ' ' + to
+      // Русский формат: 1 000,00 (десятичная запятая).
+      function fmt(value) {
+        return value.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+      }
+      resultBox.textContent = fmt(amount) + ' ' + from + ' = ' + fmt((amount * rates[from]) / rates[to]) + ' ' + to
       resultBox.hidden = false
       var date = cachedRates.date ? new Date(cachedRates.date).toLocaleDateString('ru-RU') : ''
       rateBox.textContent = 'Курс ЦБ РФ' + (date ? ' на ' + date : '') + ': 1 USD — ' +
-        formatNumber(rates.USD, 2) + ' ₽, 1 EUR — ' + formatNumber(rates.EUR, 2) + ' ₽, 1 CNY — ' +
-        formatNumber(rates.CNY, 2) + ' ₽'
+        fmt(rates.USD) + ' ₽, 1 EUR — ' + fmt(rates.EUR) + ' ₽, 1 CNY — ' + fmt(rates.CNY) + ' ₽'
     }
 
     function convert() {
@@ -634,7 +635,7 @@
           show(amount, from, to, rates)
         })
         .catch(function () {
-          resultBox.textContent = 'Не удалось загрузить курсы — конвертация недоступна.'
+          resultBox.textContent = 'Курсы временно недоступны'
         })
     }
 
@@ -649,33 +650,48 @@
   function initCalculator() {
     var form = byId('calculator-form')
     if (!form) return
-    var box = byId('calculator-result')
+    var resultBox = byId('calculator-result')
+    var table = byId('calculator-years')
+    var tbody = table ? table.querySelector('tbody') : null
 
     function money(value) {
       return Math.round(value).toLocaleString('ru-RU') + ' ₽'
     }
 
+    function yearsWord(n) {
+      var mod10 = n % 10
+      var mod100 = n % 100
+      if (mod10 === 1 && mod100 !== 11) return 'год'
+      if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return 'года'
+      return 'лет'
+    }
+
     form.addEventListener('submit', function (event) {
       event.preventDefault()
-      var initialSum = Number(form.elements.initial.value)
+      var balance = Number(form.elements.initial.value)
       var monthly = Number(form.elements.monthly.value)
-      var rate = Number(form.elements.rate.value) / 100 / 12
-      var months = Number(form.elements.years.value) * 12
-      if (initialSum < 0 || monthly < 0 || !months) return
+      var rate = Number(form.elements.rate.value)
+      var years = Number(form.elements.years.value)
+      if (isNaN(balance) || isNaN(monthly) || isNaN(rate) || !years || years < 1) return
+      if (balance < 0 || monthly < 0 || rate < 0) return
 
-      var growth = Math.pow(1 + rate, months)
-      var total = initialSum * growth
-      if (rate > 0) {
-        total += monthly * ((growth - 1) / rate)
-      } else {
-        total += monthly * months
+      // Сложный процент с ежегодной капитализацией: за год баланс
+      // растёт на rate% и на 12 ежемесячных пополнений.
+      var invested = balance
+      var rows = ''
+      for (var year = 1; year <= years; year++) {
+        balance = balance * (1 + rate / 100) + monthly * 12
+        invested += monthly * 12
+        rows += '<tr><td>' + year + '</td><td>' + money(balance) + '</td><td>' + money(invested) + '</td></tr>'
       }
-      var invested = initialSum + monthly * months
 
-      byId('calc-total').textContent = money(total)
-      byId('calc-invested').textContent = money(invested)
-      byId('calc-profit').textContent = money(total - invested)
-      box.hidden = false
+      resultBox.textContent = 'Итого через ' + years + ' ' + yearsWord(years) + ': ' + money(balance) +
+        ' (вложено ' + money(invested) + ', доход ' + money(balance - invested) + ')'
+      resultBox.hidden = false
+      if (tbody) {
+        tbody.innerHTML = rows
+        table.hidden = false
+      }
     })
   }
 
