@@ -10,8 +10,8 @@
   <meta property="og:title" content="Биржи — Funds Lab">
   <meta property="og:description" content="Список бирж, представленных в каталоге Funds Lab, с количеством торгуемых инструментов.">
   <meta property="og:type" content="website">
-  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
-  <link rel="stylesheet" href="styles.css?v=cb65cd405e">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=dff0f58a0a">
+  <link rel="stylesheet" href="styles.css?v=dff0f58a0a">
 </head>
 <body data-page="exchanges">
   <div class="site-shell">
@@ -19,8 +19,16 @@
     <div class="site-header-inner">
       <a class="brand" href="index.html">Funds Lab</a>
       <nav aria-label="Основная навигация">
-        <ul class="nav-list"><li><a href="index.html">Главная</a></li><li><a href="catalog.html">Каталог</a></li><li><a href="exchanges.html" aria-current="page">Биржи</a></li><li><a href="news.html">Новости</a></li><li><a href="search.html">Поиск</a></li></ul>
+        <ul class="nav-list"><li><a href="index.html">Главная</a></li><li><a href="catalog.html">Каталог</a></li><li><a href="exchanges.html" aria-current="page">Биржи</a></li><li><a href="news.html">Новости</a></li><li><a href="xml.html">XML</a></li><li><a href="db.html">БД</a></li><li><a href="rss.html">RSS</a></li><li><a href="search.html">Поиск</a></li><li><a href="forum.html">Форум</a></li><li><a href="about.html">О проекте</a></li></ul>
       </nav>
+    </div>
+    <form class="site-search" action="search.html" method="get" role="search">
+      <input type="search" name="q" placeholder="Поиск по сайту: Сбербанк, ETF, дивиденды…" aria-label="Поиск по сайту">
+      <button type="submit">Найти</button>
+    </form>
+    <div class="informers">
+      <div class="informer informer--weather" id="weather-widget">Погода: загрузка…</div>
+      <div class="informer informer--currency" id="currency-widget">Курсы валют: загрузка…</div>
     </div>
   </header>
     <main class="site-main">
@@ -68,13 +76,13 @@
     </main>
     <footer class="site-footer">
     <nav aria-label="Дополнительные разделы">
-      <ul class="nav-list nav-list--footer"><li><a href="forum.html">Форум</a></li><li><a href="guestbook.html">Гостевая книга</a></li><li><a href="poll.html">Опрос</a></li><li><a href="subscribe.html">Рассылка</a></li><li><a href="links.html">Полезные ссылки</a></li><li><a href="calendar.html">Календарь</a></li><li><a href="stats.html">Статистика посещений</a></li><li><a href="about.html">О проекте</a></li></ul>
+      <ul class="nav-list nav-list--footer"><li><a href="guestbook.html">Гостевая книга</a></li><li><a href="poll.html">Опрос</a></li><li><a href="converter.html">Конвертер валют</a></li><li><a href="calculator.html">Инвестиционный калькулятор</a></li><li><a href="links.html">Полезные ссылки</a></li><li><a href="calendar.html">Календарь событий</a></li><li><a href="stats.html">Статистика посещений</a></li></ul>
     </nav>
     <p class="visit-counter">Всего посещений сайта: <span data-visit-total>0</span></p>
     <p class="author-note">Учебный проект по дисциплине «Веб-программирование». Автор: студент группы БИЗ-Б23, Корнюшкин Игорь.</p>
   </footer>
   </div>
-  <script src="data.js?v=cb65cd405e"></script>
-  <script src="app.js?v=cb65cd405e"></script>
+  <script src="data.js?v=dff0f58a0a"></script>
+  <script src="app.js?v=dff0f58a0a"></script>
 </body>
 </html>
