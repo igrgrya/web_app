@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://igrgrya.github.io/web_app/index.html</loc></url>
-  <url><loc>https://igrgrya.github.io/web_app/catalog.html</loc></url>
   <url><loc>https://igrgrya.github.io/web_app/exchanges.html</loc></url>
   <url><loc>https://igrgrya.github.io/web_app/news.html</loc></url>
   <url><loc>https://igrgrya.github.io/web_app/xml.html</loc></url>
@@ -9,12 +8,6 @@
   <url><loc>https://igrgrya.github.io/web_app/rss.html</loc></url>
   <url><loc>https://igrgrya.github.io/web_app/search.html</loc></url>
   <url><loc>https://igrgrya.github.io/web_app/forum.html</loc></url>
-  <url><loc>https://igrgrya.github.io/web_app/guestbook.html</loc></url>
-  <url><loc>https://igrgrya.github.io/web_app/poll.html</loc></url>
-  <url><loc>https://igrgrya.github.io/web_app/converter.html</loc></url>
-  <url><loc>https://igrgrya.github.io/web_app/calculator.html</loc></url>
-  <url><loc>https://igrgrya.github.io/web_app/links.html</loc></url>
-  <url><loc>https://igrgrya.github.io/web_app/calendar.html</loc></url>
-  <url><loc>https://igrgrya.github.io/web_app/stats.html</loc></url>
+  <url><loc>https://igrgrya.github.io/web_app/services.html</loc></url>
   <url><loc>https://igrgrya.github.io/web_app/about.html</loc></url>
 </urlset>

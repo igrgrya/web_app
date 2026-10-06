@@ -47,8 +47,6 @@ const ASSET_VERSION = createHash('sha1')
 
 /* --- Вспомогательные функции ----------------------------------------- */
 
-const TYPE_LABELS = { stock: 'Акция', etf: 'ETF', fund: 'Фонд', bond: 'Облигация' }
-
 function esc(value) {
   return String(value === null || value === undefined ? '' : value).replace(/[&<>"']/g, (ch) => ({
     '&': '&amp;',
@@ -61,10 +59,6 @@ function esc(value) {
 
 function findExchange(id) {
   return exchanges.find((e) => e.id === id)
-}
-
-function findSector(id) {
-  return sectors.find((s) => s.id === id)
 }
 
 function findInstrument(id) {
@@ -84,7 +78,6 @@ function register(id, label, url) {
 
 const NAV = [
   { id: 'index', label: 'Главная', url: 'index.html' },
-  { id: 'catalog', label: 'Каталог', url: 'catalog.html' },
   { id: 'exchanges', label: 'Биржи', url: 'exchanges.html' },
   { id: 'news', label: 'Новости', url: 'news.html' },
   { id: 'xml', label: 'XML', url: 'xml.html' },
@@ -92,17 +85,19 @@ const NAV = [
   { id: 'rss', label: 'RSS', url: 'rss.html' },
   { id: 'search', label: 'Поиск', url: 'search.html' },
   { id: 'forum', label: 'Форум', url: 'forum.html' },
+  { id: 'services', label: 'Сервисы', url: 'services.html' },
   { id: 'about', label: 'О проекте', url: 'about.html' },
 ]
 
+/* Сервисные ссылки ведут на якоря страниц «Сервисы» и «Форум». */
 const FOOTER_LINKS = [
-  { id: 'guestbook', label: 'Гостевая книга', url: 'guestbook.html' },
-  { id: 'poll', label: 'Опрос', url: 'poll.html' },
-  { id: 'converter', label: 'Конвертер валют', url: 'converter.html' },
-  { id: 'calculator', label: 'Инвестиционный калькулятор', url: 'calculator.html' },
-  { id: 'links', label: 'Полезные ссылки', url: 'links.html' },
-  { id: 'calendar', label: 'Календарь событий', url: 'calendar.html' },
-  { id: 'stats', label: 'Статистика посещений', url: 'stats.html' },
+  { id: 'guestbook', label: 'Гостевая книга', url: 'forum.html#guestbook' },
+  { id: 'poll', label: 'Опрос', url: 'services.html#poll' },
+  { id: 'converter', label: 'Конвертер валют', url: 'services.html#converter' },
+  { id: 'calculator', label: 'Инвестиционный калькулятор', url: 'services.html#calculator' },
+  { id: 'links', label: 'Полезные ссылки', url: 'services.html#links' },
+  { id: 'calendar', label: 'Календарь событий', url: 'services.html#calendar' },
+  { id: 'stats', label: 'Статистика посещений', url: 'services.html#stats' },
 ]
 
 function navLink(item, active) {
@@ -173,49 +168,6 @@ ${extraScripts}  <script src="app.js?v=${ASSET_VERSION}"></script>
 
 /* --- Общие фрагменты -------------------------------------------------- */
 
-function instrumentTableRows() {
-  return instruments
-    .map((item) => {
-      const exchange = findExchange(item.exchangeId)
-      const sector = findSector(item.sectorId)
-      const cls = item.changePercent >= 0 ? 'change--up' : 'change--down'
-      const sign = item.changePercent >= 0 ? '+' : ''
-      return `<tr data-exchange="${item.exchangeId}" data-sector="${item.sectorId}">
-          <td>${esc(item.ticker)}</td>
-          <td>${esc(item.name)}</td>
-          <td>${esc(exchange ? exchange.code : '—')}</td>
-          <td>${esc(sector ? sector.name : '—')}</td>
-          <td>${esc(item.price)} ${esc(item.currency)}</td>
-          <td><span class="${cls}">${sign}${esc(item.changePercent)}%</span></td>
-        </tr>`
-    })
-    .join('\n        ')
-}
-
-function instrumentDetails(item) {
-  const exchange = findExchange(item.exchangeId)
-  const sector = findSector(item.sectorId)
-  const cls = item.changePercent >= 0 ? 'change--up' : 'change--down'
-  const sign = item.changePercent >= 0 ? '+' : ''
-  return `<details class="instrument-card" id="${esc(item.ticker)}">
-          <summary><strong>${esc(item.ticker)}</strong> — ${esc(item.name)}
-            <span class="${cls}">${sign}${esc(item.changePercent)}%</span></summary>
-          <p>${esc(item.description)}</p>
-          <dl class="fact-list">
-            <div><dt>Тип</dt><dd>${esc(TYPE_LABELS[item.type] || item.type)}</dd></div>
-            <div><dt>Биржа</dt><dd>${esc(exchange ? exchange.name + ' (' + exchange.code + ')' : '—')}</dd></div>
-            <div><dt>Сектор</dt><dd>${esc(sector ? sector.name : '—')}</dd></div>
-            <div><dt>Цена</dt><dd>${esc(item.price)} ${esc(item.currency)}</dd></div>
-            <div><dt>Объём торгов</dt><dd>${esc(item.volume.toLocaleString('ru-RU'))}</dd></div>
-            <div><dt>Дата листинга</dt><dd>${esc(item.listedDate)}</dd></div>
-          </dl>
-          <div class="rating" data-ticker="${esc(item.ticker)}">
-            <div class="star-rating-stars"></div>
-            <p class="muted" data-rating-summary>Оценок пока нет — станьте первым.</p>
-          </div>
-        </details>`
-}
-
 function guestbookItems(entries) {
   return entries
     .map(
@@ -266,14 +218,35 @@ function forumPage() {
           <input name="title" required>
         </label>
         <button type="submit">Создать тему</button>
-      </form>`
+      </form>
+
+      <h2 id="guestbook">Гостевая книга</h2>
+      <p class="lead">Напишите нам, что думаете о сайте — сообщение сразу появится в списке ниже.</p>
+
+      <form class="stacked-form" id="guestbook-form">
+        <label>Имя
+          <input name="authorName" required>
+        </label>
+        <label>Email (необязательно)
+          <input type="email" name="email">
+        </label>
+        <label>Сообщение
+          <textarea name="message" rows="4" required></textarea>
+        </label>
+        <button type="submit">Оставить запись</button>
+      </form>
+
+      <h3>Записи посетителей</h3>
+      <ul class="card-list" id="guestbook-list">
+      ${guestbookItems(initialGuestbookEntries)}
+      </ul>`
 
   register('forum', 'Форум', 'forum.html')
   return page({
     id: 'forum',
     title: 'Форум',
-    description: 'Обсуждения инвесторов: темы про фонды, акции и стратегии на сайте Funds Lab.',
-    keywords: 'форум, обсуждение, инвестиции, фонды, акции',
+    description: 'Обсуждения инвесторов и гостевая книга: темы про фонды, акции и стратегии на сайте Funds Lab.',
+    keywords: 'форум, гостевая книга, обсуждение, инвестиции, фонды, акции, отзывы',
     body,
   })
 }
@@ -283,13 +256,11 @@ function pollInitial() {
   const items = initialPoll.options
     .map((option) => `<li><button type="button" data-option="${option.id}">${esc(option.text)}</button></li>`)
     .join('\n        ')
-  return `<div id="poll">
-      <h2 data-poll-question>${esc(initialPoll.question)}</h2>
+  return `<p class="lead" data-poll-question>${esc(initialPoll.question)}</p>
       <ul class="poll-options">
         ${items}
       </ul>
-      <p class="muted" data-poll-note>Всего голосов: ${total}.</p>
-    </div>`
+      <p class="muted" data-poll-note>Всего голосов: ${total}.</p>`
 }
 
 /* --- Страницы --------------------------------------------------------- */
@@ -301,7 +272,7 @@ function homePage() {
       const cls = item.changePercent >= 0 ? 'change--up' : 'change--down'
       const sign = item.changePercent >= 0 ? '+' : ''
       return `<li class="card">
-          <a href="catalog.html#${esc(item.ticker)}"><strong>${esc(item.ticker)}</strong> — ${esc(item.name)}</a>
+          <strong>${esc(item.ticker)}</strong> — ${esc(item.name)}
           <p class="${cls}">${sign}${esc(item.changePercent)}%</p>
         </li>`
     })
@@ -321,7 +292,7 @@ function homePage() {
         <img src="assets/hero.png?v=${ASSET_VERSION}" alt="Иллюстрация: график роста биржевых инструментов" width="170" height="179" class="hero-image">
         <div>
           <h1>Funds Lab</h1>
-          <p class="lead">Учебный проект по дисциплине «Веб-программирование»: интерактивный сайт о фондах, акциях и биржах, с каталогом инструментов, новостями и сервисами для сообщества инвесторов.</p>
+          <p class="lead">Учебный проект по дисциплине «Веб-программирование»: интерактивный сайт о фондах, акциях и биржах, с новостями рынка, биржами и сервисами для сообщества инвесторов.</p>
         </div>
       </div>
 
@@ -339,7 +310,6 @@ function homePage() {
           <ul class="card-list">
           ${movers}
           </ul>
-          <p><a href="catalog.html">Смотреть весь каталог →</a></p>
         </section>
 
         <section id="latest-news">
@@ -358,65 +328,6 @@ function homePage() {
     description:
       'Funds Lab — учебный сайт о фондах, акциях и биржах: каталог инструментов, новости рынка и сервисы для инвесторов.',
     keywords: 'фонды, акции, биржи, инвестиции, ETF, Funds Lab',
-    body,
-  })
-}
-
-function catalogPage() {
-  const exchangeOptions = exchanges
-    .map((exchange) => `<option value="${exchange.id}">${esc(exchange.code)}</option>`)
-    .join('')
-  const sectorOptions = sectors
-    .map((sector) => `<option value="${sector.id}">${esc(sector.name)}</option>`)
-    .join('')
-
-  const body = `      <h1 id="catalog-top">Каталог инструментов</h1>
-      <p class="lead">Список фондов и акций, представленных на сайте. Отфильтруйте по бирже или сектору.</p>
-
-      <div class="filter-bar">
-        <label>Биржа:
-          <select id="exchange-filter">
-            <option value="all">Все</option>
-            ${exchangeOptions}
-          </select>
-        </label>
-        <label>Сектор:
-          <select id="sector-filter">
-            <option value="all">Все</option>
-            ${sectorOptions}
-          </select>
-        </label>
-      </div>
-
-      <table class="data-table" id="catalog-table">
-        <caption>Инструменты каталога Funds Lab</caption>
-        <thead>
-          <tr>
-            <th scope="col">Тикер</th>
-            <th scope="col">Название</th>
-            <th scope="col">Биржа</th>
-            <th scope="col">Сектор</th>
-            <th scope="col">Цена</th>
-            <th scope="col">Изменение</th>
-          </tr>
-        </thead>
-        <tbody>
-        ${instrumentTableRows()}
-        </tbody>
-      </table>
-
-      <h2>Подробно об инструменте</h2>
-      <p class="muted">Нажмите на строку, чтобы раскрыть описание, характеристики и оценить инструмент.</p>
-      ${instruments.map((item) => instrumentDetails(item)).join('\n      ')}
-
-      <p><a href="#catalog-top">↑ Вверх к началу таблицы</a></p>`
-
-  register('catalog', 'Каталог инструментов', 'catalog.html')
-  return page({
-    id: 'catalog',
-    title: 'Каталог инструментов',
-    description: 'Полный список фондов, акций и ETF, доступных на сайте Funds Lab, с фильтром по бирже и сектору.',
-    keywords: 'каталог, акции, ETF, фонды, биржа, сектор',
     body,
   })
 }
@@ -470,7 +381,7 @@ function newsListPage() {
     .map((item) => {
       const related = item.relatedInstrumentId ? findInstrument(item.relatedInstrumentId) : null
       const relatedHtml = related
-        ? `<p>Связанный инструмент: <a href="catalog.html#${esc(related.ticker)}">${esc(related.ticker)} — ${esc(related.name)}</a></p>`
+        ? `<p>Связанный инструмент: <strong>${esc(related.ticker)}</strong> — ${esc(related.name)}</p>`
         : ''
       return `<details class="news-item" id="news-${esc(item.id)}">
           <summary><strong>${esc(item.title)}</strong> <span class="muted">${esc(item.publishedAt)}</span></summary>
@@ -507,41 +418,9 @@ function newsListPage() {
   })
 }
 
-function guestbookPage() {
-  const body = `      <h1>Гостевая книга</h1>
-      <p class="lead">Напишите нам, что думаете о сайте — сообщение сразу появится в списке ниже.</p>
-
-      <form class="stacked-form" id="guestbook-form">
-        <label>Имя
-          <input name="authorName" required>
-        </label>
-        <label>Email (необязательно)
-          <input type="email" name="email">
-        </label>
-        <label>Сообщение
-          <textarea name="message" rows="4" required></textarea>
-        </label>
-        <button type="submit">Оставить запись</button>
-      </form>
-
-      <h2>Записи посетителей</h2>
-      <ul class="card-list" id="guestbook-list">
-      ${guestbookItems(initialGuestbookEntries)}
-      </ul>`
-
-  register('guestbook', 'Гостевая книга', 'guestbook.html')
-  return page({
-    id: 'guestbook',
-    title: 'Гостевая книга',
-    description: 'Оставьте отзыв о сайте Funds Lab или почитайте, что пишут другие посетители.',
-    keywords: 'гостевая книга, отзывы, обратная связь',
-    body,
-  })
-}
-
 function searchPage() {
   const body = `      <h1>Поиск по сайту</h1>
-      <p class="lead">Поиск по каталогу инструментов и новостям Funds Lab по ключевому слову.</p>
+      <p class="lead">Поиск по новостям и страницам Funds Lab по ключевому слову.</p>
 
       <form class="stacked-form" onsubmit="return false">
         <label>Ключевое слово
@@ -555,34 +434,30 @@ function searchPage() {
   return page({
     id: 'search',
     title: 'Поиск по сайту',
-    description: 'Поиск по каталогу инструментов и новостям Funds Lab по ключевому слову.',
-    keywords: 'поиск, поиск по сайту, каталог, новости',
+    description: 'Поиск по новостям и страницам сайта Funds Lab по ключевому слову.',
+    keywords: 'поиск, поиск по сайту, новости, страницы',
     body,
     extraScripts: `  <script src="search-index.js?v=${ASSET_VERSION}"></script>\n`,
   })
 }
 
-function pollPage() {
-  const body = `      <h1>Опрос</h1>
-      <p class="lead">Примите участие в опросе Funds Lab.</p>
-      ${pollInitial()}`
+function servicesPage() {
+  const calendarSorted = [...events].sort((a, b) => a.eventDate.localeCompare(b.eventDate))
+  const calendarRows = calendarSorted
+    .map((event) => {
+      const instrument = event.relatedInstrumentId ? findInstrument(event.relatedInstrumentId) : null
+      const link = instrument ? esc(instrument.ticker) : '—'
+      return `<tr>
+          <td>${esc(event.eventDate)}</td>
+          <td>${esc(event.title)}</td>
+          <td>${esc(event.description)}</td>
+          <td>${link}</td>
+        </tr>`
+    })
+    .join('\n        ')
 
-  register('poll', 'Опрос', 'poll.html')
-  return page({
-    id: 'poll',
-    title: 'Опрос',
-    description: 'Примите участие в опросе Funds Lab: какой класс активов вам интереснее всего?',
-    keywords: 'опрос, голосование, активы, инвестиции',
-    body,
-  })
-}
-
-function linksPage() {
-  const categories = [...new Set(externalLinks.map((link) => link.category))]
-  const toc = categories
-    .map((category, i) => `<li><a href="#cat-${i}">${esc(category)}</a></li>`)
-    .join('')
-  const sections = categories
+  const linkCategories = [...new Set(externalLinks.map((link) => link.category))]
+  const linkSections = linkCategories
     .map((category, i) => {
       const items = externalLinks
         .filter((link) => link.category === category)
@@ -594,99 +469,149 @@ function linksPage() {
         )
         .join('\n          ')
       return `<section id="cat-${i}">
-        <h2>${esc(category)}</h2>
-        <ul class="card-list">
-          ${items}
-        </ul>
-      </section>`
+          <h3>${esc(category)}</h3>
+          <ul class="card-list">
+            ${items}
+          </ul>
+        </section>`
     })
     .join('\n      ')
 
-  const body = `      <h1>Полезные ссылки</h1>
-      <p class="lead">Подборка внешних ресурсов, сгруппированных по категориям.</p>
+  const body = `      <h1 id="services-top">Сервисы сайта</h1>
+      <p class="lead">Интерактивные сервисы Funds Lab: опрос, конвертер валют, инвестиционный калькулятор, календарь событий, полезные ссылки и статистика посещений.</p>
 
       <nav class="toc" aria-label="Содержание страницы">
-        <h2>Категории</h2>
-        <ul>${toc}</ul>
+        <h2>Содержание</h2>
+        <ul>
+          <li><a href="#poll">Опрос</a></li>
+          <li><a href="#converter">Конвертер валют</a></li>
+          <li><a href="#calculator">Инвестиционный калькулятор</a></li>
+          <li><a href="#calendar">Календарь событий</a></li>
+          <li><a href="#links">Полезные ссылки</a></li>
+          <li><a href="#stats">Статистика посещений</a></li>
+        </ul>
       </nav>
 
-      ${sections}`
+      <section id="poll">
+        <h2>Опрос</h2>
+        ${pollInitial()}
+      </section>
 
-  register('links', 'Полезные ссылки', 'links.html')
+      <section id="converter">
+        <h2>Конвертер валют</h2>
+        <p class="lead">Пересчёт суммы между рублём, долларом, евро и юанем по актуальному курсу ЦБ РФ.</p>
+
+        <form class="stacked-form" id="converter-form">
+          <label>Сумма
+            <input type="number" name="amount" value="1000" min="0" step="any" required>
+          </label>
+          <label>Из валюты
+            <select name="from">
+              <option value="RUB">RUB — рубль</option>
+              <option value="USD">USD — доллар США</option>
+              <option value="EUR">EUR — евро</option>
+              <option value="CNY">CNY — юань</option>
+            </select>
+          </label>
+          <label>В валюту
+            <select name="to">
+              <option value="USD">USD — доллар США</option>
+              <option value="EUR">EUR — евро</option>
+              <option value="CNY">CNY — юань</option>
+              <option value="RUB">RUB — рубль</option>
+            </select>
+          </label>
+          <button type="submit">Перевести</button>
+        </form>
+
+        <p id="converter-result" hidden></p>
+        <p class="muted" id="converter-rate"></p>
+      </section>
+
+      <section id="calculator">
+        <h2>Инвестиционный калькулятор</h2>
+        <p class="lead">Расчёт будущей суммы вклада с учётом ежемесячных пополнений и сложного процента (капитализация раз в год).</p>
+
+        <form class="stacked-form" id="calculator-form">
+          <label>Начальная сумма
+            <input type="number" name="initial" value="100000" min="0" step="any" required>
+          </label>
+          <label>Ежемесячное пополнение
+            <input type="number" name="monthly" value="10000" min="0" step="any" required>
+          </label>
+          <label>Доходность, % годовых
+            <input type="number" name="rate" value="10" min="0" max="100" step="any" required>
+          </label>
+          <label>Срок, лет
+            <input type="number" name="years" value="5" min="1" max="50" step="1" required>
+          </label>
+          <button type="submit">Рассчитать</button>
+        </form>
+
+        <p id="calculator-result" hidden></p>
+
+        <table class="data-table" id="calculator-years" hidden>
+          <caption>Баланс по годам</caption>
+          <thead>
+            <tr>
+              <th scope="col">Год</th>
+              <th scope="col">Баланс</th>
+              <th scope="col">Вложено</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </section>
+
+      <section id="calendar">
+        <h2>Календарь событий</h2>
+        <p class="lead">Ближайшие корпоративные события: отчётность, дивидендные отсечки, заседания регуляторов.</p>
+        <table class="data-table">
+          <caption>Ближайшие события</caption>
+          <thead>
+            <tr>
+              <th scope="col">Дата</th>
+              <th scope="col">Событие</th>
+              <th scope="col">Описание</th>
+              <th scope="col">Инструмент</th>
+            </tr>
+          </thead>
+          <tbody>
+          ${calendarRows}
+          </tbody>
+        </table>
+      </section>
+
+      <section id="links">
+        <h2>Полезные ссылки</h2>
+        <p class="lead">Подборка внешних ресурсов, сгруппированных по категориям.</p>
+      ${linkSections}
+      </section>
+
+      <section id="stats">
+        <h2>Статистика посещений по разделам</h2>
+        <p class="lead">Сколько раз был открыт каждый раздел сайта (данные хранятся в вашем браузере).</p>
+        <table class="data-table">
+          <caption>Просмотры разделов сайта</caption>
+          <thead>
+            <tr>
+              <th scope="col">Раздел</th>
+              <th scope="col">Адрес</th>
+              <th scope="col">Просмотров</th>
+            </tr>
+          </thead>
+          <tbody id="stats-body">
+          </tbody>
+        </table>
+        <p><a href="#services-top">↑ Вверх</a></p>
+      </section>`
+
+  register('services', 'Сервисы', 'services.html')
   return page({
-    id: 'links',
-    title: 'Полезные ссылки',
-    description: 'Подборка официальных сайтов бирж, регуляторов и финансовых СМИ.',
-    keywords: 'ссылки, биржи, регуляторы, финансовые СМИ, каталог',
-    body,
-  })
-}
-
-function calendarPage() {
-  const sorted = [...events].sort((a, b) => a.eventDate.localeCompare(b.eventDate))
-  const rows = sorted
-    .map((event) => {
-      const instrument = event.relatedInstrumentId ? findInstrument(event.relatedInstrumentId) : null
-      const link = instrument ? `<a href="catalog.html#${esc(instrument.ticker)}">${esc(instrument.ticker)}</a>` : '—'
-      return `<tr>
-          <td>${esc(event.eventDate)}</td>
-          <td>${esc(event.title)}</td>
-          <td>${esc(event.description)}</td>
-          <td>${link}</td>
-        </tr>`
-    })
-    .join('\n        ')
-
-  const body = `      <h1>Календарь событий</h1>
-      <p class="lead">Ближайшие корпоративные события: отчётность, дивидендные отсечки, заседания регуляторов.</p>
-      <table class="data-table">
-        <caption>Ближайшие события</caption>
-        <thead>
-          <tr>
-            <th scope="col">Дата</th>
-            <th scope="col">Событие</th>
-            <th scope="col">Описание</th>
-            <th scope="col">Инструмент</th>
-          </tr>
-        </thead>
-        <tbody>
-        ${rows}
-        </tbody>
-      </table>`
-
-  register('calendar', 'Календарь событий', 'calendar.html')
-  return page({
-    id: 'calendar',
-    title: 'Календарь событий',
-    description: 'Ближайшие даты отчётности и дивидендов по инструментам из каталога Funds Lab.',
-    keywords: 'календарь, события, дивиденды, отчётность',
-    body,
-  })
-}
-
-function statsPage() {
-  const body = `      <h1 id="stats-top">Статистика посещений по разделам</h1>
-      <p class="lead">Сколько раз был открыт каждый раздел сайта (данные хранятся в вашем браузере).</p>
-      <table class="data-table">
-        <caption>Просмотры разделов сайта</caption>
-        <thead>
-          <tr>
-            <th scope="col">Раздел</th>
-            <th scope="col">Адрес</th>
-            <th scope="col">Просмотров</th>
-          </tr>
-        </thead>
-        <tbody id="stats-body">
-        </tbody>
-      </table>
-      <p><a href="#stats-top">↑ Вверх</a></p>`
-
-  register('stats', 'Статистика посещений', 'stats.html')
-  return page({
-    id: 'stats',
-    title: 'Статистика посещений',
-    description: 'Разбивка просмотров сайта Funds Lab по разделам.',
-    keywords: 'статистика, счётчик посещений, аналитика',
+    id: 'services',
+    title: 'Сервисы сайта',
+    description: 'Сервисы Funds Lab: опрос, конвертер валют по курсу ЦБ РФ, инвестиционный калькулятор, календарь событий, полезные ссылки, статистика посещений.',
+    keywords: 'сервисы, опрос, конвертер валют, калькулятор, календарь, ссылки, статистика',
     body,
   })
 }
@@ -719,8 +644,6 @@ function aboutPage() {
           <li>Счётчик посещаемости и статистика по разделам</li>
           <li>Поиск по сайту (форма в шапке на каждой странице)</li>
           <li>Информеры в шапке — погода Обнинска (open-meteo) и курсы ЦБ РФ</li>
-          <li>Фильтр каталога по бирже и сектору</li>
-          <li>Рейтинг инструментов звёздами (в каталоге)</li>
           <li>Форум</li>
           <li>Гостевая книга</li>
           <li>Опрос</li>
@@ -734,7 +657,7 @@ function aboutPage() {
 
       <section id="plan">
         <h2>Структура сайта и план развития</h2>
-        <p>Сайт состоит из 18 статических страниц: 10 разделов главного меню (Главная, Каталог, Биржи, Новости, XML, БД, RSS, Поиск, Форум, О проекте), 7 сервисных страниц в футере (Гостевая книга, Опрос, Конвертер валют, Инвестиционный калькулятор, Полезные ссылки, Календарь событий, Статистика посещений) и страница 404.</p>
+        <p>Сайт состоит из 10 статических страниц — все они являются разделами главного меню (Главная, Биржи, Новости, XML, БД, RSS, Поиск, Форум, Сервисы, О проекте) — плюс техническая страница 404. Сервисные разделы (гостевая книга, опрос, конвертер, калькулятор, ссылки, календарь, статистика) встроены в страницы «Форум» и «Сервисы» и доступны также из футера по якорям.</p>
         <p>Дальнейшее развитие — по лабораторным работам:</p>
         <ul>
           <li>№2 — каталог инструментов переедет в XML с XSL-преобразованием;</li>
@@ -875,104 +798,10 @@ function rssPage() {
   })
 }
 
-/* --- Дополнительные сервисы ------------------------------------------- */
-
-function converterPage() {
-  const body = `      <h1>Конвертер валют</h1>
-      <p class="lead">Пересчёт суммы между рублём, долларом, евро и юанем по актуальному курсу ЦБ РФ.</p>
-
-      <form class="stacked-form" id="converter-form">
-        <label>Сумма
-          <input type="number" name="amount" value="1000" min="0" step="any" required>
-        </label>
-        <label>Из валюты
-          <select name="from">
-            <option value="RUB">RUB — рубль</option>
-            <option value="USD">USD — доллар США</option>
-            <option value="EUR">EUR — евро</option>
-            <option value="CNY">CNY — юань</option>
-          </select>
-        </label>
-        <label>В валюту
-          <select name="to">
-            <option value="USD">USD — доллар США</option>
-            <option value="EUR">EUR — евро</option>
-            <option value="CNY">CNY — юань</option>
-            <option value="RUB">RUB — рубль</option>
-          </select>
-        </label>
-        <button type="submit">Перевести</button>
-      </form>
-
-      <p id="converter-result" hidden></p>
-      <p class="muted" id="converter-rate"></p>`
-
-  register('converter', 'Конвертер валют', 'converter.html')
-  return page({
-    id: 'converter',
-    title: 'Конвертер валют',
-    description: 'Конвертер валют по актуальному курсу ЦБ РФ: рубль, доллар, евро, юань.',
-    keywords: 'конвертер валют, курс ЦБ РФ, доллар, евро, юань',
-    body,
-  })
-}
-
-function calculatorPage() {
-  const body = `      <h1>Инвестиционный калькулятор</h1>
-      <p class="lead">Расчёт будущей суммы вклада с учётом ежемесячных пополнений и сложного процента (капитализация раз в год).</p>
-
-      <form class="stacked-form" id="calculator-form">
-        <label>Начальная сумма
-          <input type="number" name="initial" value="100000" min="0" step="any" required>
-        </label>
-        <label>Ежемесячное пополнение
-          <input type="number" name="monthly" value="10000" min="0" step="any" required>
-        </label>
-        <label>Доходность, % годовых
-          <input type="number" name="rate" value="10" min="0" max="100" step="any" required>
-        </label>
-        <label>Срок, лет
-          <input type="number" name="years" value="5" min="1" max="50" step="1" required>
-        </label>
-        <button type="submit">Рассчитать</button>
-      </form>
-
-      <p id="calculator-result" hidden></p>
-
-      <table class="data-table" id="calculator-years" hidden>
-        <caption>Баланс по годам</caption>
-        <thead>
-          <tr>
-            <th scope="col">Год</th>
-            <th scope="col">Баланс</th>
-            <th scope="col">Вложено</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>`
-
-  register('calculator', 'Инвестиционный калькулятор', 'calculator.html')
-  return page({
-    id: 'calculator',
-    title: 'Инвестиционный калькулятор',
-    description: 'Расчёт доходности инвестиций с ежемесячными пополнениями и сложным процентом.',
-    keywords: 'инвестиционный калькулятор, сложный процент, доходность, вклад',
-    body,
-  })
-}
-
 /* --- Сборка ------------------------------------------------------------ */
 
 function buildSearchIndex() {
   const entries = []
-  instruments.forEach((item) => {
-    entries.push({
-      type: 'Инструмент',
-      title: `${item.ticker} — ${item.name}`,
-      url: `catalog.html#${item.ticker}`,
-      text: `${item.ticker} ${item.name} ${item.description}`,
-    })
-  })
   news.forEach((item) => {
     entries.push({ type: 'Новость', title: item.title, url: `news.html#news-${item.id}`, text: `${item.title} ${item.body}` })
   })
@@ -994,7 +823,6 @@ function main() {
 
   const files = {}
   files['index.html'] = homePage()
-  files['catalog.html'] = catalogPage()
   files['exchanges.html'] = exchangesPage()
   files['news.html'] = newsListPage()
   files['xml.html'] = xmlPage()
@@ -1002,13 +830,7 @@ function main() {
   files['rss.html'] = rssPage()
   files['search.html'] = searchPage()
   files['forum.html'] = forumPage()
-  files['guestbook.html'] = guestbookPage()
-  files['poll.html'] = pollPage()
-  files['converter.html'] = converterPage()
-  files['calculator.html'] = calculatorPage()
-  files['links.html'] = linksPage()
-  files['calendar.html'] = calendarPage()
-  files['stats.html'] = statsPage()
+  files['services.html'] = servicesPage()
   files['about.html'] = aboutPage()
   files['404.html'] = notFoundPage()
 
