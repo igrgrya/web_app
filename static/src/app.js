@@ -16,7 +16,6 @@
     pageViews: 'funds_lab_page_views',
     guestbook: 'funds_lab_guestbook',
     forumTopics: 'funds_lab_forum_topics',
-    ratings: 'funds_lab_ratings',
     poll: 'funds_lab_poll',
     pollVoted: 'funds_lab_poll_voted',
     subscribers: 'funds_lab_subscribers'
@@ -255,60 +254,6 @@
     })
   }
 
-  /* --- Рейтинг инструментов (обязательный сервис) -------------------- */
-
-  function getRatings(ticker) {
-    var all = readJSON(KEYS.ratings, {})
-    return all[ticker] || []
-  }
-
-  function addRating(ticker, stars) {
-    var all = readJSON(KEYS.ratings, {})
-    all[ticker] = (all[ticker] || []).concat(stars)
-    writeJSON(KEYS.ratings, all)
-    return all[ticker]
-  }
-
-  function initRatings() {
-    var widgets = document.querySelectorAll('.rating')
-    for (var i = 0; i < widgets.length; i++) {
-      attachRating(widgets[i])
-    }
-  }
-
-  function attachRating(widget) {
-    var ticker = widget.getAttribute('data-ticker')
-    var starsBox = widget.querySelector('.star-rating-stars')
-    var summary = widget.querySelector('[data-rating-summary]')
-    if (!ticker || !starsBox || !summary) return
-
-    function average(values) {
-      if (!values.length) return null
-      return values.reduce(function (a, b) { return a + b }, 0) / values.length
-    }
-
-    function render() {
-      var values = getRatings(ticker)
-      var avg = average(values)
-      starsBox.innerHTML = [1, 2, 3, 4, 5].map(function (star) {
-        return '<button type="button" class="star" data-star="' + star + '" ' +
-          'aria-label="Оценить на ' + star + '">&#9733;</button>'
-      }).join('')
-      summary.textContent = avg !== null
-        ? 'Средняя оценка: ' + avg.toFixed(1) + ' из 5 (' + values.length + ')'
-        : 'Оценок пока нет — станьте первым.'
-      var buttons = starsBox.querySelectorAll('.star')
-      for (var i = 0; i < buttons.length; i++) {
-        buttons[i].addEventListener('click', function (event) {
-          addRating(ticker, Number(event.currentTarget.getAttribute('data-star')))
-          render()
-        })
-      }
-    }
-
-    render()
-  }
-
   /* --- Опрос (дополнительный сервис) --------------------------------- */
 
   function getPoll() {
@@ -435,29 +380,6 @@
       input.value = initialQuery
       render()
     }
-  }
-
-  /* --- Фильтр каталога ----------------------------------------------- */
-
-  function initCatalogFilter() {
-    var table = byId('catalog-table')
-    var exchangeFilter = byId('exchange-filter')
-    var sectorFilter = byId('sector-filter')
-    if (!table || !exchangeFilter || !sectorFilter) return
-
-    function apply() {
-      var exchange = exchangeFilter.value
-      var sector = sectorFilter.value
-      var rows = table.querySelectorAll('tbody tr')
-      for (var i = 0; i < rows.length; i++) {
-        var okExchange = exchange === 'all' || rows[i].getAttribute('data-exchange') === exchange
-        var okSector = sector === 'all' || rows[i].getAttribute('data-sector') === sector
-        rows[i].hidden = !(okExchange && okSector)
-      }
-    }
-
-    exchangeFilter.addEventListener('change', apply)
-    sectorFilter.addEventListener('change', apply)
   }
 
   /* --- Статистика по разделам (дополнительный сервис) ---------------- */
@@ -702,8 +624,8 @@
     recordPageView(pageId)
     recordVisit()
 
-    // Ссылки вида catalog.html#SBER или news.html#news-2 ведут на
-    // свёрнутый <details> — раскрываем целевой блок.
+    // Ссылки вида news.html#news-2 ведут на свёрнутый <details> —
+    // раскрываем целевой блок.
     var hash = window.location.hash
     if (hash) {
       var anchor = document.getElementById(decodeURIComponent(hash.slice(1)))
@@ -712,11 +634,9 @@
 
     initGuestbook()
     initForum()
-    initRatings()
     initPoll()
     initSubscribe()
     initSearch()
-    initCatalogFilter()
     initStats()
     initWeather()
     initCurrency()
