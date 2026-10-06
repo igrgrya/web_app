@@ -302,6 +302,53 @@ code {
   }
 }
 
+/* --- Раскрывающиеся блоки: каталог, новости, форум ------------------- */
+
+.instrument-card,
+.news-item,
+.forum-topic-block {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+  margin-bottom: 12px;
+}
+
+.instrument-card summary,
+.news-item summary,
+.forum-topic-block summary {
+  cursor: pointer;
+  padding: 14px 16px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.instrument-card summary:hover,
+.news-item summary:hover,
+.forum-topic-block summary:hover {
+  color: var(--accent);
+}
+
+.instrument-card:target,
+.news-item:target,
+.forum-topic-block:target {
+  border-color: var(--accent-border);
+}
+
+.instrument-card > :not(summary),
+.news-item > :not(summary),
+.forum-topic-block > :not(summary) {
+  margin-inline: 16px;
+}
+
+.code-block {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  overflow-x: auto;
+  font: 14px/150% var(--mono);
+}
+
 /* --- Карточки -------------------------------------------------------- */
 
 .card-list {

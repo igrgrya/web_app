@@ -71,10 +71,6 @@ function findInstrument(id) {
   return instruments.find((i) => i.id === id)
 }
 
-function instrumentUrl(ticker) {
-  return `instrument-${ticker}.html`
-}
-
 const dateFmt = (value) => value
 
 /* Записи о страницах: нужны для статистики и sitemap.xml. */
@@ -184,8 +180,8 @@ function instrumentTableRows() {
       const sector = findSector(item.sectorId)
       const cls = item.changePercent >= 0 ? 'change--up' : 'change--down'
       const sign = item.changePercent >= 0 ? '+' : ''
-      return `<tr data-exchange="${item.exchangeId}" data-sector="${item.sectorId}" id="${esc(item.ticker)}">
-          <td><a href="${instrumentUrl(item.ticker)}">${esc(item.ticker)}</a></td>
+      return `<tr data-exchange="${item.exchangeId}" data-sector="${item.sectorId}">
+          <td>${esc(item.ticker)}</td>
           <td>${esc(item.name)}</td>
           <td>${esc(exchange ? exchange.code : '—')}</td>
           <td>${esc(sector ? sector.name : '—')}</td>
@@ -196,20 +192,28 @@ function instrumentTableRows() {
     .join('\n        ')
 }
 
-function newsCards(items) {
-  return items
-    .map((item) => {
-      const related = item.relatedInstrumentId ? findInstrument(item.relatedInstrumentId) : null
-      const link = related
-        ? ` &middot; <a href="${instrumentUrl(related.ticker)}">${esc(related.ticker)}</a>`
-        : ''
-      return `<li class="card" id="news-${esc(item.id)}">
-        <h2><a href="news-${item.id}.html">${esc(item.title)}</a></h2>
-        <p class="muted">${esc(dateFmt(item.publishedAt))}${link}</p>
-        <p>${esc(item.body.slice(0, 140))}…</p>
-      </li>`
-    })
-    .join('\n      ')
+function instrumentDetails(item) {
+  const exchange = findExchange(item.exchangeId)
+  const sector = findSector(item.sectorId)
+  const cls = item.changePercent >= 0 ? 'change--up' : 'change--down'
+  const sign = item.changePercent >= 0 ? '+' : ''
+  return `<details class="instrument-card" id="${esc(item.ticker)}">
+          <summary><strong>${esc(item.ticker)}</strong> — ${esc(item.name)}
+            <span class="${cls}">${sign}${esc(item.changePercent)}%</span></summary>
+          <p>${esc(item.description)}</p>
+          <dl class="fact-list">
+            <div><dt>Тип</dt><dd>${esc(TYPE_LABELS[item.type] || item.type)}</dd></div>
+            <div><dt>Биржа</dt><dd>${esc(exchange ? exchange.name + ' (' + exchange.code + ')' : '—')}</dd></div>
+            <div><dt>Сектор</dt><dd>${esc(sector ? sector.name : '—')}</dd></div>
+            <div><dt>Цена</dt><dd>${esc(item.price)} ${esc(item.currency)}</dd></div>
+            <div><dt>Объём торгов</dt><dd>${esc(item.volume.toLocaleString('ru-RU'))}</dd></div>
+            <div><dt>Дата листинга</dt><dd>${esc(item.listedDate)}</dd></div>
+          </dl>
+          <div class="rating" data-ticker="${esc(item.ticker)}">
+            <div class="star-rating-stars"></div>
+            <p class="muted" data-rating-summary>Оценок пока нет — станьте первым.</p>
+          </div>
+        </details>`
 }
 
 function guestbookItems(entries) {
@@ -221,15 +225,57 @@ function guestbookItems(entries) {
     .join('\n      ')
 }
 
-function forumItems(topics) {
+function forumTopicBlocks(topics) {
   return topics
     .map(
-      (topic) => `<li class="card">
-        <h2><a href="forum-topic.html?id=${topic.id}">${esc(topic.title)}</a></h2>
-        <p class="muted">Автор: ${esc(topic.authorName)} &middot; ${esc(topic.createdAt)} &middot; Ответов: ${topic.replies ? topic.replies.length : 0}</p>
-      </li>`,
+      (topic) => `<details class="forum-topic-block" id="topic-${esc(topic.id)}">
+          <summary><strong>${esc(topic.title)}</strong> — ${esc(topic.authorName)}, ${esc(topic.createdAt)} &middot; ответов: ${topic.replies ? topic.replies.length : 0}</summary>
+          <ul class="card-list">
+            ${(topic.replies || [])
+              .map(
+                (reply) => `<li class="card"><p>${esc(reply.message)}</p>
+              <p class="muted">${esc(reply.authorName)} &middot; ${esc(reply.createdAt)}</p></li>`,
+              )
+              .join('\n            ')}
+            ${topic.replies && topic.replies.length ? '' : '<li class="empty-state">Ответов пока нет.</li>'}
+          </ul>
+          <form class="stacked-form reply-form" data-topic-id="${esc(topic.id)}">
+            <label>Ваше имя <input name="authorName" required></label>
+            <label>Сообщение <textarea name="message" rows="3" required></textarea></label>
+            <button type="submit">Ответить</button>
+          </form>
+        </details>`,
     )
     .join('\n      ')
+}
+
+function forumPage() {
+  const body = `      <h1>Форум</h1>
+      <p class="lead">Обсуждайте фонды, акции и инвестиционные стратегии с другими читателями сайта.</p>
+
+      <div id="forum-list">
+      ${forumTopicBlocks(initialForumTopics)}
+      </div>
+
+      <h2>Создать новую тему</h2>
+      <form class="stacked-form" id="forum-form">
+        <label>Ваше имя
+          <input name="authorName" required>
+        </label>
+        <label>Заголовок темы
+          <input name="title" required>
+        </label>
+        <button type="submit">Создать тему</button>
+      </form>`
+
+  register('forum', 'Форум', 'forum.html')
+  return page({
+    id: 'forum',
+    title: 'Форум',
+    description: 'Обсуждения инвесторов: темы про фонды, акции и стратегии на сайте Funds Lab.',
+    keywords: 'форум, обсуждение, инвестиции, фонды, акции',
+    body,
+  })
 }
 
 function pollInitial() {
@@ -358,6 +404,11 @@ function catalogPage() {
         ${instrumentTableRows()}
         </tbody>
       </table>
+
+      <h2>Подробно об инструменте</h2>
+      <p class="muted">Нажмите на строку, чтобы раскрыть описание, характеристики и оценить инструмент.</p>
+      ${instruments.map((item) => instrumentDetails(item)).join('\n      ')}
+
       <p><a href="#catalog-top">↑ Вверх к началу таблицы</a></p>`
 
   register('catalog', 'Каталог инструментов', 'catalog.html')
@@ -366,38 +417,6 @@ function catalogPage() {
     title: 'Каталог инструментов',
     description: 'Полный список фондов, акций и ETF, доступных на сайте Funds Lab, с фильтром по бирже и сектору.',
     keywords: 'каталог, акции, ETF, фонды, биржа, сектор',
-    body,
-  })
-}
-
-function instrumentPage(item) {
-  const exchange = findExchange(item.exchangeId)
-  const sector = findSector(item.sectorId)
-  const body = `      <p class="breadcrumb"><a href="catalog.html">← Назад в каталог</a></p>
-      <h1>${esc(item.ticker)} — ${esc(item.name)}</h1>
-      <p class="lead">${esc(item.description)}</p>
-
-      <dl class="fact-list">
-        <div><dt>Тип</dt><dd>${esc(TYPE_LABELS[item.type] || item.type)}</dd></div>
-        <div><dt>Биржа</dt><dd>${esc(exchange ? exchange.name + ' (' + exchange.code + ')' : '—')}</dd></div>
-        <div><dt>Сектор</dt><dd>${esc(sector ? sector.name : '—')}</dd></div>
-        <div><dt>Цена</dt><dd>${esc(item.price)} ${esc(item.currency)}</dd></div>
-        <div><dt>Объём торгов</dt><dd>${esc(item.volume.toLocaleString('ru-RU'))}</dd></div>
-        <div><dt>Дата листинга</dt><dd>${esc(item.listedDate)}</dd></div>
-      </dl>
-
-      <h2>Оценка сообщества</h2>
-      <div id="rating" data-ticker="${esc(item.ticker)}">
-        <div class="star-rating-stars"></div>
-        <p class="muted" data-rating-summary>Оценок пока нет — станьте первым.</p>
-      </div>`
-
-  register(`instrument-${item.ticker}`, `${item.ticker} — ${item.name}`, instrumentUrl(item.ticker))
-  return page({
-    id: `instrument-${item.ticker}`,
-    title: `${item.ticker} — ${item.name}`,
-    description: item.description,
-    keywords: `${item.ticker}, ${item.name}, ${sector ? sector.name : ''}, ${TYPE_LABELS[item.type]}`,
     body,
   })
 }
@@ -447,11 +466,36 @@ function exchangesPage() {
 }
 
 function newsListPage() {
+  const items = news
+    .map((item) => {
+      const related = item.relatedInstrumentId ? findInstrument(item.relatedInstrumentId) : null
+      const relatedHtml = related
+        ? `<p>Связанный инструмент: <a href="catalog.html#${esc(related.ticker)}">${esc(related.ticker)} — ${esc(related.name)}</a></p>`
+        : ''
+      return `<details class="news-item" id="news-${esc(item.id)}">
+          <summary><strong>${esc(item.title)}</strong> <span class="muted">${esc(item.publishedAt)}</span></summary>
+          <p>${esc(item.body)}</p>
+          ${relatedHtml}
+        </details>`
+    })
+    .join('\n      ')
+
   const body = `      <h1>Новости</h1>
       <p class="lead">Новости рынка фондов и акций: отчётности компаний, дивиденды, обзоры рынка.</p>
-      <ul class="card-list">
-      ${newsCards(news)}
-      </ul>`
+      ${items}
+
+      <h2>Подписка на рассылку</h2>
+      <p class="lead">Оставьте email, чтобы получать сводку новостей рынка (в рамках лабораторной — без реальной отправки писем).</p>
+
+      <form class="stacked-form" id="subscribe-form">
+        <label>Email
+          <input type="email" name="email" required>
+        </label>
+        <button type="submit">Подписаться</button>
+      </form>
+
+      <p class="success-state" id="subscribe-success" hidden>Спасибо! Вы подписаны на рассылку.</p>
+      <p class="muted">Всего подписчиков: <span id="subscriber-count">0</span></p>`
 
   register('news', 'Новости', 'news.html')
   return page({
@@ -459,85 +503,6 @@ function newsListPage() {
     title: 'Новости',
     description: 'Новости рынка фондов и акций: отчётности компаний, дивиденды, обзоры рынка.',
     keywords: 'новости, фонды, акции, дивиденды, рынок',
-    body,
-  })
-}
-
-function newsDetailPage(item) {
-  const related = item.relatedInstrumentId ? findInstrument(item.relatedInstrumentId) : null
-  const relatedHtml = related
-    ? `<p>Связанный инструмент: <a href="${instrumentUrl(related.ticker)}">${esc(related.ticker)} — ${esc(related.name)}</a></p>`
-    : ''
-  const body = `      <p class="breadcrumb"><a href="news.html">← Все новости</a></p>
-      <h1>${esc(item.title)}</h1>
-      <p class="muted">${esc(item.publishedAt)}</p>
-      <p class="lead">${esc(item.body)}</p>
-      ${relatedHtml}`
-
-  register(`news-${item.id}`, `Новость: ${item.title}`, `news-${item.id}.html`)
-  return page({
-    id: `news-${item.id}`,
-    title: item.title,
-    description: item.body.slice(0, 160),
-    keywords: 'новость, фонды, акции, рынок',
-    body,
-  })
-}
-
-function forumPage() {
-  const body = `      <h1>Форум</h1>
-      <p class="lead">Обсуждайте фонды, акции и инвестиционные стратегии с другими читателями сайта.</p>
-
-      <ul class="card-list" id="forum-list">
-      ${forumItems(initialForumTopics)}
-      </ul>
-
-      <h2>Создать новую тему</h2>
-      <form class="stacked-form" id="forum-form">
-        <label>Ваше имя
-          <input name="authorName" required>
-        </label>
-        <label>Заголовок темы
-          <input name="title" required>
-        </label>
-        <button type="submit">Создать тему</button>
-      </form>`
-
-  register('forum', 'Форум', 'forum.html')
-  return page({
-    id: 'forum',
-    title: 'Форум',
-    description: 'Обсуждения инвесторов: темы про фонды, акции и стратегии на сайте Funds Lab.',
-    keywords: 'форум, обсуждение, инвестиции, фонды, акции',
-    body,
-  })
-}
-
-function forumTopicPage() {
-  const body = `      <p class="breadcrumb"><a href="forum.html">← Все темы</a></p>
-      <h1 data-topic-title>Тема форума</h1>
-      <p class="muted" data-topic-meta>Загрузка…</p>
-
-      <ul class="card-list" id="reply-list"></ul>
-
-      <h2 id="reply-heading">Ответить</h2>
-      <form class="stacked-form" id="reply-form" data-topic-id="">
-        <label>Ваше имя
-          <input name="authorName" required>
-        </label>
-        <label>Сообщение
-          <textarea name="message" rows="4" required></textarea>
-        </label>
-        <button type="submit">Отправить ответ</button>
-      </form>
-      <p class="empty-state" id="topic-missing" hidden>Тема не найдена. <a href="forum.html">Вернуться к списку тем</a>.</p>`
-
-  register('forum-topic', 'Тема форума', 'forum-topic.html')
-  return page({
-    id: 'forum-topic',
-    title: 'Тема форума',
-    description: 'Обсуждение на форуме Funds Lab.',
-    keywords: 'форум, тема, обсуждение',
     body,
   })
 }
@@ -612,30 +577,6 @@ function pollPage() {
   })
 }
 
-function subscribePage() {
-  const body = `      <h1>Подписка на рассылку</h1>
-      <p class="lead">Оставьте email, чтобы получать сводку новостей рынка (в рамках лабораторной — без реальной отправки писем).</p>
-
-      <form class="stacked-form" id="subscribe-form">
-        <label>Email
-          <input type="email" name="email" required>
-        </label>
-        <button type="submit">Подписаться</button>
-      </form>
-
-      <p class="success-state" id="subscribe-success" hidden>Спасибо! Вы подписаны на рассылку.</p>
-      <p class="muted">Всего подписчиков: <span id="subscriber-count">0</span></p>`
-
-  register('subscribe', 'Подписка на рассылку', 'subscribe.html')
-  return page({
-    id: 'subscribe',
-    title: 'Подписка на рассылку',
-    description: 'Подпишитесь на рассылку новостей о фондах и акциях от Funds Lab.',
-    keywords: 'рассылка, подписка, новости, email',
-    body,
-  })
-}
-
 function linksPage() {
   const categories = [...new Set(externalLinks.map((link) => link.category))]
   const toc = categories
@@ -686,7 +627,7 @@ function calendarPage() {
   const rows = sorted
     .map((event) => {
       const instrument = event.relatedInstrumentId ? findInstrument(event.relatedInstrumentId) : null
-      const link = instrument ? `<a href="${instrumentUrl(instrument.ticker)}">${esc(instrument.ticker)}</a>` : '—'
+      const link = instrument ? `<a href="catalog.html#${esc(instrument.ticker)}">${esc(instrument.ticker)}</a>` : '—'
       return `<tr>
           <td>${esc(event.eventDate)}</td>
           <td>${esc(event.title)}</td>
@@ -815,6 +756,189 @@ function notFoundPage() {
   })
 }
 
+/* --- Страницы-заглушки для следующих лабораторных работ --------------- */
+
+function xmlPage() {
+  const sample = instruments
+    .slice(0, 2)
+    .map(
+      (item) => `  <instrument ticker="${esc(item.ticker)}">
+    <name>${esc(item.name)}</name>
+    <type>${esc(item.type)}</type>
+    <exchange>${esc(findExchange(item.exchangeId) ? findExchange(item.exchangeId).code : '')}</exchange>
+    <price currency="${esc(item.currency)}">${esc(item.price)}</price>
+    <changePercent>${esc(item.changePercent)}</changePercent>
+  </instrument>`,
+    )
+    .join('\n')
+  const xmlSample = `<?xml version="1.0" encoding="UTF-8"?>
+<catalog>
+${sample}
+</catalog>`
+
+  const body = `      <h1>XML-данные каталога</h1>
+      <p class="lead">Каталог инструментов — это плоский статический список-реестр. В лабораторной работе №2 такие данные будут храниться в XML-файле и загружаться на страницу средствами JavaScript.</p>
+
+      <h2>Планируемая структура XML-документа</h2>
+      <p>Пример XML-описания инструментов каталога (фрагмент):</p>
+      <pre class="code-block"><code>${esc(xmlSample)}</code></pre>
+
+      <h2>Что будет реализовано</h2>
+      <ul>
+        <li>XML-файл с полным каталогом инструментов (элементы, атрибуты, вложенность).</li>
+        <li>Загрузка и разбор XML на клиенте (DOM Parser / fetch).</li>
+        <li>Отрисовка таблицы каталога из XML-данных с фильтрацией по бирже и сектору.</li>
+      </ul>
+
+      <p class="muted">Страница-заглушка: раздел будет реализован в лабораторной работе №2.</p>`
+
+  register('xml', 'XML', 'xml.html')
+  return page({
+    id: 'xml',
+    title: 'XML',
+    description: 'XML-хранение данных каталога Funds Lab — заглушка лабораторной работы №2.',
+    keywords: 'XML, данные, каталог, разметка',
+    body,
+  })
+}
+
+function dbPage() {
+  const body = `      <h1>База данных</h1>
+      <p class="lead">Сейчас данные сайта встроены в статические страницы. В лабораторной работе №3 каталог, новости и события переедут в базу данных PostgreSQL, а доступ к ним появится через backend на FastAPI + SQLAlchemy.</p>
+
+      <h2>Планируемая структура таблиц</h2>
+      <table class="data-table">
+        <caption>Проект схемы базы данных</caption>
+        <thead>
+          <tr>
+            <th scope="col">Таблица</th>
+            <th scope="col">Содержимое</th>
+            <th scope="col">Связи</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>exchanges</td><td>Биржи: код, название, страна, часовой пояс</td><td>1—M instruments</td></tr>
+          <tr><td>sectors</td><td>Секторы экономики</td><td>1—M instruments</td></tr>
+          <tr><td>instruments</td><td>Каталог: тикер, название, тип, цена, объём торгов</td><td>FK → exchanges, sectors</td></tr>
+          <tr><td>news</td><td>Новости рынка, связь с инструментами</td><td>FK → instruments</td></tr>
+          <tr><td>events</td><td>Календарь событий (отчётности, дивиденды)</td><td>FK → instruments</td></tr>
+          <tr><td>ratings</td><td>Оценки инструментов пользователями</td><td>FK → instruments</td></tr>
+        </tbody>
+      </table>
+
+      <p class="muted">Страница-заглушка: раздел будет реализован в лабораторной работе №3.</p>`
+
+  register('db', 'БД', 'db.html')
+  return page({
+    id: 'db',
+    title: 'БД',
+    description: 'База данных PostgreSQL для каталога и новостей Funds Lab — заглушка лабораторной работы №3.',
+    keywords: 'база данных, PostgreSQL, SQLAlchemy, FastAPI',
+    body,
+  })
+}
+
+function rssPage() {
+  const body = `      <h1>RSS-лента</h1>
+      <p class="lead">Лента новостей сайта в формате RSS позволит подписываться на обновления «Последних новостей» через любой RSS-ридер.</p>
+
+      <h2>Как это будет работать</h2>
+      <ul>
+        <li>При сборке сайта будет генерироваться файл <code>rss.xml</code> с последними новостями каталога.</li>
+        <li>В заголовке страниц появится ссылка <code>&lt;link rel="alternate" type="application/rss+xml"&gt;</code>.</li>
+        <li>Адрес ленты: <code>rss.xml</code> — её можно добавить в любой агрегатор новостей.</li>
+      </ul>
+
+      <p class="muted">Страница-заглушка: лента будет реализована в следующей лабораторной работе.</p>`
+
+  register('rss', 'RSS', 'rss.html')
+  return page({
+    id: 'rss',
+    title: 'RSS',
+    description: 'RSS-лента новостей Funds Lab — заглушка следующей лабораторной работы.',
+    keywords: 'RSS, лента новостей, подписка',
+    body,
+  })
+}
+
+/* --- Дополнительные сервисы ------------------------------------------- */
+
+function converterPage() {
+  const body = `      <h1>Конвертер валют</h1>
+      <p class="lead">Пересчёт суммы между рублём, долларом, евро и юанем по актуальному курсу ЦБ РФ.</p>
+
+      <form class="stacked-form" id="converter-form">
+        <label>Сумма
+          <input type="number" name="amount" value="100" min="0" step="any" required>
+        </label>
+        <label>Из валюты
+          <select name="from">
+            <option value="RUB">RUB — рубль</option>
+            <option value="USD">USD — доллар США</option>
+            <option value="EUR">EUR — евро</option>
+            <option value="CNY">CNY — юань</option>
+          </select>
+        </label>
+        <label>В валюту
+          <select name="to">
+            <option value="USD">USD — доллар США</option>
+            <option value="EUR">EUR — евро</option>
+            <option value="CNY">CNY — юань</option>
+            <option value="RUB">RUB — рубль</option>
+          </select>
+        </label>
+        <button type="submit">Конвертировать</button>
+      </form>
+
+      <p class="success-state" id="converter-result" hidden></p>
+      <p class="muted" id="converter-rate"></p>`
+
+  register('converter', 'Конвертер валют', 'converter.html')
+  return page({
+    id: 'converter',
+    title: 'Конвертер валют',
+    description: 'Конвертер валют по актуальному курсу ЦБ РФ: рубль, доллар, евро, юань.',
+    keywords: 'конвертер валют, курс ЦБ РФ, доллар, евро, юань',
+    body,
+  })
+}
+
+function calculatorPage() {
+  const body = `      <h1>Инвестиционный калькулятор</h1>
+      <p class="lead">Расчёт будущей суммы вклада с учётом ежемесячных пополнений и сложного процента.</p>
+
+      <form class="stacked-form" id="calculator-form">
+        <label>Начальная сумма, ₽
+          <input type="number" name="initial" value="100000" min="0" step="any" required>
+        </label>
+        <label>Пополнение в месяц, ₽
+          <input type="number" name="monthly" value="10000" min="0" step="any" required>
+        </label>
+        <label>Годовая доходность, %
+          <input type="number" name="rate" value="10" min="0" max="100" step="any" required>
+        </label>
+        <label>Срок, лет
+          <input type="number" name="years" value="5" min="1" max="50" step="1" required>
+        </label>
+        <button type="submit">Рассчитать</button>
+      </form>
+
+      <dl class="fact-list" id="calculator-result" hidden>
+        <div><dt>Будущая сумма</dt><dd id="calc-total"></dd></div>
+        <div><dt>Всего вложено</dt><dd id="calc-invested"></dd></div>
+        <div><dt>Доход</dt><dd id="calc-profit"></dd></div>
+      </dl>`
+
+  register('calculator', 'Инвестиционный калькулятор', 'calculator.html')
+  return page({
+    id: 'calculator',
+    title: 'Инвестиционный калькулятор',
+    description: 'Расчёт доходности инвестиций с ежемесячными пополнениями и сложным процентом.',
+    keywords: 'инвестиционный калькулятор, сложный процент, доходность, вклад',
+    body,
+  })
+}
+
 /* --- Сборка ------------------------------------------------------------ */
 
 function buildSearchIndex() {
@@ -823,12 +947,12 @@ function buildSearchIndex() {
     entries.push({
       type: 'Инструмент',
       title: `${item.ticker} — ${item.name}`,
-      url: instrumentUrl(item.ticker),
+      url: `catalog.html#${item.ticker}`,
       text: `${item.ticker} ${item.name} ${item.description}`,
     })
   })
   news.forEach((item) => {
-    entries.push({ type: 'Новость', title: item.title, url: `news-${item.id}.html`, text: `${item.title} ${item.body}` })
+    entries.push({ type: 'Новость', title: item.title, url: `news.html#news-${item.id}`, text: `${item.title} ${item.body}` })
   })
   registry.forEach((item) => {
     entries.push({ type: 'Страница', title: item.label, url: item.url, text: item.label })
@@ -849,20 +973,17 @@ function main() {
   const files = {}
   files['index.html'] = homePage()
   files['catalog.html'] = catalogPage()
-  instruments.forEach((item) => {
-    files[instrumentUrl(item.ticker)] = instrumentPage(item)
-  })
   files['exchanges.html'] = exchangesPage()
   files['news.html'] = newsListPage()
-  news.forEach((item) => {
-    files[`news-${item.id}.html`] = newsDetailPage(item)
-  })
-  files['forum.html'] = forumPage()
-  files['forum-topic.html'] = forumTopicPage()
-  files['guestbook.html'] = guestbookPage()
+  files['xml.html'] = xmlPage()
+  files['db.html'] = dbPage()
+  files['rss.html'] = rssPage()
   files['search.html'] = searchPage()
+  files['forum.html'] = forumPage()
+  files['guestbook.html'] = guestbookPage()
   files['poll.html'] = pollPage()
-  files['subscribe.html'] = subscribePage()
+  files['converter.html'] = converterPage()
+  files['calculator.html'] = calculatorPage()
   files['links.html'] = linksPage()
   files['calendar.html'] = calendarPage()
   files['stats.html'] = statsPage()

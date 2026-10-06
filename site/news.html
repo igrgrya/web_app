@@ -10,8 +10,8 @@
   <meta property="og:title" content="Новости — Funds Lab">
   <meta property="og:description" content="Новости рынка фондов и акций: отчётности компаний, дивиденды, обзоры рынка.">
   <meta property="og:type" content="website">
-  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=dff0f58a0a">
-  <link rel="stylesheet" href="styles.css?v=dff0f58a0a">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=6a6b1aeba1">
+  <link rel="stylesheet" href="styles.css?v=6a6b1aeba1">
 </head>
 <body data-page="news">
   <div class="site-shell">
@@ -34,33 +34,44 @@
     <main class="site-main">
       <h1>Новости</h1>
       <p class="lead">Новости рынка фондов и акций: отчётности компаний, дивиденды, обзоры рынка.</p>
-      <ul class="card-list">
-      <li class="card" id="news-1">
-        <h2><a href="news-1.html">Сбербанк отчитался о рекордной прибыли</a></h2>
-        <p class="muted">2026-09-20 &middot; <a href="instrument-SBER.html">SBER</a></p>
-        <p>Банк опубликовал квартальную отчётность, превысив ожидания аналитиков рынка. Чистая прибыль выросла на фоне роста кредитного портфеля и коми…</p>
-      </li>
-      <li class="card" id="news-2">
-        <h2><a href="news-2.html">Газпром объявил дивиденды</a></h2>
-        <p class="muted">2026-09-18 &middot; <a href="instrument-GAZP.html">GAZP</a></p>
-        <p>Совет директоров рекомендовал выплату дивидендов по итогам года. Финальное решение будет принято на годовом собрании акционеров.…</p>
-      </li>
-      <li class="card" id="news-3">
-        <h2><a href="news-3.html">Apple представила новый продукт</a></h2>
-        <p class="muted">2026-09-15 &middot; <a href="instrument-AAPL.html">AAPL</a></p>
-        <p>Компания анонсировала обновление линейки устройств на ежегодной презентации, включая улучшенные характеристики и новые функции.…</p>
-      </li>
-      <li class="card" id="news-4">
-        <h2><a href="news-4.html">S&amp;P 500 обновил исторический максимум</a></h2>
-        <p class="muted">2026-09-12 &middot; <a href="instrument-SPY.html">SPY</a></p>
-        <p>Индекс закрылся на новом рекордном уровне на фоне позитивной макроэкономической статистики и сильных корпоративных отчётов.…</p>
-      </li>
-      <li class="card" id="news-5">
-        <h2><a href="news-5.html">Обзор рынка: итоги недели</a></h2>
-        <p class="muted">2026-09-10</p>
-        <p>Общий обзор движения основных индексов и инструментов за прошедшую неделю: что выросло, что просело и почему.…</p>
-      </li>
-      </ul>
+      <details class="news-item" id="news-1">
+          <summary><strong>Сбербанк отчитался о рекордной прибыли</strong> <span class="muted">2026-09-20</span></summary>
+          <p>Банк опубликовал квартальную отчётность, превысив ожидания аналитиков рынка. Чистая прибыль выросла на фоне роста кредитного портфеля и комиссионных доходов.</p>
+          <p>Связанный инструмент: <a href="catalog.html#SBER">SBER — Сбербанк</a></p>
+        </details>
+      <details class="news-item" id="news-2">
+          <summary><strong>Газпром объявил дивиденды</strong> <span class="muted">2026-09-18</span></summary>
+          <p>Совет директоров рекомендовал выплату дивидендов по итогам года. Финальное решение будет принято на годовом собрании акционеров.</p>
+          <p>Связанный инструмент: <a href="catalog.html#GAZP">GAZP — Газпром</a></p>
+        </details>
+      <details class="news-item" id="news-3">
+          <summary><strong>Apple представила новый продукт</strong> <span class="muted">2026-09-15</span></summary>
+          <p>Компания анонсировала обновление линейки устройств на ежегодной презентации, включая улучшенные характеристики и новые функции.</p>
+          <p>Связанный инструмент: <a href="catalog.html#AAPL">AAPL — Apple Inc.</a></p>
+        </details>
+      <details class="news-item" id="news-4">
+          <summary><strong>S&amp;P 500 обновил исторический максимум</strong> <span class="muted">2026-09-12</span></summary>
+          <p>Индекс закрылся на новом рекордном уровне на фоне позитивной макроэкономической статистики и сильных корпоративных отчётов.</p>
+          <p>Связанный инструмент: <a href="catalog.html#SPY">SPY — SPDR S&amp;P 500 ETF Trust</a></p>
+        </details>
+      <details class="news-item" id="news-5">
+          <summary><strong>Обзор рынка: итоги недели</strong> <span class="muted">2026-09-10</span></summary>
+          <p>Общий обзор движения основных индексов и инструментов за прошедшую неделю: что выросло, что просело и почему.</p>
+          
+        </details>
+
+      <h2>Подписка на рассылку</h2>
+      <p class="lead">Оставьте email, чтобы получать сводку новостей рынка (в рамках лабораторной — без реальной отправки писем).</p>
+
+      <form class="stacked-form" id="subscribe-form">
+        <label>Email
+          <input type="email" name="email" required>
+        </label>
+        <button type="submit">Подписаться</button>
+      </form>
+
+      <p class="success-state" id="subscribe-success" hidden>Спасибо! Вы подписаны на рассылку.</p>
+      <p class="muted">Всего подписчиков: <span id="subscriber-count">0</span></p>
     </main>
     <footer class="site-footer">
     <nav aria-label="Дополнительные разделы">
@@ -70,7 +81,7 @@
     <p class="author-note">Учебный проект по дисциплине «Веб-программирование». Автор: студент группы БИЗ-Б23, Корнюшкин Игорь.</p>
   </footer>
   </div>
-  <script src="data.js?v=dff0f58a0a"></script>
-  <script src="app.js?v=dff0f58a0a"></script>
+  <script src="data.js?v=6a6b1aeba1"></script>
+  <script src="app.js?v=6a6b1aeba1"></script>
 </body>
 </html>
