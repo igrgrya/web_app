@@ -200,15 +200,44 @@
     return updated.filter(function (topic) { return topic.id === Number(topicId) })[0]
   }
 
-  function renderForumList() {
+  function renderForumList(openTopicId) {
     var list = byId('forum-list')
     if (!list) return
     var topics = getForumTopics()
     list.innerHTML = topics.map(function (topic) {
-      return '<li class="card"><h2><a href="forum-topic.html?id=' + topic.id + '">' + esc(topic.title) + '</a></h2>' +
-        '<p class="muted">Автор: ' + esc(topic.authorName) + ' &middot; ' + esc(topic.createdAt) +
-        ' &middot; Ответов: ' + (topic.replies ? topic.replies.length : 0) + '</p></li>'
+      var replies = topic.replies || []
+      var replyItems = replies.length
+        ? replies.map(function (reply) {
+            return '<li class="card"><p>' + esc(reply.message) + '</p>' +
+              '<p class="muted">' + esc(reply.authorName) + ' &middot; ' + esc(reply.createdAt) + '</p></li>'
+          }).join('')
+        : '<li class="empty-state">Ответов пока нет.</li>'
+      return '<details class="forum-topic-block" id="topic-' + topic.id + '"' +
+          (openTopicId === topic.id ? ' open' : '') + '>' +
+        '<summary><strong>' + esc(topic.title) + '</strong> — ' + esc(topic.authorName) + ', ' +
+          esc(topic.createdAt) + ' &middot; ответов: ' + replies.length + '</summary>' +
+        '<ul class="card-list">' + replyItems + '</ul>' +
+        '<form class="stacked-form reply-form" data-topic-id="' + topic.id + '">' +
+          '<label>Ваше имя <input name="authorName" required></label>' +
+          '<label>Сообщение <textarea name="message" rows="3" required></textarea></label>' +
+          '<button type="submit">Ответить</button>' +
+        '</form>' +
+      '</details>'
     }).join('')
+
+    // Формы ответов: одна внутри каждой темы.
+    var forms = list.querySelectorAll('.reply-form')
+    for (var i = 0; i < forms.length; i++) {
+      forms[i].addEventListener('submit', function (event) {
+        event.preventDefault()
+        var form = event.currentTarget
+        var authorName = form.elements.authorName.value.trim()
+        var message = form.elements.message.value.trim()
+        if (!authorName || !message) return
+        addForumReply(form.getAttribute('data-topic-id'), { authorName: authorName, message: message })
+        renderForumList(Number(form.getAttribute('data-topic-id')))
+      })
+    }
   }
 
   function initForum() {
@@ -220,55 +249,8 @@
       var authorName = form.elements.authorName.value.trim()
       var title = form.elements.title.value.trim()
       if (!authorName || !title) return
-      addForumTopic({ title: title, authorName: authorName })
-      renderForumList()
-      form.reset()
-    })
-  }
-
-  function initForumTopic() {
-    var list = byId('reply-list')
-    var form = byId('reply-form')
-    if (!list || !form) return
-    var topicId = Number(new URLSearchParams(window.location.search).get('id'))
-    var titleEl = document.querySelector('[data-topic-title]')
-    var metaEl = document.querySelector('[data-topic-meta]')
-    var heading = byId('reply-heading')
-    var missing = byId('topic-missing')
-    form.setAttribute('data-topic-id', String(topicId))
-
-    function render() {
-      var topic = getForumTopics().filter(function (t) { return t.id === topicId })[0]
-      if (!topic) {
-        if (titleEl) titleEl.textContent = 'Тема не найдена'
-        if (metaEl) metaEl.hidden = true
-        if (heading) heading.hidden = true
-        form.hidden = true
-        if (missing) missing.hidden = false
-        return
-      }
-      if (titleEl) titleEl.textContent = topic.title
-      if (metaEl) metaEl.textContent = 'Автор темы: ' + topic.authorName + ' · ' + topic.createdAt
-      document.title = topic.title + ' — Funds Lab'
-      var replies = topic.replies ? topic.replies : []
-      if (!replies.length) {
-        list.innerHTML = '<li class="empty-state">Ответов пока нет.</li>'
-        return
-      }
-      list.innerHTML = replies.map(function (reply) {
-        return '<li class="card"><p>' + esc(reply.message) + '</p>' +
-          '<p class="muted">' + esc(reply.authorName) + ' &middot; ' + esc(reply.createdAt) + '</p></li>'
-      }).join('')
-    }
-
-    render()
-    form.addEventListener('submit', function (event) {
-      event.preventDefault()
-      var authorName = form.elements.authorName.value.trim()
-      var message = form.elements.message.value.trim()
-      if (!authorName || !message) return
-      addForumReply(topicId, { authorName: authorName, message: message })
-      render()
+      var topic = addForumTopic({ title: title, authorName: authorName })
+      renderForumList(topic.id)
       form.reset()
     })
   }
@@ -287,12 +269,18 @@
     return all[ticker]
   }
 
-  function initRating() {
-    var widget = byId('rating')
-    if (!widget) return
+  function initRatings() {
+    var widgets = document.querySelectorAll('.rating')
+    for (var i = 0; i < widgets.length; i++) {
+      attachRating(widgets[i])
+    }
+  }
+
+  function attachRating(widget) {
     var ticker = widget.getAttribute('data-ticker')
     var starsBox = widget.querySelector('.star-rating-stars')
     var summary = widget.querySelector('[data-rating-summary]')
+    if (!ticker || !starsBox || !summary) return
 
     function average(values) {
       if (!values.length) return null
@@ -593,6 +581,104 @@
       .catch(function () { box.textContent = 'Не удалось загрузить курсы валют.' })
   }
 
+  /* --- Конвертер валют (дополнительный сервис) ----------------------- */
+
+  function initConverter() {
+    var form = byId('converter-form')
+    if (!form) return
+    var resultBox = byId('converter-result')
+    var rateBox = byId('converter-rate')
+    var cachedRates = null
+
+    // Курс ЦБ РФ: рублей за единицу валюты (RUB = 1).
+    function rubRates(data) {
+      var valute = data && data.Valute
+      if (!valute) return null
+      var rates = { RUB: 1 }
+      ;['USD', 'EUR', 'CNY'].forEach(function (code) {
+        var value = valute[code]
+        if (value && typeof value.Value === 'number') {
+          rates[code] = value.Value / (value.Nominal || 1)
+        }
+      })
+      return rates.USD && rates.EUR && rates.CNY ? rates : null
+    }
+
+    function show(amount, from, to, rates) {
+      var total = (amount * rates[from]) / rates[to]
+      resultBox.textContent = formatNumber(amount, 2) + ' ' + from + ' = ' +
+        formatNumber(total, 2) + ' ' + to
+      resultBox.hidden = false
+      var date = cachedRates.date ? new Date(cachedRates.date).toLocaleDateString('ru-RU') : ''
+      rateBox.textContent = 'Курс ЦБ РФ' + (date ? ' на ' + date : '') + ': 1 USD — ' +
+        formatNumber(rates.USD, 2) + ' ₽, 1 EUR — ' + formatNumber(rates.EUR, 2) + ' ₽, 1 CNY — ' +
+        formatNumber(rates.CNY, 2) + ' ₽'
+    }
+
+    function convert() {
+      var amount = Number(form.elements.amount.value)
+      var from = form.elements.from.value
+      var to = form.elements.to.value
+      if (!amount || amount < 0) return
+      if (cachedRates) {
+        show(amount, from, to, cachedRates.rates)
+        return
+      }
+      resultBox.textContent = 'Загрузка курсов…'
+      resultBox.hidden = false
+      fetchJSON('https://www.cbr-xml-daily.ru/daily_json.js', 8000)
+        .then(function (data) {
+          var rates = rubRates(data)
+          if (!rates) throw new Error('no data')
+          cachedRates = { rates: rates, date: data.Date }
+          show(amount, from, to, rates)
+        })
+        .catch(function () {
+          resultBox.textContent = 'Не удалось загрузить курсы — конвертация недоступна.'
+        })
+    }
+
+    form.addEventListener('submit', function (event) {
+      event.preventDefault()
+      convert()
+    })
+  }
+
+  /* --- Инвестиционный калькулятор (дополнительный сервис) ------------ */
+
+  function initCalculator() {
+    var form = byId('calculator-form')
+    if (!form) return
+    var box = byId('calculator-result')
+
+    function money(value) {
+      return Math.round(value).toLocaleString('ru-RU') + ' ₽'
+    }
+
+    form.addEventListener('submit', function (event) {
+      event.preventDefault()
+      var initialSum = Number(form.elements.initial.value)
+      var monthly = Number(form.elements.monthly.value)
+      var rate = Number(form.elements.rate.value) / 100 / 12
+      var months = Number(form.elements.years.value) * 12
+      if (initialSum < 0 || monthly < 0 || !months) return
+
+      var growth = Math.pow(1 + rate, months)
+      var total = initialSum * growth
+      if (rate > 0) {
+        total += monthly * ((growth - 1) / rate)
+      } else {
+        total += monthly * months
+      }
+      var invested = initialSum + monthly * months
+
+      byId('calc-total').textContent = money(total)
+      byId('calc-invested').textContent = money(invested)
+      byId('calc-profit').textContent = money(total - invested)
+      box.hidden = false
+    })
+  }
+
   /* --- Запуск --------------------------------------------------------- */
 
   function init() {
@@ -600,10 +686,17 @@
     recordPageView(pageId)
     recordVisit()
 
+    // Ссылки вида catalog.html#SBER или news.html#news-2 ведут на
+    // свёрнутый <details> — раскрываем целевой блок.
+    var hash = window.location.hash
+    if (hash) {
+      var anchor = document.getElementById(decodeURIComponent(hash.slice(1)))
+      if (anchor && anchor.tagName === 'DETAILS') anchor.open = true
+    }
+
     initGuestbook()
     initForum()
-    initForumTopic()
-    initRating()
+    initRatings()
     initPoll()
     initSubscribe()
     initSearch()
@@ -611,6 +704,8 @@
     initStats()
     initWeather()
     initCurrency()
+    initConverter()
+    initCalculator()
     renderCounter()
   }
 

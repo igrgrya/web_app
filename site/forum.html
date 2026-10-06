@@ -10,8 +10,8 @@
   <meta property="og:title" content="Форум — Funds Lab">
   <meta property="og:description" content="Обсуждения инвесторов: темы про фонды, акции и стратегии на сайте Funds Lab.">
   <meta property="og:type" content="website">
-  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=dff0f58a0a">
-  <link rel="stylesheet" href="styles.css?v=dff0f58a0a">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=6a6b1aeba1">
+  <link rel="stylesheet" href="styles.css?v=6a6b1aeba1">
 </head>
 <body data-page="forum">
   <div class="site-shell">
@@ -35,12 +35,23 @@
       <h1>Форум</h1>
       <p class="lead">Обсуждайте фонды, акции и инвестиционные стратегии с другими читателями сайта.</p>
 
-      <ul class="card-list" id="forum-list">
-      <li class="card">
-        <h2><a href="forum-topic.html?id=1">Как выбрать первый ETF?</a></h2>
-        <p class="muted">Автор: Дмитрий &middot; 2026-09-14 &middot; Ответов: 2</p>
-      </li>
-      </ul>
+      <div id="forum-list">
+      <details class="forum-topic-block" id="topic-1">
+          <summary><strong>Как выбрать первый ETF?</strong> — Дмитрий, 2026-09-14 &middot; ответов: 2</summary>
+          <ul class="card-list">
+            <li class="card"><p>Начните с широких индексных фондов вроде SPY.</p>
+              <p class="muted">Ирина &middot; 2026-09-14</p></li>
+            <li class="card"><p>Спасибо, посмотрю подробнее про диверсификацию.</p>
+              <p class="muted">Дмитрий &middot; 2026-09-15</p></li>
+            
+          </ul>
+          <form class="stacked-form reply-form" data-topic-id="1">
+            <label>Ваше имя <input name="authorName" required></label>
+            <label>Сообщение <textarea name="message" rows="3" required></textarea></label>
+            <button type="submit">Ответить</button>
+          </form>
+        </details>
+      </div>
 
       <h2>Создать новую тему</h2>
       <form class="stacked-form" id="forum-form">
@@ -61,7 +72,7 @@
     <p class="author-note">Учебный проект по дисциплине «Веб-программирование». Автор: студент группы БИЗ-Б23, Корнюшкин Игорь.</p>
   </footer>
   </div>
-  <script src="data.js?v=dff0f58a0a"></script>
-  <script src="app.js?v=dff0f58a0a"></script>
+  <script src="data.js?v=6a6b1aeba1"></script>
+  <script src="app.js?v=6a6b1aeba1"></script>
 </body>
 </html>

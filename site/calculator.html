@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Инвестиционный калькулятор — Funds Lab</title>
+  <meta name="description" content="Расчёт доходности инвестиций с ежемесячными пополнениями и сложным процентом.">
+  <meta name="keywords" content="инвестиционный калькулятор, сложный процент, доходность, вклад">
+  <meta name="author" content="Funds Lab">
+  <meta property="og:title" content="Инвестиционный калькулятор — Funds Lab">
+  <meta property="og:description" content="Расчёт доходности инвестиций с ежемесячными пополнениями и сложным процентом.">
+  <meta property="og:type" content="website">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=6a6b1aeba1">
+  <link rel="stylesheet" href="styles.css?v=6a6b1aeba1">
+</head>
+<body data-page="calculator">
+  <div class="site-shell">
+    <header class="site-header">
+    <div class="site-header-inner">
+      <a class="brand" href="index.html">Funds Lab</a>
+      <nav aria-label="Основная навигация">
+        <ul class="nav-list"><li><a href="index.html">Главная</a></li><li><a href="catalog.html">Каталог</a></li><li><a href="exchanges.html">Биржи</a></li><li><a href="news.html">Новости</a></li><li><a href="xml.html">XML</a></li><li><a href="db.html">БД</a></li><li><a href="rss.html">RSS</a></li><li><a href="search.html">Поиск</a></li><li><a href="forum.html">Форум</a></li><li><a href="about.html">О проекте</a></li></ul>
+      </nav>
+    </div>
+    <form class="site-search" action="search.html" method="get" role="search">
+      <input type="search" name="q" placeholder="Поиск по сайту: Сбербанк, ETF, дивиденды…" aria-label="Поиск по сайту">
+      <button type="submit">Найти</button>
+    </form>
+    <div class="informers">
+      <div class="informer informer--weather" id="weather-widget">Погода: загрузка…</div>
+      <div class="informer informer--currency" id="currency-widget">Курсы валют: загрузка…</div>
+    </div>
+  </header>
+    <main class="site-main">
+      <h1>Инвестиционный калькулятор</h1>
+      <p class="lead">Расчёт будущей суммы вклада с учётом ежемесячных пополнений и сложного процента.</p>
+
+      <form class="stacked-form" id="calculator-form">
+        <label>Начальная сумма, ₽
+          <input type="number" name="initial" value="100000" min="0" step="any" required>
+        </label>
+        <label>Пополнение в месяц, ₽
+          <input type="number" name="monthly" value="10000" min="0" step="any" required>
+        </label>
+        <label>Годовая доходность, %
+          <input type="number" name="rate" value="10" min="0" max="100" step="any" required>
+        </label>
+        <label>Срок, лет
+          <input type="number" name="years" value="5" min="1" max="50" step="1" required>
+        </label>
+        <button type="submit">Рассчитать</button>
+      </form>
+
+      <dl class="fact-list" id="calculator-result" hidden>
+        <div><dt>Будущая сумма</dt><dd id="calc-total"></dd></div>
+        <div><dt>Всего вложено</dt><dd id="calc-invested"></dd></div>
+        <div><dt>Доход</dt><dd id="calc-profit"></dd></div>
+      </dl>
+    </main>
+    <footer class="site-footer">
+    <nav aria-label="Дополнительные разделы">
+      <ul class="nav-list nav-list--footer"><li><a href="guestbook.html">Гостевая книга</a></li><li><a href="poll.html">Опрос</a></li><li><a href="converter.html">Конвертер валют</a></li><li><a href="calculator.html" aria-current="page">Инвестиционный калькулятор</a></li><li><a href="links.html">Полезные ссылки</a></li><li><a href="calendar.html">Календарь событий</a></li><li><a href="stats.html">Статистика посещений</a></li></ul>
+    </nav>
+    <p class="visit-counter">Всего посещений сайта: <span data-visit-total>0</span></p>
+    <p class="author-note">Учебный проект по дисциплине «Веб-программирование». Автор: студент группы БИЗ-Б23, Корнюшкин Игорь.</p>
+  </footer>
+  </div>
+  <script src="data.js?v=6a6b1aeba1"></script>
+  <script src="app.js?v=6a6b1aeba1"></script>
+</body>
+</html>
