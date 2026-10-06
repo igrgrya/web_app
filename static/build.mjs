@@ -41,6 +41,7 @@ const ASSET_VERSION = createHash('sha1')
   )
   .update(readFileSync(join(SRC, 'app.js'), 'utf8'))
   .update(readFileSync(join(SRC, 'styles.css'), 'utf8'))
+  .update(readFileSync(join(SRC, '../assets/hero.png')))
   .digest('hex')
   .slice(0, 10)
 
@@ -90,18 +91,22 @@ const NAV = [
   { id: 'catalog', label: 'Каталог', url: 'catalog.html' },
   { id: 'exchanges', label: 'Биржи', url: 'exchanges.html' },
   { id: 'news', label: 'Новости', url: 'news.html' },
+  { id: 'xml', label: 'XML', url: 'xml.html' },
+  { id: 'db', label: 'БД', url: 'db.html' },
+  { id: 'rss', label: 'RSS', url: 'rss.html' },
   { id: 'search', label: 'Поиск', url: 'search.html' },
+  { id: 'forum', label: 'Форум', url: 'forum.html' },
+  { id: 'about', label: 'О проекте', url: 'about.html' },
 ]
 
 const FOOTER_LINKS = [
-  { id: 'forum', label: 'Форум', url: 'forum.html' },
   { id: 'guestbook', label: 'Гостевая книга', url: 'guestbook.html' },
   { id: 'poll', label: 'Опрос', url: 'poll.html' },
-  { id: 'subscribe', label: 'Рассылка', url: 'subscribe.html' },
+  { id: 'converter', label: 'Конвертер валют', url: 'converter.html' },
+  { id: 'calculator', label: 'Инвестиционный калькулятор', url: 'calculator.html' },
   { id: 'links', label: 'Полезные ссылки', url: 'links.html' },
-  { id: 'calendar', label: 'Календарь', url: 'calendar.html' },
+  { id: 'calendar', label: 'Календарь событий', url: 'calendar.html' },
   { id: 'stats', label: 'Статистика посещений', url: 'stats.html' },
-  { id: 'about', label: 'О проекте', url: 'about.html' },
 ]
 
 function navLink(item, active) {
@@ -117,10 +122,18 @@ function header(active) {
         <ul class="nav-list">${NAV.map((item) => navLink(item, active)).join('')}</ul>
       </nav>
     </div>
+    <form class="site-search" action="search.html" method="get" role="search">
+      <input type="search" name="q" placeholder="Поиск по сайту: Сбербанк, ETF, дивиденды…" aria-label="Поиск по сайту">
+      <button type="submit">Найти</button>
+    </form>
+    <div class="informers">
+      <div class="informer informer--weather" id="weather-widget">Погода: загрузка…</div>
+      <div class="informer informer--currency" id="currency-widget">Курсы валют: загрузка…</div>
+    </div>
   </header>`
 }
 
-function footer() {
+function footer(active) {
   return `<footer class="site-footer">
     <nav aria-label="Дополнительные разделы">
       <ul class="nav-list nav-list--footer">${FOOTER_LINKS.map((item) => navLink(item, active)).join('')}</ul>
@@ -130,10 +143,7 @@ function footer() {
   </footer>`
 }
 
-let active = ''
-
 function page({ id, title, description, keywords, body, extraScripts = '' }) {
-  active = id
   const html = `<!doctype html>
 <html lang="ru">
 <head>
@@ -146,7 +156,7 @@ function page({ id, title, description, keywords, body, extraScripts = '' }) {
   <meta property="og:title" content="${esc(title)} — Funds Lab">
   <meta property="og:description" content="${esc(description)}">
   <meta property="og:type" content="website">
-  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=${ASSET_VERSION}">
   <link rel="stylesheet" href="styles.css?v=${ASSET_VERSION}">
 </head>
 <body data-page="${esc(id)}">
@@ -155,7 +165,7 @@ function page({ id, title, description, keywords, body, extraScripts = '' }) {
     <main class="site-main">
 ${body}
     </main>
-    ${footer()}
+    ${footer(id)}
   </div>
   <script src="data.js?v=${ASSET_VERSION}"></script>
 ${extraScripts}  <script src="app.js?v=${ASSET_VERSION}"></script>
@@ -174,7 +184,7 @@ function instrumentTableRows() {
       const sector = findSector(item.sectorId)
       const cls = item.changePercent >= 0 ? 'change--up' : 'change--down'
       const sign = item.changePercent >= 0 ? '+' : ''
-      return `<tr data-exchange="${item.exchangeId}" data-sector="${item.sectorId}">
+      return `<tr data-exchange="${item.exchangeId}" data-sector="${item.sectorId}" id="${esc(item.ticker)}">
           <td><a href="${instrumentUrl(item.ticker)}">${esc(item.ticker)}</a></td>
           <td>${esc(item.name)}</td>
           <td>${esc(exchange ? exchange.code : '—')}</td>
@@ -193,7 +203,7 @@ function newsCards(items) {
       const link = related
         ? ` &middot; <a href="${instrumentUrl(related.ticker)}">${esc(related.ticker)}</a>`
         : ''
-      return `<li class="card">
+      return `<li class="card" id="news-${esc(item.id)}">
         <h2><a href="news-${item.id}.html">${esc(item.title)}</a></h2>
         <p class="muted">${esc(dateFmt(item.publishedAt))}${link}</p>
         <p>${esc(item.body.slice(0, 140))}…</p>
@@ -245,7 +255,7 @@ function homePage() {
       const cls = item.changePercent >= 0 ? 'change--up' : 'change--down'
       const sign = item.changePercent >= 0 ? '+' : ''
       return `<li class="card">
-          <a href="${instrumentUrl(item.ticker)}"><strong>${esc(item.ticker)}</strong> — ${esc(item.name)}</a>
+          <a href="catalog.html#${esc(item.ticker)}"><strong>${esc(item.ticker)}</strong> — ${esc(item.name)}</a>
           <p class="${cls}">${sign}${esc(item.changePercent)}%</p>
         </li>`
     })
@@ -255,14 +265,14 @@ function homePage() {
     .slice(0, 3)
     .map(
       (item) => `<li class="card">
-          <a href="news-${item.id}.html">${esc(item.title)}</a>
+          <a href="news.html#news-${esc(item.id)}">${esc(item.title)}</a>
           <p class="muted">${esc(item.publishedAt)}</p>
         </li>`,
     )
     .join('\n          ')
 
   const body = `      <div class="hero-block">
-        <img src="assets/hero.png" alt="Иллюстрация: график роста биржевых инструментов" width="170" height="179" class="hero-image">
+        <img src="assets/hero.png?v=${ASSET_VERSION}" alt="Иллюстрация: график роста биржевых инструментов" width="170" height="179" class="hero-image">
         <div>
           <h1>Funds Lab</h1>
           <p class="lead">Учебный проект по дисциплине «Веб-программирование»: интерактивный сайт о фондах, акциях и биржах, с каталогом инструментов, новостями и сервисами для сообщества инвесторов.</p>
@@ -274,7 +284,6 @@ function homePage() {
         <ul>
           <li><a href="#top-movers">Растут быстрее всех сегодня</a></li>
           <li><a href="#latest-news">Последние новости</a></li>
-          <li><a href="#banners">Дополнительные сервисы</a></li>
         </ul>
       </nav>
 
@@ -294,28 +303,7 @@ function homePage() {
           </ul>
           <p><a href="news.html">Все новости →</a></p>
         </section>
-      </div>
-
-      <section id="banners">
-        <h2>Дополнительные сервисы</h2>
-        <div class="banner-grid">
-          <div class="banner">
-            <h3>Поиск в Яндексе</h3>
-            <form action="https://yandex.ru/search/" method="get" target="_blank" rel="noopener">
-              <input type="text" name="text" placeholder="Что найти?" aria-label="Поисковый запрос">
-              <button type="submit">Искать</button>
-            </form>
-          </div>
-          <div class="banner">
-            <h3>Погода</h3>
-            <p id="weather-widget">Загрузка…</p>
-          </div>
-          <div class="banner">
-            <h3>Курсы валют</h3>
-            <p id="currency-widget">Загрузка…</p>
-          </div>
-        </div>
-      </section>`
+      </div>`
 
   register('index', 'Главная', 'index.html')
   return page({
