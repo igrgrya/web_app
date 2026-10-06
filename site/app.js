@@ -16,7 +16,7 @@
     pageViews: 'funds_lab_page_views',
     guestbook: 'funds_lab_guestbook',
     forumTopics: 'funds_lab_forum_topics',
-    ratings: 'funds_lab_ratings',
+    news: 'funds_lab_news',
     poll: 'funds_lab_poll',
     pollVoted: 'funds_lab_poll_voted',
     subscribers: 'funds_lab_subscribers'
@@ -255,58 +255,52 @@
     })
   }
 
-  /* --- Рейтинг инструментов (обязательный сервис) -------------------- */
+  /* --- Форма добавления новости (дополнительный сервис) -------------- */
 
-  function getRatings(ticker) {
-    var all = readJSON(KEYS.ratings, {})
-    return all[ticker] || []
+  function getUserNews() {
+    return readJSON(KEYS.news, [])
   }
 
-  function addRating(ticker, stars) {
-    var all = readJSON(KEYS.ratings, {})
-    all[ticker] = (all[ticker] || []).concat(stars)
-    writeJSON(KEYS.ratings, all)
-    return all[ticker]
+  function addUserNews(entry) {
+    var list = getUserNews()
+    list.unshift(entry)
+    writeJSON(KEYS.news, list)
+    return list
   }
 
-  function initRatings() {
-    var widgets = document.querySelectorAll('.rating')
-    for (var i = 0; i < widgets.length; i++) {
-      attachRating(widgets[i])
-    }
+  function userNewsItemHtml(item) {
+    return '<details class="news-item news-item--user" id="news-' + esc(item.id) + '">' +
+      '<summary><strong>' + esc(item.title) + '</strong> <span class="muted">' + esc(item.publishedAt) + '</span></summary>' +
+      '<p>' + esc(item.body) + '</p>' +
+      '<p class="muted">добавлено через форму</p>' +
+      '</details>'
   }
 
-  function attachRating(widget) {
-    var ticker = widget.getAttribute('data-ticker')
-    var starsBox = widget.querySelector('.star-rating-stars')
-    var summary = widget.querySelector('[data-rating-summary]')
-    if (!ticker || !starsBox || !summary) return
-
-    function average(values) {
-      if (!values.length) return null
-      return values.reduce(function (a, b) { return a + b }, 0) / values.length
+  function renderUserNews() {
+    var list = byId('news-list')
+    if (!list) return
+    var rendered = list.querySelectorAll('.news-item--user')
+    for (var i = 0; i < rendered.length; i++) {
+      rendered[i].remove()
     }
+    getUserNews().forEach(function (item) {
+      list.insertAdjacentHTML('afterbegin', userNewsItemHtml(item))
+    })
+  }
 
-    function render() {
-      var values = getRatings(ticker)
-      var avg = average(values)
-      starsBox.innerHTML = [1, 2, 3, 4, 5].map(function (star) {
-        return '<button type="button" class="star" data-star="' + star + '" ' +
-          'aria-label="Оценить на ' + star + '">&#9733;</button>'
-      }).join('')
-      summary.textContent = avg !== null
-        ? 'Средняя оценка: ' + avg.toFixed(1) + ' из 5 (' + values.length + ')'
-        : 'Оценок пока нет — станьте первым.'
-      var buttons = starsBox.querySelectorAll('.star')
-      for (var i = 0; i < buttons.length; i++) {
-        buttons[i].addEventListener('click', function (event) {
-          addRating(ticker, Number(event.currentTarget.getAttribute('data-star')))
-          render()
-        })
-      }
-    }
-
-    render()
+  function initNewsForm() {
+    var form = byId('news-form')
+    if (!form) return
+    renderUserNews()
+    form.addEventListener('submit', function (event) {
+      event.preventDefault()
+      var title = form.elements.title.value.trim()
+      var body = form.elements.body.value.trim()
+      if (!title || !body) return
+      addUserNews({ id: 'user-' + Date.now(), title: title, body: body, publishedAt: today(), user: true })
+      renderUserNews()
+      form.reset()
+    })
   }
 
   /* --- Опрос (дополнительный сервис) --------------------------------- */
@@ -406,7 +400,11 @@
     var input = byId('search-input')
     var results = byId('search-results')
     if (!input || !results) return
-    var index = window.FUNDS_LAB_SEARCH || []
+    // Статичный индекс дополняется новостями, добавленными через форму.
+    var userNews = getUserNews().map(function (item) {
+      return { type: 'Новость', title: item.title, url: 'news.html#news-' + item.id, text: item.title + ' ' + item.body }
+    })
+    var index = (window.FUNDS_LAB_SEARCH || []).concat(userNews)
 
     function render() {
       var q = input.value.trim().toLowerCase()
@@ -435,29 +433,6 @@
       input.value = initialQuery
       render()
     }
-  }
-
-  /* --- Фильтр каталога ----------------------------------------------- */
-
-  function initCatalogFilter() {
-    var table = byId('catalog-table')
-    var exchangeFilter = byId('exchange-filter')
-    var sectorFilter = byId('sector-filter')
-    if (!table || !exchangeFilter || !sectorFilter) return
-
-    function apply() {
-      var exchange = exchangeFilter.value
-      var sector = sectorFilter.value
-      var rows = table.querySelectorAll('tbody tr')
-      for (var i = 0; i < rows.length; i++) {
-        var okExchange = exchange === 'all' || rows[i].getAttribute('data-exchange') === exchange
-        var okSector = sector === 'all' || rows[i].getAttribute('data-sector') === sector
-        rows[i].hidden = !(okExchange && okSector)
-      }
-    }
-
-    exchangeFilter.addEventListener('change', apply)
-    sectorFilter.addEventListener('change', apply)
   }
 
   /* --- Статистика по разделам (дополнительный сервис) ---------------- */
@@ -695,6 +670,62 @@
     })
   }
 
+  /* --- Мировые часы бирж (дополнительный сервис) --------------------- */
+
+  function initExchangeClock() {
+    var cards = document.querySelectorAll('.clock-card')
+    if (!cards.length) return
+
+    function pad(value) {
+      return (value < 10 ? '0' : '') + value
+    }
+
+    function toMinutes(hhmm) {
+      var parts = hhmm.split(':')
+      return Number(parts[0]) * 60 + Number(parts[1])
+    }
+
+    function render() {
+      var now = new Date()
+      for (var i = 0; i < cards.length; i++) {
+        var card = cards[i]
+        var timeEl = card.querySelector('.clock-time')
+        var badgeEl = card.querySelector('.session-badge')
+        try {
+          var parts = new Intl.DateTimeFormat('en-US', {
+            timeZone: card.getAttribute('data-tz'),
+            hour: '2-digit',
+            minute: '2-digit',
+            weekday: 'short',
+            hour12: false,
+          }).formatToParts(now)
+          var part = function (type) {
+            for (var j = 0; j < parts.length; j++) {
+              if (parts[j].type === type) return parts[j].value
+            }
+            return ''
+          }
+          var weekday = part('weekday')
+          var minutes = (Number(part('hour')) % 24) * 60 + Number(part('minute'))
+          if (timeEl) timeEl.textContent = pad(Math.floor(minutes / 60)) + ':' + pad(minutes % 60)
+          var isWorkday = weekday !== 'Sat' && weekday !== 'Sun'
+          var isOpen = isWorkday &&
+            minutes >= toMinutes(card.getAttribute('data-open')) &&
+            minutes < toMinutes(card.getAttribute('data-close'))
+          if (badgeEl) {
+            badgeEl.textContent = isOpen ? 'сессия открыта' : 'сессия закрыта'
+            badgeEl.className = 'session-badge ' + (isOpen ? 'session-badge--open' : 'session-badge--closed')
+          }
+        } catch (e) {
+          if (timeEl) timeEl.textContent = '--:--'
+        }
+      }
+    }
+
+    render()
+    setInterval(render, 60000)
+  }
+
   /* --- Запуск --------------------------------------------------------- */
 
   function init() {
@@ -702,26 +733,28 @@
     recordPageView(pageId)
     recordVisit()
 
-    // Ссылки вида catalog.html#SBER или news.html#news-2 ведут на
-    // свёрнутый <details> — раскрываем целевой блок.
+    initGuestbook()
+    initForum()
+    initNewsForm()
+    initPoll()
+    initSubscribe()
+    initSearch()
+    initStats()
+    initWeather()
+    initCurrency()
+    initConverter()
+    initCalculator()
+    initExchangeClock()
+
+    // Ссылки вида news.html#news-2 ведут на свёрнутый <details> —
+    // раскрываем целевой блок. Важно: после initNewsForm(), чтобы
+    // якоря пользовательских новостей уже существовали в DOM.
     var hash = window.location.hash
     if (hash) {
       var anchor = document.getElementById(decodeURIComponent(hash.slice(1)))
       if (anchor && anchor.tagName === 'DETAILS') anchor.open = true
     }
 
-    initGuestbook()
-    initForum()
-    initRatings()
-    initPoll()
-    initSubscribe()
-    initSearch()
-    initCatalogFilter()
-    initStats()
-    initWeather()
-    initCurrency()
-    initConverter()
-    initCalculator()
     renderCounter()
   }
 

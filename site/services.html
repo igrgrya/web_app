@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Сервисы сайта — Funds Lab</title>
+  <meta name="description" content="Сервисы Funds Lab: опрос, конвертер валют по курсу ЦБ РФ, инвестиционный калькулятор, календарь событий, полезные ссылки, статистика посещений.">
+  <meta name="keywords" content="сервисы, опрос, конвертер валют, калькулятор, календарь, ссылки, статистика">
+  <meta name="author" content="Funds Lab">
+  <meta property="og:title" content="Сервисы сайта — Funds Lab">
+  <meta property="og:description" content="Сервисы Funds Lab: опрос, конвертер валют по курсу ЦБ РФ, инвестиционный калькулятор, календарь событий, полезные ссылки, статистика посещений.">
+  <meta property="og:type" content="website">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=a451d5e53f">
+  <link rel="stylesheet" href="styles.css?v=a451d5e53f">
+</head>
+<body data-page="services">
+  <div class="site-shell">
+    <header class="site-header">
+    <div class="site-header-inner">
+      <a class="brand" href="index.html">Funds Lab</a>
+      <nav aria-label="Основная навигация">
+        <ul class="nav-list"><li><a href="index.html">Главная</a></li><li><a href="exchanges.html">Биржи</a></li><li><a href="news.html">Новости</a></li><li><a href="xml.html">XML</a></li><li><a href="db.html">БД</a></li><li><a href="rss.html">RSS</a></li><li><a href="search.html">Поиск</a></li><li><a href="forum.html">Форум</a></li><li><a href="services.html" aria-current="page">Сервисы</a></li><li><a href="about.html">О проекте</a></li></ul>
+      </nav>
+    </div>
+    <form class="site-search" action="search.html" method="get" role="search">
+      <input type="search" name="q" placeholder="Поиск по сайту: Сбербанк, ETF, дивиденды…" aria-label="Поиск по сайту">
+      <button type="submit">Найти</button>
+    </form>
+    <div class="informers">
+      <div class="informer informer--weather" id="weather-widget">Погода: загрузка…</div>
+      <div class="informer informer--currency" id="currency-widget">Курсы валют: загрузка…</div>
+    </div>
+  </header>
+    <main class="site-main">
+      <h1 id="services-top">Сервисы сайта</h1>
+      <p class="lead">Интерактивные сервисы Funds Lab: опрос, конвертер валют, инвестиционный калькулятор, календарь событий, полезные ссылки и статистика посещений.</p>
+
+      <nav class="toc" aria-label="Содержание страницы">
+        <h2>Содержание</h2>
+        <ul>
+          <li><a href="#poll">Опрос</a></li>
+          <li><a href="#converter">Конвертер валют</a></li>
+          <li><a href="#calculator">Инвестиционный калькулятор</a></li>
+          <li><a href="#calendar">Календарь событий</a></li>
+          <li><a href="#links">Полезные ссылки</a></li>
+          <li><a href="#stats">Статистика посещений</a></li>
+        </ul>
+      </nav>
+
+      <section id="poll">
+        <h2>Опрос</h2>
+        <p class="lead" data-poll-question>Какой класс активов вам интереснее всего?</p>
+      <ul class="poll-options">
+        <li><button type="button" data-option="1">Акции</button></li>
+        <li><button type="button" data-option="2">ETF / фонды</button></li>
+        <li><button type="button" data-option="3">Облигации</button></li>
+      </ul>
+      <p class="muted" data-poll-note>Всего голосов: 9.</p>
+      </section>
+
+      <section id="converter">
+        <h2>Конвертер валют</h2>
+        <p class="lead">Пересчёт суммы между рублём, долларом, евро и юанем по актуальному курсу ЦБ РФ.</p>
+
+        <form class="stacked-form" id="converter-form">
+          <label>Сумма
+            <input type="number" name="amount" value="1000" min="0" step="any" required>
+          </label>
+          <label>Из валюты
+            <select name="from">
+              <option value="RUB">RUB — рубль</option>
+              <option value="USD">USD — доллар США</option>
+              <option value="EUR">EUR — евро</option>
+              <option value="CNY">CNY — юань</option>
+            </select>
+          </label>
+          <label>В валюту
+            <select name="to">
+              <option value="USD">USD — доллар США</option>
+              <option value="EUR">EUR — евро</option>
+              <option value="CNY">CNY — юань</option>
+              <option value="RUB">RUB — рубль</option>
+            </select>
+          </label>
+          <button type="submit">Перевести</button>
+        </form>
+
+        <p id="converter-result" hidden></p>
+        <p class="muted" id="converter-rate"></p>
+      </section>
+
+      <section id="calculator">
+        <h2>Инвестиционный калькулятор</h2>
+        <p class="lead">Расчёт будущей суммы вклада с учётом ежемесячных пополнений и сложного процента (капитализация раз в год).</p>
+
+        <form class="stacked-form" id="calculator-form">
+          <label>Начальная сумма
+            <input type="number" name="initial" value="100000" min="0" step="any" required>
+          </label>
+          <label>Ежемесячное пополнение
+            <input type="number" name="monthly" value="10000" min="0" step="any" required>
+          </label>
+          <label>Доходность, % годовых
+            <input type="number" name="rate" value="10" min="0" max="100" step="any" required>
+          </label>
+          <label>Срок, лет
+            <input type="number" name="years" value="5" min="1" max="50" step="1" required>
+          </label>
+          <button type="submit">Рассчитать</button>
+        </form>
+
+        <p id="calculator-result" hidden></p>
+
+        <table class="data-table" id="calculator-years" hidden>
+          <caption>Баланс по годам</caption>
+          <thead>
+            <tr>
+              <th scope="col">Год</th>
+              <th scope="col">Баланс</th>
+              <th scope="col">Вложено</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </section>
+
+      <section id="calendar">
+        <h2>Календарь событий</h2>
+        <p class="lead">Ближайшие корпоративные события: отчётность, дивидендные отсечки, заседания регуляторов.</p>
+        <table class="data-table">
+          <caption>Ближайшие события</caption>
+          <thead>
+            <tr>
+              <th scope="col">Дата</th>
+              <th scope="col">Событие</th>
+              <th scope="col">Описание</th>
+              <th scope="col">Инструмент</th>
+            </tr>
+          </thead>
+          <tbody>
+          <tr>
+          <td>2026-10-05</td>
+          <td>Публикация отчётности Сбербанка</td>
+          <td>Ожидается публикация квартального отчёта.</td>
+          <td>SBER</td>
+        </tr>
+        <tr>
+          <td>2026-10-12</td>
+          <td>Дивидендная отсечка Газпрома</td>
+          <td>Последний день покупки акций для получения дивидендов.</td>
+          <td>GAZP</td>
+        </tr>
+        <tr>
+          <td>2026-10-19</td>
+          <td>Отчётность Apple за квартал</td>
+          <td>Публикация финансовых результатов компании.</td>
+          <td>AAPL</td>
+        </tr>
+        <tr>
+          <td>2026-10-28</td>
+          <td>Заседание ФРС США</td>
+          <td>Решение по ключевой ставке.</td>
+          <td>—</td>
+        </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="links">
+        <h2>Полезные ссылки</h2>
+        <p class="lead">Подборка внешних ресурсов, сгруппированных по категориям.</p>
+      <section id="cat-0">
+          <h3>Биржи</h3>
+          <ul class="card-list">
+            <li class="card">
+            <a href="https://www.moex.com" target="_blank" rel="noopener">Московская биржа</a>
+            <p class="muted">Официальный сайт Московской биржи.</p>
+          </li>
+          <li class="card">
+            <a href="https://www.nasdaq.com" target="_blank" rel="noopener">NASDAQ</a>
+            <p class="muted">Официальный сайт биржи NASDAQ.</p>
+          </li>
+          <li class="card">
+            <a href="https://www.nyse.com" target="_blank" rel="noopener">NYSE</a>
+            <p class="muted">Официальный сайт Нью-Йоркской фондовой биржи.</p>
+          </li>
+          </ul>
+        </section>
+      <section id="cat-1">
+          <h3>Регуляторы</h3>
+          <ul class="card-list">
+            <li class="card">
+            <a href="https://www.cbr.ru" target="_blank" rel="noopener">Банк России</a>
+            <p class="muted">Центральный банк Российской Федерации.</p>
+          </li>
+          <li class="card">
+            <a href="https://www.sec.gov" target="_blank" rel="noopener">SEC.gov</a>
+            <p class="muted">Комиссия по ценным бумагам и биржам США.</p>
+          </li>
+          </ul>
+        </section>
+      <section id="cat-2">
+          <h3>Новости</h3>
+          <ul class="card-list">
+            <li class="card">
+            <a href="https://quote.rbc.ru" target="_blank" rel="noopener">РБК Инвестиции</a>
+            <p class="muted">Финансовые новости и котировки.</p>
+          </li>
+          </ul>
+        </section>
+      </section>
+
+      <section id="stats">
+        <h2>Статистика посещений по разделам</h2>
+        <p class="lead">Сколько раз был открыт каждый раздел сайта (данные хранятся в вашем браузере).</p>
+        <table class="data-table">
+          <caption>Просмотры разделов сайта</caption>
+          <thead>
+            <tr>
+              <th scope="col">Раздел</th>
+              <th scope="col">Адрес</th>
+              <th scope="col">Просмотров</th>
+            </tr>
+          </thead>
+          <tbody id="stats-body">
+          </tbody>
+        </table>
+        <p><a href="#services-top">↑ Вверх</a></p>
+      </section>
+    </main>
+    <footer class="site-footer">
+    <nav aria-label="Дополнительные разделы">
+      <ul class="nav-list nav-list--footer"><li><a href="forum.html#guestbook">Гостевая книга</a></li><li><a href="services.html#poll">Опрос</a></li><li><a href="services.html#converter">Конвертер валют</a></li><li><a href="services.html#calculator">Инвестиционный калькулятор</a></li><li><a href="services.html#links">Полезные ссылки</a></li><li><a href="services.html#calendar">Календарь событий</a></li><li><a href="services.html#stats">Статистика посещений</a></li></ul>
+    </nav>
+    <p class="visit-counter">Всего посещений сайта: <span data-visit-total>0</span></p>
+    <p class="author-note">Учебный проект по дисциплине «Веб-программирование». Автор: студент группы БИЗ-Б23, Корнюшкин Игорь.</p>
+  </footer>
+  </div>
+  <script src="data.js?v=a451d5e53f"></script>
+  <script src="app.js?v=a451d5e53f"></script>
+</body>
+</html>

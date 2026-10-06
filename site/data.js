@@ -65,11 +65,6 @@ window.FUNDS_LAB_PAGES = [
     "url": "index.html"
   },
   {
-    "id": "catalog",
-    "label": "Каталог инструментов",
-    "url": "catalog.html"
-  },
-  {
     "id": "exchanges",
     "label": "Биржи",
     "url": "exchanges.html"
@@ -105,39 +100,9 @@ window.FUNDS_LAB_PAGES = [
     "url": "forum.html"
   },
   {
-    "id": "guestbook",
-    "label": "Гостевая книга",
-    "url": "guestbook.html"
-  },
-  {
-    "id": "poll",
-    "label": "Опрос",
-    "url": "poll.html"
-  },
-  {
-    "id": "converter",
-    "label": "Конвертер валют",
-    "url": "converter.html"
-  },
-  {
-    "id": "calculator",
-    "label": "Инвестиционный калькулятор",
-    "url": "calculator.html"
-  },
-  {
-    "id": "links",
-    "label": "Полезные ссылки",
-    "url": "links.html"
-  },
-  {
-    "id": "calendar",
-    "label": "Календарь событий",
-    "url": "calendar.html"
-  },
-  {
-    "id": "stats",
-    "label": "Статистика посещений",
-    "url": "stats.html"
+    "id": "services",
+    "label": "Сервисы",
+    "url": "services.html"
   },
   {
     "id": "about",
