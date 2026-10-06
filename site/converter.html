@@ -10,8 +10,8 @@
   <meta property="og:title" content="Конвертер валют — Funds Lab">
   <meta property="og:description" content="Конвертер валют по актуальному курсу ЦБ РФ: рубль, доллар, евро, юань.">
   <meta property="og:type" content="website">
-  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=6a6b1aeba1">
-  <link rel="stylesheet" href="styles.css?v=6a6b1aeba1">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=6d713a9c4b">
+  <link rel="stylesheet" href="styles.css?v=6d713a9c4b">
 </head>
 <body data-page="converter">
   <div class="site-shell">
@@ -37,7 +37,7 @@
 
       <form class="stacked-form" id="converter-form">
         <label>Сумма
-          <input type="number" name="amount" value="100" min="0" step="any" required>
+          <input type="number" name="amount" value="1000" min="0" step="any" required>
         </label>
         <label>Из валюты
           <select name="from">
@@ -55,10 +55,10 @@
             <option value="RUB">RUB — рубль</option>
           </select>
         </label>
-        <button type="submit">Конвертировать</button>
+        <button type="submit">Перевести</button>
       </form>
 
-      <p class="success-state" id="converter-result" hidden></p>
+      <p id="converter-result" hidden></p>
       <p class="muted" id="converter-rate"></p>
     </main>
     <footer class="site-footer">
@@ -69,7 +69,7 @@
     <p class="author-note">Учебный проект по дисциплине «Веб-программирование». Автор: студент группы БИЗ-Б23, Корнюшкин Игорь.</p>
   </footer>
   </div>
-  <script src="data.js?v=6a6b1aeba1"></script>
-  <script src="app.js?v=6a6b1aeba1"></script>
+  <script src="data.js?v=6d713a9c4b"></script>
+  <script src="app.js?v=6d713a9c4b"></script>
 </body>
 </html>

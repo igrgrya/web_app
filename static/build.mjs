@@ -869,7 +869,7 @@ function converterPage() {
 
       <form class="stacked-form" id="converter-form">
         <label>Сумма
-          <input type="number" name="amount" value="100" min="0" step="any" required>
+          <input type="number" name="amount" value="1000" min="0" step="any" required>
         </label>
         <label>Из валюты
           <select name="from">
@@ -887,10 +887,10 @@ function converterPage() {
             <option value="RUB">RUB — рубль</option>
           </select>
         </label>
-        <button type="submit">Конвертировать</button>
+        <button type="submit">Перевести</button>
       </form>
 
-      <p class="success-state" id="converter-result" hidden></p>
+      <p id="converter-result" hidden></p>
       <p class="muted" id="converter-rate"></p>`
 
   register('converter', 'Конвертер валют', 'converter.html')
@@ -905,16 +905,16 @@ function converterPage() {
 
 function calculatorPage() {
   const body = `      <h1>Инвестиционный калькулятор</h1>
-      <p class="lead">Расчёт будущей суммы вклада с учётом ежемесячных пополнений и сложного процента.</p>
+      <p class="lead">Расчёт будущей суммы вклада с учётом ежемесячных пополнений и сложного процента (капитализация раз в год).</p>
 
       <form class="stacked-form" id="calculator-form">
-        <label>Начальная сумма, ₽
+        <label>Начальная сумма
           <input type="number" name="initial" value="100000" min="0" step="any" required>
         </label>
-        <label>Пополнение в месяц, ₽
+        <label>Ежемесячное пополнение
           <input type="number" name="monthly" value="10000" min="0" step="any" required>
         </label>
-        <label>Годовая доходность, %
+        <label>Доходность, % годовых
           <input type="number" name="rate" value="10" min="0" max="100" step="any" required>
         </label>
         <label>Срок, лет
@@ -923,11 +923,19 @@ function calculatorPage() {
         <button type="submit">Рассчитать</button>
       </form>
 
-      <dl class="fact-list" id="calculator-result" hidden>
-        <div><dt>Будущая сумма</dt><dd id="calc-total"></dd></div>
-        <div><dt>Всего вложено</dt><dd id="calc-invested"></dd></div>
-        <div><dt>Доход</dt><dd id="calc-profit"></dd></div>
-      </dl>`
+      <p id="calculator-result" hidden></p>
+
+      <table class="data-table" id="calculator-years" hidden>
+        <caption>Баланс по годам</caption>
+        <thead>
+          <tr>
+            <th scope="col">Год</th>
+            <th scope="col">Баланс</th>
+            <th scope="col">Вложено</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>`
 
   register('calculator', 'Инвестиционный калькулятор', 'calculator.html')
   return page({
