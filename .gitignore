@@ -7,6 +7,5 @@ __pycache__/
 *.pyc
 backend/.env
 MANUAL_STEPS.md
-.gitignore
 DEPLOY.md
 explanation.md
