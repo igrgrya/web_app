@@ -1,53 +1,5 @@
 window.FUNDS_LAB_SEARCH = [
   {
-    "type": "Инструмент",
-    "title": "SBER — Сбербанк",
-    "url": "catalog.html#SBER",
-    "text": "SBER Сбербанк Крупнейший банк России, предоставляет полный спектр банковских услуг."
-  },
-  {
-    "type": "Инструмент",
-    "title": "GAZP — Газпром",
-    "url": "catalog.html#GAZP",
-    "text": "GAZP Газпром Крупнейшая газовая компания страны, добыча и транспортировка газа."
-  },
-  {
-    "type": "Инструмент",
-    "title": "LKOH — Лукойл",
-    "url": "catalog.html#LKOH",
-    "text": "LKOH Лукойл Одна из крупнейших нефтяных компаний мира."
-  },
-  {
-    "type": "Инструмент",
-    "title": "FXIT — FinEx Технологии ETF",
-    "url": "catalog.html#FXIT",
-    "text": "FXIT FinEx Технологии ETF Биржевой фонд на сектор технологических компаний."
-  },
-  {
-    "type": "Инструмент",
-    "title": "AAPL — Apple Inc.",
-    "url": "catalog.html#AAPL",
-    "text": "AAPL Apple Inc. Производитель электроники, программного обеспечения и цифровых сервисов."
-  },
-  {
-    "type": "Инструмент",
-    "title": "MSFT — Microsoft Corporation",
-    "url": "catalog.html#MSFT",
-    "text": "MSFT Microsoft Corporation Разработчик операционных систем, офисного ПО и облачных сервисов."
-  },
-  {
-    "type": "Инструмент",
-    "title": "SPY — SPDR S&P 500 ETF Trust",
-    "url": "catalog.html#SPY",
-    "text": "SPY SPDR S&P 500 ETF Trust Фонд, отслеживающий индекс широкого рынка S&P 500."
-  },
-  {
-    "type": "Инструмент",
-    "title": "JNJ — Johnson & Johnson",
-    "url": "catalog.html#JNJ",
-    "text": "JNJ Johnson & Johnson Фармацевтика, медицинские изделия и товары для здоровья."
-  },
-  {
     "type": "Новость",
     "title": "Сбербанк отчитался о рекордной прибыли",
     "url": "news.html#news-1",
@@ -82,12 +34,6 @@ window.FUNDS_LAB_SEARCH = [
     "title": "Главная",
     "url": "index.html",
     "text": "Главная"
-  },
-  {
-    "type": "Страница",
-    "title": "Каталог инструментов",
-    "url": "catalog.html",
-    "text": "Каталог инструментов"
   },
   {
     "type": "Страница",
@@ -133,45 +79,9 @@ window.FUNDS_LAB_SEARCH = [
   },
   {
     "type": "Страница",
-    "title": "Гостевая книга",
-    "url": "guestbook.html",
-    "text": "Гостевая книга"
-  },
-  {
-    "type": "Страница",
-    "title": "Опрос",
-    "url": "poll.html",
-    "text": "Опрос"
-  },
-  {
-    "type": "Страница",
-    "title": "Конвертер валют",
-    "url": "converter.html",
-    "text": "Конвертер валют"
-  },
-  {
-    "type": "Страница",
-    "title": "Инвестиционный калькулятор",
-    "url": "calculator.html",
-    "text": "Инвестиционный калькулятор"
-  },
-  {
-    "type": "Страница",
-    "title": "Полезные ссылки",
-    "url": "links.html",
-    "text": "Полезные ссылки"
-  },
-  {
-    "type": "Страница",
-    "title": "Календарь событий",
-    "url": "calendar.html",
-    "text": "Календарь событий"
-  },
-  {
-    "type": "Страница",
-    "title": "Статистика посещений",
-    "url": "stats.html",
-    "text": "Статистика посещений"
+    "title": "Сервисы",
+    "url": "services.html",
+    "text": "Сервисы"
   },
   {
     "type": "Страница",

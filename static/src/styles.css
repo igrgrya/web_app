@@ -572,6 +572,50 @@ code {
   z-index: 1;
 }
 
+/* --- Мировые часы бирж ------------------------------------------------ */
+
+.clock-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  list-style: none;
+  padding: 0;
+}
+
+.clock-card h3 {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+
+.clock-time {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-h);
+  margin: 0 0 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+.session-badge {
+  display: inline-block;
+  margin: 0;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  border: 1px solid var(--border);
+  background: var(--code-bg);
+  color: var(--text);
+}
+
+.session-badge--open {
+  border-color: var(--up);
+  background: rgba(22, 163, 74, 0.1);
+  color: var(--up);
+}
+
+.session-badge--closed {
+  border-color: var(--border);
+}
+
 /* --- Подвал ---------------------------------------------------------- */
 
 .site-footer {
