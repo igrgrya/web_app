@@ -807,6 +807,46 @@ function servicesPage() {
   })
 }
 
+function contactsPage() {
+  const body = `      <h1>Контакты</h1>
+      <p class="lead">Автор и учебные реквизиты проекта Funds Lab.</p>
+
+      <table class="data-table">
+        <caption>Контактная информация</caption>
+        <tbody>
+          <tr>
+            <td>Автор</td>
+            <td>Корнюшкин Игорь</td>
+          </tr>
+          <tr>
+            <td>Группа</td>
+            <td>БИЗ-Б23</td>
+          </tr>
+          <tr>
+            <td>Email</td>
+            <td><a href="mailto:igor.kornyushkin@example.com">igor.kornyushkin@example.com</a></td>
+          </tr>
+          <tr>
+            <td>Адрес сайта</td>
+            <td><a href="https://igrgrya.github.io/web_app/" target="_blank" rel="noopener">igrgrya.github.io/web_app</a></td>
+          </tr>
+          <tr>
+            <td>Репозиторий</td>
+            <td><a href="https://github.com/igrgrya/web_app" target="_blank" rel="noopener">github.com/igrgrya/web_app</a></td>
+          </tr>
+        </tbody>
+      </table>`
+
+  register('contacts', 'Контакты', 'contacts.html')
+  return page({
+    id: 'contacts',
+    title: 'Контакты',
+    description: 'Контакты проекта Funds Lab: автор, учебная группа, адрес сайта и репозиторий.',
+    keywords: 'контакты, автор, обратная связь, Funds Lab',
+    body,
+  })
+}
+
 function aboutPage() {
   const body = `      <h1 id="about-top">О проекте</h1>
       <p class="lead">Funds Lab — учебный сайт, созданный в рамках лабораторных работ по дисциплине «Веб-программирование». Тема сайта — фонды, акции и биржи.</p>
@@ -844,13 +884,12 @@ function aboutPage() {
           <li>Конвертер валют</li>
           <li>Инвестиционный калькулятор</li>
           <li>Календарь событий</li>
-          <li>Коллекция полезных ссылок</li>
         </ul>
       </section>
 
       <section id="plan">
         <h2>Структура сайта и план развития</h2>
-        <p>Сайт состоит из 10 статических страниц, по одной на каждый пункт меню (+ техническая 404): Главная, Биржи, Новости, XML, БД, RSS, Поиск, Форум, Сервисы, О проекте.</p>
+        <p>Сайт состоит из 10 статических страниц: Главная, Новости, Биржи, История бирж, Новичку, Глоссарий, Риски, Ссылки, Контакты, О проекте. Отдельно вынесены сервисные страницы (Поиск, Форум и Сервисы), страницы-заглушки XML, БД и RSS под лабораторные работы №2–4 и техническая страница 404.</p>
         <p>Дальнейшее развитие — по лабораторным работам:</p>
         <ul>
           <li>№2 — раздел «Каталог инструментов» на XML + XSL-преобразование;</li>
@@ -1022,6 +1061,7 @@ function main() {
   files['glossary.html'] = glossaryPage()
   files['risks.html'] = risksPage()
   files['news.html'] = newsListPage()
+  files['contacts.html'] = contactsPage()
   files['xml.html'] = xmlPage()
   files['db.html'] = dbPage()
   files['rss.html'] = rssPage()
