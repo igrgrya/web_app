@@ -95,6 +95,11 @@ window.FUNDS_LAB_PAGES = [
     "url": "news.html"
   },
   {
+    "id": "contacts",
+    "label": "Контакты",
+    "url": "contacts.html"
+  },
+  {
     "id": "xml",
     "label": "XML",
     "url": "xml.html"

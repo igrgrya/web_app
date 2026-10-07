@@ -73,6 +73,12 @@ window.FUNDS_LAB_SEARCH = [
   },
   {
     "type": "Страница",
+    "title": "Контакты",
+    "url": "contacts.html",
+    "text": "Контакты"
+  },
+  {
+    "type": "Страница",
     "title": "XML",
     "url": "xml.html",
     "text": "XML"
