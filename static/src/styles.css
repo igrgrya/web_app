@@ -337,6 +337,7 @@ code {
 
 .instrument-card,
 .news-item,
+.glossary-item,
 .forum-topic-block {
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -346,6 +347,7 @@ code {
 
 .instrument-card summary,
 .news-item summary,
+.glossary-item summary,
 .forum-topic-block summary {
   cursor: pointer;
   padding: 14px 16px;
@@ -355,18 +357,21 @@ code {
 
 .instrument-card summary:hover,
 .news-item summary:hover,
+.glossary-item summary:hover,
 .forum-topic-block summary:hover {
   color: var(--accent);
 }
 
 .instrument-card:target,
 .news-item:target,
+.glossary-item:target,
 .forum-topic-block:target {
   border-color: var(--accent-border);
 }
 
 .instrument-card > :not(summary),
 .news-item > :not(summary),
+.glossary-item > :not(summary),
 .forum-topic-block > :not(summary) {
   margin-inline: 16px;
 }

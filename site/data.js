@@ -70,6 +70,16 @@ window.FUNDS_LAB_PAGES = [
     "url": "exchanges.html"
   },
   {
+    "id": "history",
+    "label": "История бирж",
+    "url": "history.html"
+  },
+  {
+    "id": "glossary",
+    "label": "Глоссарий",
+    "url": "glossary.html"
+  },
+  {
     "id": "news",
     "label": "Новости",
     "url": "news.html"

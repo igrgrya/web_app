@@ -43,6 +43,18 @@ window.FUNDS_LAB_SEARCH = [
   },
   {
     "type": "Страница",
+    "title": "История бирж",
+    "url": "history.html",
+    "text": "История бирж"
+  },
+  {
+    "type": "Страница",
+    "title": "Глоссарий",
+    "url": "glossary.html",
+    "text": "Глоссарий"
+  },
+  {
+    "type": "Страница",
     "title": "Новости",
     "url": "news.html",
     "text": "Новости"
