@@ -822,10 +822,6 @@ function contactsPage() {
             <td>БИЗ-Б23</td>
           </tr>
           <tr>
-            <td>Email</td>
-            <td><a href="mailto:igor.kornyushkin@example.com">igor.kornyushkin@example.com</a></td>
-          </tr>
-          <tr>
             <td>Адрес сайта</td>
             <td><a href="https://igrgrya.github.io/web_app/" target="_blank" rel="noopener">igrgrya.github.io/web_app</a></td>
           </tr>
