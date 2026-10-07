@@ -85,6 +85,12 @@ window.FUNDS_LAB_SEARCH = [
   },
   {
     "type": "Страница",
+    "title": "Ссылки",
+    "url": "links.html",
+    "text": "Ссылки"
+  },
+  {
+    "type": "Страница",
     "title": "О проекте",
     "url": "about.html",
     "text": "О проекте"
