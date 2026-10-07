@@ -49,9 +49,21 @@ window.FUNDS_LAB_SEARCH = [
   },
   {
     "type": "Страница",
+    "title": "Новичку",
+    "url": "beginners.html",
+    "text": "Новичку"
+  },
+  {
+    "type": "Страница",
     "title": "Глоссарий",
     "url": "glossary.html",
     "text": "Глоссарий"
+  },
+  {
+    "type": "Страница",
+    "title": "Риски",
+    "url": "risks.html",
+    "text": "Риски"
   },
   {
     "type": "Страница",

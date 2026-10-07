@@ -376,6 +376,16 @@ code {
   margin-inline: 16px;
 }
 
+/* Нумерованные шаги на странице «Новичку». */
+.steps-list {
+  margin: 0 0 16px;
+  padding-left: 24px;
+}
+
+.steps-list li {
+  margin-bottom: 8px;
+}
+
 .code-block {
   background: var(--code-bg);
   border: 1px solid var(--border);
