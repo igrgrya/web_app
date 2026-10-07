@@ -527,7 +527,7 @@ function risksPage() {
   ]
     .map(
       ([title, text]) => `<li class="card">
-          <h3>${esc(title)}</h3>
+          <h2>${esc(title)}</h2>
           <p>${esc(text)}</p>
         </li>`,
     )
