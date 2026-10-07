@@ -139,79 +139,36 @@ code {
   font-size: 15px;
 }
 
-/* Полное меню одной строкой: 10 статических пунктов + разделитель
-   + 6 сервисных (приглушённых) ссылок. */
+/* Единое меню одной строкой: все 16 пунктов. При сужении окна кегль
+   плавно уменьшается (clamp, паддинги и гэп — в em), ниже порога
+   читаемости строка прокручивается по горизонтали, но не переносится. */
 .nav-main {
   display: flex;
-  align-items: center;
   flex-wrap: nowrap;
-  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
   padding: 0 32px 12px;
 }
 
-/* Основная группа растягивается на свободную ширину ряда. */
-.nav-main > nav:first-child {
+.nav-main::-webkit-scrollbar {
+  display: none;
+}
+
+.nav-main > nav {
   flex: 1;
   min-width: 0;
 }
 
-.nav-main > nav:first-child .nav-list {
+.nav-main .nav-list {
+  flex-wrap: nowrap;
   justify-content: space-between;
+  font-size: clamp(9.5px, 0.8vw + 3.5px, 13px);
+  gap: 0.25em;
 }
 
 .nav-main .nav-list a {
-  font-size: 13px;
-  padding: 4px 8px;
+  padding: 0.3em 0.5em;
   white-space: nowrap;
-}
-
-/* Сервисная группа: тонкий разделитель слева вместо отдельной строки. */
-.nav-extra {
-  display: flex;
-  border-left: 1px solid var(--border);
-  padding-left: 12px;
-  margin-left: 4px;
-}
-
-.nav-list--muted {
-  font-size: 13px;
-}
-
-.nav-list--muted a {
-  padding: 3px 8px;
-  color: var(--text);
-  opacity: 0.8;
-}
-
-.nav-list--muted a:hover,
-.nav-list--muted a[aria-current='page'] {
-  opacity: 1;
-}
-
-@media (max-width: 1024px) {
-  .nav-main .nav-list a {
-    font-size: 12px;
-    padding: 3px 6px;
-  }
-}
-
-/* На узких экранах одна строка меню невозможна — группы складываются в стек. */
-@media (max-width: 900px) {
-  .nav-main {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 2px;
-  }
-
-  .nav-main > nav:first-child .nav-list {
-    justify-content: flex-start;
-  }
-
-  .nav-extra {
-    border-left: none;
-    padding-left: 0;
-    margin-left: 0;
-  }
 }
 
 /* --- Основное содержимое -------------------------------------------- */
