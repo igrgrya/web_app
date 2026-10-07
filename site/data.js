@@ -70,9 +70,34 @@ window.FUNDS_LAB_PAGES = [
     "url": "exchanges.html"
   },
   {
+    "id": "history",
+    "label": "История бирж",
+    "url": "history.html"
+  },
+  {
+    "id": "beginners",
+    "label": "Новичку",
+    "url": "beginners.html"
+  },
+  {
+    "id": "glossary",
+    "label": "Глоссарий",
+    "url": "glossary.html"
+  },
+  {
+    "id": "risks",
+    "label": "Риски",
+    "url": "risks.html"
+  },
+  {
     "id": "news",
     "label": "Новости",
     "url": "news.html"
+  },
+  {
+    "id": "contacts",
+    "label": "Контакты",
+    "url": "contacts.html"
   },
   {
     "id": "xml",
@@ -103,6 +128,11 @@ window.FUNDS_LAB_PAGES = [
     "id": "services",
     "label": "Сервисы",
     "url": "services.html"
+  },
+  {
+    "id": "links",
+    "label": "Ссылки",
+    "url": "links.html"
   },
   {
     "id": "about",

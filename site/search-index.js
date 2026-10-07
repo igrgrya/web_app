@@ -43,9 +43,39 @@ window.FUNDS_LAB_SEARCH = [
   },
   {
     "type": "Страница",
+    "title": "История бирж",
+    "url": "history.html",
+    "text": "История бирж"
+  },
+  {
+    "type": "Страница",
+    "title": "Новичку",
+    "url": "beginners.html",
+    "text": "Новичку"
+  },
+  {
+    "type": "Страница",
+    "title": "Глоссарий",
+    "url": "glossary.html",
+    "text": "Глоссарий"
+  },
+  {
+    "type": "Страница",
+    "title": "Риски",
+    "url": "risks.html",
+    "text": "Риски"
+  },
+  {
+    "type": "Страница",
     "title": "Новости",
     "url": "news.html",
     "text": "Новости"
+  },
+  {
+    "type": "Страница",
+    "title": "Контакты",
+    "url": "contacts.html",
+    "text": "Контакты"
   },
   {
     "type": "Страница",
@@ -82,6 +112,12 @@ window.FUNDS_LAB_SEARCH = [
     "title": "Сервисы",
     "url": "services.html",
     "text": "Сервисы"
+  },
+  {
+    "type": "Страница",
+    "title": "Ссылки",
+    "url": "links.html",
+    "text": "Ссылки"
   },
   {
     "type": "Страница",

@@ -139,6 +139,29 @@ code {
   font-size: 15px;
 }
 
+/* Вторая группа меню в шапке: сервисы и страницы лабораторных работ. */
+.nav-extra {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  padding: 0 32px 12px;
+}
+
+.nav-list--muted {
+  font-size: 15px;
+}
+
+.nav-list--muted a {
+  padding: 3px 10px;
+  color: var(--text);
+  opacity: 0.8;
+}
+
+.nav-list--muted a:hover,
+.nav-list--muted a[aria-current='page'] {
+  opacity: 1;
+}
+
 /* --- Основное содержимое -------------------------------------------- */
 
 .site-main {
@@ -297,7 +320,8 @@ code {
 
 @media (max-width: 640px) {
   .site-search,
-  .informers {
+  .informers,
+  .nav-extra {
     padding-inline: 16px;
   }
 }
@@ -306,6 +330,7 @@ code {
 
 .instrument-card,
 .news-item,
+.glossary-item,
 .forum-topic-block {
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -315,6 +340,7 @@ code {
 
 .instrument-card summary,
 .news-item summary,
+.glossary-item summary,
 .forum-topic-block summary {
   cursor: pointer;
   padding: 14px 16px;
@@ -324,20 +350,33 @@ code {
 
 .instrument-card summary:hover,
 .news-item summary:hover,
+.glossary-item summary:hover,
 .forum-topic-block summary:hover {
   color: var(--accent);
 }
 
 .instrument-card:target,
 .news-item:target,
+.glossary-item:target,
 .forum-topic-block:target {
   border-color: var(--accent-border);
 }
 
 .instrument-card > :not(summary),
 .news-item > :not(summary),
+.glossary-item > :not(summary),
 .forum-topic-block > :not(summary) {
   margin-inline: 16px;
+}
+
+/* Нумерованные шаги на странице «Новичку». */
+.steps-list {
+  margin: 0 0 16px;
+  padding-left: 24px;
+}
+
+.steps-list li {
+  margin-bottom: 8px;
 }
 
 .code-block {
@@ -368,6 +407,7 @@ code {
 
 .card h2,
 .card h3 {
+  font-size: 19px;
   margin: 0 0 4px;
 }
 
@@ -584,7 +624,7 @@ code {
 
 .clock-card h3 {
   margin: 0 0 8px;
-  font-size: 16px;
+  font-size: 19px;
 }
 
 .clock-time {
