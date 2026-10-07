@@ -10,28 +10,30 @@
   <meta property="og:title" content="Новости — Funds Lab">
   <meta property="og:description" content="Новости рынка фондов и акций: отчётности компаний, дивиденды, обзоры рынка.">
   <meta property="og:type" content="website">
-  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=563d11fdeb">
-  <link rel="stylesheet" href="styles.css?v=563d11fdeb">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=661d156dea">
+  <link rel="stylesheet" href="styles.css?v=661d156dea">
 </head>
 <body data-page="news">
   <div class="site-shell">
     <header class="site-header">
     <div class="site-header-inner">
       <a class="brand" href="index.html">Funds Lab</a>
-      <nav aria-label="Основная навигация">
-        <ul class="nav-list"><li><a href="index.html">Главная</a></li><li><a href="news.html" aria-current="page">Новости</a></li><li><a href="exchanges.html">Биржи</a></li><li><a href="history.html">История бирж</a></li><li><a href="beginners.html">Новичку</a></li><li><a href="glossary.html">Глоссарий</a></li><li><a href="risks.html">Риски</a></li><li><a href="links.html">Ссылки</a></li><li><a href="contacts.html">Контакты</a></li><li><a href="about.html">О проекте</a></li></ul>
-      </nav>
+      <form class="site-search" action="search.html" method="get" role="search">
+        <input type="search" name="q" placeholder="Поиск по сайту…" aria-label="Поиск по сайту">
+        <button type="submit">Найти</button>
+      </form>
+      <div class="informers">
+        <div class="informer informer--weather" id="weather-widget">Погода: загрузка…</div>
+        <div class="informer informer--currency" id="currency-widget">Курсы валют: загрузка…</div>
+      </div>
     </div>
-    <nav class="nav-extra" aria-label="Сервисы и лабораторные работы">
-      <ul class="nav-list nav-list--muted"><li><a href="search.html">Поиск</a></li><li><a href="forum.html">Форум</a></li><li><a href="services.html">Сервисы</a></li><li><a href="xml.html">XML</a></li><li><a href="db.html">БД</a></li><li><a href="rss.html">RSS</a></li></ul>
-    </nav>
-    <form class="site-search" action="search.html" method="get" role="search">
-      <input type="search" name="q" placeholder="Поиск по сайту: Сбербанк, ETF, дивиденды…" aria-label="Поиск по сайту">
-      <button type="submit">Найти</button>
-    </form>
-    <div class="informers">
-      <div class="informer informer--weather" id="weather-widget">Погода: загрузка…</div>
-      <div class="informer informer--currency" id="currency-widget">Курсы валют: загрузка…</div>
+    <div class="nav-main">
+      <nav aria-label="Основная навигация">
+        <ul class="nav-list"><li><a href="index.html">Главная</a></li><li><a href="news.html" aria-current="page">Новости</a></li><li><a href="exchanges.html">Биржи</a></li><li><a href="history.html">История</a></li><li><a href="beginners.html">Новичку</a></li><li><a href="glossary.html">Глоссарий</a></li><li><a href="risks.html">Риски</a></li><li><a href="links.html">Ссылки</a></li><li><a href="contacts.html">Контакты</a></li><li><a href="about.html">О проекте</a></li></ul>
+      </nav>
+      <nav class="nav-extra" aria-label="Сервисы и лабораторные работы">
+        <ul class="nav-list nav-list--muted"><li><a href="search.html">Поиск</a></li><li><a href="forum.html">Форум</a></li><li><a href="services.html">Сервисы</a></li><li><a href="xml.html">XML</a></li><li><a href="db.html">БД</a></li><li><a href="rss.html">RSS</a></li></ul>
+      </nav>
     </div>
   </header>
     <main class="site-main">
@@ -93,7 +95,7 @@
     <p class="author-note">Учебный проект по дисциплине «Веб-программирование». Автор: студент группы БИЗ-Б23, Корнюшкин Игорь.</p>
   </footer>
   </div>
-  <script src="data.js?v=563d11fdeb"></script>
-  <script src="app.js?v=563d11fdeb"></script>
+  <script src="data.js?v=661d156dea"></script>
+  <script src="app.js?v=661d156dea"></script>
 </body>
 </html>
