@@ -76,17 +76,28 @@ function register(id, label, url) {
 
 /* --- Общий каркас страницы -------------------------------------------- */
 
+/* Меню из двух групп: 10 статических страниц + сервисные страницы
+   и страницы-заглушки лабораторных работ. */
 const NAV = [
   { id: 'index', label: 'Главная', url: 'index.html' },
-  { id: 'exchanges', label: 'Биржи', url: 'exchanges.html' },
   { id: 'news', label: 'Новости', url: 'news.html' },
-  { id: 'xml', label: 'XML', url: 'xml.html' },
-  { id: 'db', label: 'БД', url: 'db.html' },
-  { id: 'rss', label: 'RSS', url: 'rss.html' },
+  { id: 'exchanges', label: 'Биржи', url: 'exchanges.html' },
+  { id: 'history', label: 'История бирж', url: 'history.html' },
+  { id: 'beginners', label: 'Новичку', url: 'beginners.html' },
+  { id: 'glossary', label: 'Глоссарий', url: 'glossary.html' },
+  { id: 'risks', label: 'Риски', url: 'risks.html' },
+  { id: 'links', label: 'Ссылки', url: 'links.html' },
+  { id: 'contacts', label: 'Контакты', url: 'contacts.html' },
+  { id: 'about', label: 'О проекте', url: 'about.html' },
+]
+
+const NAV_EXTRA = [
   { id: 'search', label: 'Поиск', url: 'search.html' },
   { id: 'forum', label: 'Форум', url: 'forum.html' },
   { id: 'services', label: 'Сервисы', url: 'services.html' },
-  { id: 'about', label: 'О проекте', url: 'about.html' },
+  { id: 'xml', label: 'XML', url: 'xml.html' },
+  { id: 'db', label: 'БД', url: 'db.html' },
+  { id: 'rss', label: 'RSS', url: 'rss.html' },
 ]
 
 /* Сервисные ссылки ведут на якоря страниц «Сервисы» и «Форум». */
@@ -95,7 +106,7 @@ const FOOTER_LINKS = [
   { id: 'poll', label: 'Опрос', url: 'services.html#poll' },
   { id: 'converter', label: 'Конвертер валют', url: 'services.html#converter' },
   { id: 'calculator', label: 'Инвестиционный калькулятор', url: 'services.html#calculator' },
-  { id: 'links', label: 'Полезные ссылки', url: 'services.html#links' },
+  { id: 'links', label: 'Ссылки', url: 'links.html' },
   { id: 'calendar', label: 'Календарь событий', url: 'services.html#calendar' },
   { id: 'stats', label: 'Статистика посещений', url: 'services.html#stats' },
 ]
@@ -113,6 +124,10 @@ function header(active) {
         <ul class="nav-list">${NAV.map((item) => navLink(item, active)).join('')}</ul>
       </nav>
     </div>
+    <nav class="nav-extra" aria-label="Сервисы и лабораторные работы">
+      <span class="nav-extra-label">Сервисы и л.р. №2–4:</span>
+      <ul class="nav-list nav-list--muted">${NAV_EXTRA.map((item) => navLink(item, active)).join('')}</ul>
+    </nav>
     <form class="site-search" action="search.html" method="get" role="search">
       <input type="search" name="q" placeholder="Поиск по сайту: Сбербанк, ETF, дивиденды…" aria-label="Поиск по сайту">
       <button type="submit">Найти</button>
@@ -431,6 +446,42 @@ function newsListPage() {
   })
 }
 
+function linksPage() {
+  const linkCategories = [...new Set(externalLinks.map((link) => link.category))]
+  const linkSections = linkCategories
+    .map((category, i) => {
+      const items = externalLinks
+        .filter((link) => link.category === category)
+        .map(
+          (link) => `<li class="card">
+            <a href="${esc(link.url)}" target="_blank" rel="noopener">${esc(link.title)}</a>
+            <p class="muted">${esc(link.description)}</p>
+          </li>`,
+        )
+        .join('\n          ')
+      return `<section id="cat-${i}">
+          <h2>${esc(category)}</h2>
+          <ul class="card-list">
+            ${items}
+          </ul>
+        </section>`
+    })
+    .join('\n      ')
+
+  const body = `      <h1>Ссылки</h1>
+      <p class="lead">Подборка внешних ресурсов, сгруппированных по категориям.</p>
+      ${linkSections}`
+
+  register('links', 'Ссылки', 'links.html')
+  return page({
+    id: 'links',
+    title: 'Ссылки',
+    description: 'Полезные ссылки для инвесторов: биржи, обучающие ресурсы и аналитика рынка.',
+    keywords: 'ссылки, полезные ресурсы, биржи, обучение, аналитика, инвестиции',
+    body,
+  })
+}
+
 function searchPage() {
   const body = `      <h1>Поиск по сайту</h1>
       <p class="lead">Поиск по новостям и страницам Funds Lab по ключевому слову.</p>
@@ -469,29 +520,8 @@ function servicesPage() {
     })
     .join('\n        ')
 
-  const linkCategories = [...new Set(externalLinks.map((link) => link.category))]
-  const linkSections = linkCategories
-    .map((category, i) => {
-      const items = externalLinks
-        .filter((link) => link.category === category)
-        .map(
-          (link) => `<li class="card">
-            <a href="${esc(link.url)}" target="_blank" rel="noopener">${esc(link.title)}</a>
-            <p class="muted">${esc(link.description)}</p>
-          </li>`,
-        )
-        .join('\n          ')
-      return `<section id="cat-${i}">
-          <h3>${esc(category)}</h3>
-          <ul class="card-list">
-            ${items}
-          </ul>
-        </section>`
-    })
-    .join('\n      ')
-
   const body = `      <h1 id="services-top">Сервисы сайта</h1>
-      <p class="lead">Интерактивные сервисы Funds Lab: опрос, конвертер валют, инвестиционный калькулятор, календарь событий, полезные ссылки и статистика посещений.</p>
+      <p class="lead">Интерактивные сервисы Funds Lab: опрос, конвертер валют, инвестиционный калькулятор, календарь событий и статистика посещений.</p>
 
       <nav class="toc" aria-label="Содержание страницы">
         <h2>Содержание</h2>
@@ -500,7 +530,6 @@ function servicesPage() {
           <li><a href="#converter">Конвертер валют</a></li>
           <li><a href="#calculator">Инвестиционный калькулятор</a></li>
           <li><a href="#calendar">Календарь событий</a></li>
-          <li><a href="#links">Полезные ссылки</a></li>
           <li><a href="#stats">Статистика посещений</a></li>
         </ul>
       </nav>
@@ -595,12 +624,6 @@ function servicesPage() {
         </table>
       </section>
 
-      <section id="links">
-        <h2>Полезные ссылки</h2>
-        <p class="lead">Подборка внешних ресурсов, сгруппированных по категориям.</p>
-      ${linkSections}
-      </section>
-
       <section id="stats">
         <h2>Статистика посещений по разделам</h2>
         <p class="lead">Сколько раз был открыт каждый раздел сайта (данные хранятся в вашем браузере).</p>
@@ -623,8 +646,8 @@ function servicesPage() {
   return page({
     id: 'services',
     title: 'Сервисы сайта',
-    description: 'Сервисы Funds Lab: опрос, конвертер валют по курсу ЦБ РФ, инвестиционный калькулятор, календарь событий, полезные ссылки, статистика посещений.',
-    keywords: 'сервисы, опрос, конвертер валют, калькулятор, календарь, ссылки, статистика',
+    description: 'Сервисы Funds Lab: опрос, конвертер валют по курсу ЦБ РФ, инвестиционный калькулятор, календарь событий, статистика посещений.',
+    keywords: 'сервисы, опрос, конвертер валют, калькулятор, календарь, статистика',
     body,
   })
 }
@@ -846,6 +869,7 @@ function main() {
   files['search.html'] = searchPage()
   files['forum.html'] = forumPage()
   files['services.html'] = servicesPage()
+  files['links.html'] = linksPage()
   files['about.html'] = aboutPage()
   files['404.html'] = notFoundPage()
 

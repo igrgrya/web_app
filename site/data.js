@@ -105,6 +105,11 @@ window.FUNDS_LAB_PAGES = [
     "url": "services.html"
   },
   {
+    "id": "links",
+    "label": "Ссылки",
+    "url": "links.html"
+  },
+  {
     "id": "about",
     "label": "О проекте",
     "url": "about.html"
