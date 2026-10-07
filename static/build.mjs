@@ -80,7 +80,7 @@ const NAV = [
   { id: 'index', label: 'Главная', url: 'index.html' },
   { id: 'news', label: 'Новости', url: 'news.html' },
   { id: 'exchanges', label: 'Биржи', url: 'exchanges.html' },
-  { id: 'history', label: 'История бирж', url: 'history.html' },
+  { id: 'history', label: 'История', url: 'history.html' },
   { id: 'beginners', label: 'Новичку', url: 'beginners.html' },
   { id: 'glossary', label: 'Глоссарий', url: 'glossary.html' },
   { id: 'risks', label: 'Риски', url: 'risks.html' },
@@ -118,20 +118,22 @@ function header(active) {
   return `<header class="site-header">
     <div class="site-header-inner">
       <a class="brand" href="index.html">Funds Lab</a>
+      <form class="site-search" action="search.html" method="get" role="search">
+        <input type="search" name="q" placeholder="Поиск по сайту…" aria-label="Поиск по сайту">
+        <button type="submit">Найти</button>
+      </form>
+      <div class="informers">
+        <div class="informer informer--weather" id="weather-widget">Погода: загрузка…</div>
+        <div class="informer informer--currency" id="currency-widget">Курсы валют: загрузка…</div>
+      </div>
+    </div>
+    <div class="nav-main">
       <nav aria-label="Основная навигация">
         <ul class="nav-list">${NAV.map((item) => navLink(item, active)).join('')}</ul>
       </nav>
-    </div>
-    <nav class="nav-extra" aria-label="Сервисы и лабораторные работы">
-      <ul class="nav-list nav-list--muted">${NAV_EXTRA.map((item) => navLink(item, active)).join('')}</ul>
-    </nav>
-    <form class="site-search" action="search.html" method="get" role="search">
-      <input type="search" name="q" placeholder="Поиск по сайту: Сбербанк, ETF, дивиденды…" aria-label="Поиск по сайту">
-      <button type="submit">Найти</button>
-    </form>
-    <div class="informers">
-      <div class="informer informer--weather" id="weather-widget">Погода: загрузка…</div>
-      <div class="informer informer--currency" id="currency-widget">Курсы валют: загрузка…</div>
+      <nav class="nav-extra" aria-label="Сервисы и лабораторные работы">
+        <ul class="nav-list nav-list--muted">${NAV_EXTRA.map((item) => navLink(item, active)).join('')}</ul>
+      </nav>
     </div>
   </header>`
 }
