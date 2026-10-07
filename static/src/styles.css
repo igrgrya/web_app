@@ -101,8 +101,8 @@ code {
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 12px;
-  padding: 16px 32px;
+  gap: 8px;
+  padding: 14px 32px;
 }
 
 .brand {
@@ -139,20 +139,46 @@ code {
   font-size: 15px;
 }
 
-/* Вторая группа меню в шапке: сервисы и страницы лабораторных работ. */
-.nav-extra {
+/* Полное меню одной строкой: 10 статических пунктов + разделитель
+   + 6 сервисных (приглушённых) ссылок. */
+.nav-main {
   display: flex;
-  flex-wrap: wrap;
-  gap: 4px 12px;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 8px;
   padding: 0 32px 12px;
 }
 
+/* Основная группа растягивается на свободную ширину ряда. */
+.nav-main > nav:first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.nav-main > nav:first-child .nav-list {
+  justify-content: space-between;
+}
+
+.nav-main .nav-list a {
+  font-size: 13px;
+  padding: 4px 8px;
+  white-space: nowrap;
+}
+
+/* Сервисная группа: тонкий разделитель слева вместо отдельной строки. */
+.nav-extra {
+  display: flex;
+  border-left: 1px solid var(--border);
+  padding-left: 12px;
+  margin-left: 4px;
+}
+
 .nav-list--muted {
-  font-size: 15px;
+  font-size: 13px;
 }
 
 .nav-list--muted a {
-  padding: 3px 10px;
+  padding: 3px 8px;
   color: var(--text);
   opacity: 0.8;
 }
@@ -160,6 +186,32 @@ code {
 .nav-list--muted a:hover,
 .nav-list--muted a[aria-current='page'] {
   opacity: 1;
+}
+
+@media (max-width: 1024px) {
+  .nav-main .nav-list a {
+    font-size: 12px;
+    padding: 3px 6px;
+  }
+}
+
+/* На узких экранах одна строка меню невозможна — группы складываются в стек. */
+@media (max-width: 900px) {
+  .nav-main {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+
+  .nav-main > nav:first-child .nav-list {
+    justify-content: flex-start;
+  }
+
+  .nav-extra {
+    border-left: none;
+    padding-left: 0;
+    margin-left: 0;
+  }
 }
 
 /* --- Основное содержимое -------------------------------------------- */
@@ -172,8 +224,29 @@ code {
 @media (max-width: 640px) {
   .site-main,
   .site-header-inner,
-  .site-footer {
+  .site-footer,
+  .nav-main {
     padding-inline: 16px;
+  }
+
+  /* На телефоне ряд 1 складывается в стек: бренд, поиск, информеры. */
+  .site-header-inner {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .site-search input {
+    flex: 1;
+    width: auto;
+  }
+
+  .informers {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+
+  .informer--currency {
+    min-width: auto;
   }
 }
 
@@ -256,8 +329,7 @@ code {
 
 .site-search {
   display: flex;
-  gap: 8px;
-  padding: 0 32px 12px;
+  gap: 6px;
 }
 
 .site-search input {
@@ -268,13 +340,12 @@ code {
   background: var(--panel);
   color: var(--text-h);
   min-width: 0;
-  flex: 1;
-  max-width: 420px;
+  width: 220px;
 }
 
 .site-search button {
   font: inherit;
-  padding: 6px 14px;
+  padding: 6px 10px;
   border-radius: 6px;
   border: 1px solid var(--accent-border);
   background: var(--accent-bg);
@@ -284,20 +355,28 @@ code {
 
 .informers {
   display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  padding: 0 32px 14px;
+  flex: 1;
+  min-width: 0;
+  justify-content: flex-end;
+  gap: 6px;
+  flex-wrap: nowrap;
 }
 
 .informer {
   border-radius: 10px;
-  padding: 8px 16px;
-  font-size: 15px;
+  padding: 5px 10px;
+  font-size: 13px;
   font-weight: 600;
 }
 
 .informer strong {
-  font-size: 17px;
+  font-size: 14px;
+}
+
+/* Курсовой информер — самый длинный: сжимается первым (текст переносится
+   внутри пилюли), чтобы ряд 1 не переезжал на новую строку. */
+.informer--currency {
+  min-width: 0;
 }
 
 .informer--weather {
@@ -316,14 +395,6 @@ code {
 
 .rate-down {
   color: var(--down);
-}
-
-@media (max-width: 640px) {
-  .site-search,
-  .informers,
-  .nav-extra {
-    padding-inline: 16px;
-  }
 }
 
 /* --- Раскрывающиеся блоки: каталог, новости, форум ------------------- */
