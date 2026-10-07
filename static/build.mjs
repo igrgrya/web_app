@@ -125,7 +125,6 @@ function header(active) {
       </nav>
     </div>
     <nav class="nav-extra" aria-label="Сервисы и лабораторные работы">
-      <span class="nav-extra-label">Сервисы и л.р. №2–4:</span>
       <ul class="nav-list nav-list--muted">${NAV_EXTRA.map((item) => navLink(item, active)).join('')}</ul>
     </nav>
     <form class="site-search" action="search.html" method="get" role="search">
