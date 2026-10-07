@@ -65,8 +65,6 @@ function findInstrument(id) {
   return instruments.find((i) => i.id === id)
 }
 
-const dateFmt = (value) => value
-
 /* Записи о страницах: нужны для статистики и sitemap.xml. */
 const registry = []
 
@@ -76,17 +74,28 @@ function register(id, label, url) {
 
 /* --- Общий каркас страницы -------------------------------------------- */
 
+/* Меню из двух групп: 10 статических страниц + сервисные страницы
+   и страницы-заглушки лабораторных работ. */
 const NAV = [
   { id: 'index', label: 'Главная', url: 'index.html' },
-  { id: 'exchanges', label: 'Биржи', url: 'exchanges.html' },
   { id: 'news', label: 'Новости', url: 'news.html' },
-  { id: 'xml', label: 'XML', url: 'xml.html' },
-  { id: 'db', label: 'БД', url: 'db.html' },
-  { id: 'rss', label: 'RSS', url: 'rss.html' },
+  { id: 'exchanges', label: 'Биржи', url: 'exchanges.html' },
+  { id: 'history', label: 'История бирж', url: 'history.html' },
+  { id: 'beginners', label: 'Новичку', url: 'beginners.html' },
+  { id: 'glossary', label: 'Глоссарий', url: 'glossary.html' },
+  { id: 'risks', label: 'Риски', url: 'risks.html' },
+  { id: 'links', label: 'Ссылки', url: 'links.html' },
+  { id: 'contacts', label: 'Контакты', url: 'contacts.html' },
+  { id: 'about', label: 'О проекте', url: 'about.html' },
+]
+
+const NAV_EXTRA = [
   { id: 'search', label: 'Поиск', url: 'search.html' },
   { id: 'forum', label: 'Форум', url: 'forum.html' },
   { id: 'services', label: 'Сервисы', url: 'services.html' },
-  { id: 'about', label: 'О проекте', url: 'about.html' },
+  { id: 'xml', label: 'XML', url: 'xml.html' },
+  { id: 'db', label: 'БД', url: 'db.html' },
+  { id: 'rss', label: 'RSS', url: 'rss.html' },
 ]
 
 /* Сервисные ссылки ведут на якоря страниц «Сервисы» и «Форум». */
@@ -95,7 +104,7 @@ const FOOTER_LINKS = [
   { id: 'poll', label: 'Опрос', url: 'services.html#poll' },
   { id: 'converter', label: 'Конвертер валют', url: 'services.html#converter' },
   { id: 'calculator', label: 'Инвестиционный калькулятор', url: 'services.html#calculator' },
-  { id: 'links', label: 'Полезные ссылки', url: 'services.html#links' },
+  { id: 'links', label: 'Ссылки', url: 'links.html' },
   { id: 'calendar', label: 'Календарь событий', url: 'services.html#calendar' },
   { id: 'stats', label: 'Статистика посещений', url: 'services.html#stats' },
 ]
@@ -113,6 +122,9 @@ function header(active) {
         <ul class="nav-list">${NAV.map((item) => navLink(item, active)).join('')}</ul>
       </nav>
     </div>
+    <nav class="nav-extra" aria-label="Сервисы и лабораторные работы">
+      <ul class="nav-list nav-list--muted">${NAV_EXTRA.map((item) => navLink(item, active)).join('')}</ul>
+    </nav>
     <form class="site-search" action="search.html" method="get" role="search">
       <input type="search" name="q" placeholder="Поиск по сайту: Сбербанк, ETF, дивиденды…" aria-label="Поиск по сайту">
       <button type="submit">Найти</button>
@@ -380,6 +392,161 @@ function exchangesPage() {
   })
 }
 
+function historyPage() {
+  const rows = [
+    ['1602', 'Амстердам', 'Открылась первая в мире фондовая биржа; здесь начали торговаться акции Ост-Индской компании.'],
+    ['1698', 'Лондон', 'Кофейня Джонатана в лондонском Сити — предшественница Лондонской фондовой биржи (LSE).'],
+    ['1792', 'Нью-Йорк', '«Соглашение под платаном», подписанное 24 брокерами, — считается датой основания NYSE.'],
+    ['1878', 'Токио', 'Основана Токийская фондовая биржа — будущий центр азиатского фондового рынка.'],
+    ['1971', 'Нью-Йорк', 'Запущена NASDAQ — первая в мире электронная фондовая биржа.'],
+    ['1992', 'Москва', 'Начала работу ММВБ — Московская межбанковская валютная биржа.'],
+    ['1995', 'Москва', 'Заработала РТС — Российская торговая система.'],
+    ['2011', 'Москва', 'Слияние ММВБ и РТС: образована Московская биржа (MOEX).'],
+  ]
+    .map(
+      ([year, place, text]) => `<tr>
+          <td>${esc(year)}</td>
+          <td>${esc(place)}</td>
+          <td>${esc(text)}</td>
+        </tr>`,
+    )
+    .join('\n        ')
+
+  const body = `      <h1>История бирж</h1>
+      <p class="lead">Ключевые вехи в развитии фондовых бирж мира — от первой биржи в Амстердаме до Московской биржи.</p>
+
+      <table class="data-table">
+        <caption>Основные даты истории бирж</caption>
+        <thead>
+          <tr>
+            <th scope="col">Год</th>
+            <th scope="col">Биржа</th>
+            <th scope="col">Событие</th>
+          </tr>
+        </thead>
+        <tbody>
+        ${rows}
+        </tbody>
+      </table>
+
+      <p><a href="exchanges.html">Биржи, представленные на сайте →</a></p>`
+
+  register('history', 'История бирж', 'history.html')
+  return page({
+    id: 'history',
+    title: 'История бирж',
+    description: 'Ключевые даты истории фондовых бирж: Амстердам, Лондон, Нью-Йорк, NASDAQ, ММВБ, РТС и Московская биржа.',
+    keywords: 'история бирж, фондовая биржа, NASDAQ, NYSE, ММВБ, РТС, Московская биржа',
+    body,
+  })
+}
+
+function glossaryPage() {
+  const terms = [
+    ['Акция', 'Долевая ценная бумага: даёт владельцу долю в компании, право на часть прибыли (дивиденды) и участие в управлении.'],
+    ['Облигация', 'Долговая ценная бумага: инвестор даёт компании или государству деньги в долг и получает проценты (купон) и номинал к погашению.'],
+    ['ETF', 'Биржевой инвестиционный фонд (Exchange-Traded Fund): акции фонда торгуются на бирже, а внутри — готовый портфель из десятков и сотен инструментов.'],
+    ['ПИФ', 'Паевой инвестиционный фонд: объединённые средства вкладчиков, которыми управляет управляющая компания; доля инвестора — пай.'],
+    ['Дивиденды', 'Часть прибыли компании, которую она распределяет между акционерами; обычно выплачиваются деньгами раз в квартал или год.'],
+    ['Дивидендная отсечка', 'Дата, после которой покупатель акции уже не получит ближайшие дивиденды; в этот день цена акции обычно снижается на размер выплаты.'],
+    ['Капитализация', 'Рыночная стоимость всех акций компании: текущая цена, умноженная на количество акций в обращении.'],
+    ['Тикер', 'Краткое буквенное обозначение инструмента на бирже, например SBER или GAZP.'],
+    ['Ликвидность', 'Способность быстро купить или продать инструмент по рыночной цене без большой потери в стоимости.'],
+    ['Волатильность', 'Размах колебаний цены инструмента: чем выше волатильность, тем сильнее цена меняется за день и тем выше риск.'],
+    ['Фондовый индекс', 'Показатель состояния рынка или его части: корзина акций (например, индекс Мосбиржи или S&P 500), по изменению стоимости которой судят о рынке.'],
+    ['IPO', 'Первичное публичное размещение акций: компания впервые выходит на биржу и продаёт акции широкому кругу инвесторов.'],
+    ['Брокер', 'Лицензированный посредник между инвестором и биржей: по поручению клиента покупает и продаёт ценные бумаги.'],
+    ['Портфель', 'Набор всех инструментов инвестора — акции, облигации, фонды и деньги на счёте, рассматриваемые как единое целое.'],
+    ['Диверсификация', 'Распределение денег между разными инструментами и рынками, чтобы падение одного актива не обвалило весь портфель.'],
+  ]
+    .map(
+      ([term, definition]) => `<details class="glossary-item">
+          <summary><strong>${esc(term)}</strong></summary>
+          <p>${esc(definition)}</p>
+        </details>`,
+    )
+    .join('\n      ')
+
+  const body = `      <h1>Глоссарий</h1>
+      <p class="lead">Основные термины фондового рынка, которые встречаются на страницах сайта. Нажмите на термин, чтобы раскрыть определение.</p>
+      ${terms}`
+
+  register('glossary', 'Глоссарий', 'glossary.html')
+  return page({
+    id: 'glossary',
+    title: 'Глоссарий',
+    description: 'Глоссарий Funds Lab: акции, облигации, ETF, дивиденды, ликвидность, волатильность и другие термины фондового рынка.',
+    keywords: 'глоссарий, термины, акция, облигация, ETF, дивиденды, ликвидность, волатильность, IPO',
+    body,
+  })
+}
+
+function beginnersPage() {
+  const steps = [
+    'Определите цель и срок: на что копите (квартира, образование, пассивный доход) и через сколько лет понадобятся деньги. От срока зависит выбор инструментов.',
+    'Соберите финансовую подушку — 3–6 месяцев расходов на отдельном вкладе, чтобы не приходилось продавать инвестиции в неудачный момент.',
+    'Выберите брокера: сравните комиссии, удобство приложения и наличие лицензии Банка России.',
+    'Откройте брокерский счёт (или ИИС) — обычно это можно сделать онлайн за несколько дней.',
+    'Начинайте с широкой диверсификации: индексные фонды и ETF вместо ставок на одну-две акции.',
+    'Инвестируйте регулярно: фиксированная сумма каждый месяц работает лучше попыток «поймать момент».',
+    'Следите за издержками — комиссии съедают доходность — и раз в год ребалансируйте портфель.',
+  ]
+    .map((step) => `<li>${esc(step)}</li>`)
+    .join('\n          ')
+
+  const body = `      <h1>С чего начать инвестору</h1>
+      <p class="lead">Семь простых шагов для тех, кто только начинает разбираться в инвестициях.</p>
+
+      <ol class="steps-list">
+          ${steps}
+      </ol>
+
+      <p class="muted">Материал носит образовательный характер и не является инвестиционной рекомендацией.</p>`
+
+  register('beginners', 'Новичку', 'beginners.html')
+  return page({
+    id: 'beginners',
+    title: 'Новичку',
+    description: 'С чего начать инвестору: цель и срок, финансовая подушка, выбор брокера, диверсификация и регулярные инвестиции.',
+    keywords: 'новичку, с чего начать, инвестиции, подушка безопасности, брокер, диверсификация',
+    body,
+  })
+}
+
+function risksPage() {
+  const riskCards = [
+    ['Рыночный риск', 'Цены акций и фондов падают вместе с рынком: кризисы, санкции, паника инвесторов. Диверсификация и длинный горизонт смягчают, но не отменяют этот риск.'],
+    ['Валютный риск', 'Доходность активов в иностранной валюте для рублёвого инвестора зависит ещё и от курса: укрепление рубля снижает результат.'],
+    ['Кредитный риск', 'Эмитент облигации может не выплатить купоны или номинал. У компаний с низким рейтингом доходность выше именно за этот риск.'],
+    ['Инфляционный риск', 'Если доходность ниже инфляции, покупательная способность денег уменьшается, даже когда сумма на счёте растёт.'],
+    ['Риск ликвидности', 'Некоторые инструменты сложно быстро продать по адекватной цене: мало покупателей и широкие спреды.'],
+    ['Процентный риск', 'Изменение ключевой ставки двигает цены облигаций: при росте ставки ранее выпущенные облигации дешевеют.'],
+  ]
+    .map(
+      ([title, text]) => `<li class="card">
+          <h2>${esc(title)}</h2>
+          <p>${esc(text)}</p>
+        </li>`,
+    )
+    .join('\n        ')
+
+  const body = `      <h1>Риски и доходность</h1>
+      <p class="lead">Доходность и риск всегда идут в паре: чем выше обещанная доходность, тем больше шансы потерять часть вложений. Основные типы рисков, с которыми сталкивается частный инвестор:</p>
+
+      <ul class="card-list">
+        ${riskCards}
+      </ul>`
+
+  register('risks', 'Риски', 'risks.html')
+  return page({
+    id: 'risks',
+    title: 'Риски и доходность',
+    description: 'Основные риски частного инвестора: рыночный, валютный, кредитный, инфляционный, риск ликвидности и процентный.',
+    keywords: 'риски, доходность, рыночный риск, валютный риск, кредитный риск, инфляция, ликвидность',
+    body,
+  })
+}
+
 function newsListPage() {
   const items = news
     .map(
@@ -431,6 +598,42 @@ function newsListPage() {
   })
 }
 
+function linksPage() {
+  const linkCategories = [...new Set(externalLinks.map((link) => link.category))]
+  const linkSections = linkCategories
+    .map((category, i) => {
+      const items = externalLinks
+        .filter((link) => link.category === category)
+        .map(
+          (link) => `<li class="card">
+            <a href="${esc(link.url)}" target="_blank" rel="noopener">${esc(link.title)}</a>
+            <p class="muted">${esc(link.description)}</p>
+          </li>`,
+        )
+        .join('\n          ')
+      return `<section id="cat-${i}">
+          <h2>${esc(category)}</h2>
+          <ul class="card-list">
+            ${items}
+          </ul>
+        </section>`
+    })
+    .join('\n      ')
+
+  const body = `      <h1>Ссылки</h1>
+      <p class="lead">Подборка внешних ресурсов, сгруппированных по категориям.</p>
+      ${linkSections}`
+
+  register('links', 'Ссылки', 'links.html')
+  return page({
+    id: 'links',
+    title: 'Ссылки',
+    description: 'Полезные ссылки для инвесторов: биржи, обучающие ресурсы и аналитика рынка.',
+    keywords: 'ссылки, полезные ресурсы, биржи, обучение, аналитика, инвестиции',
+    body,
+  })
+}
+
 function searchPage() {
   const body = `      <h1>Поиск по сайту</h1>
       <p class="lead">Поиск по новостям и страницам Funds Lab по ключевому слову.</p>
@@ -469,29 +672,8 @@ function servicesPage() {
     })
     .join('\n        ')
 
-  const linkCategories = [...new Set(externalLinks.map((link) => link.category))]
-  const linkSections = linkCategories
-    .map((category, i) => {
-      const items = externalLinks
-        .filter((link) => link.category === category)
-        .map(
-          (link) => `<li class="card">
-            <a href="${esc(link.url)}" target="_blank" rel="noopener">${esc(link.title)}</a>
-            <p class="muted">${esc(link.description)}</p>
-          </li>`,
-        )
-        .join('\n          ')
-      return `<section id="cat-${i}">
-          <h3>${esc(category)}</h3>
-          <ul class="card-list">
-            ${items}
-          </ul>
-        </section>`
-    })
-    .join('\n      ')
-
   const body = `      <h1 id="services-top">Сервисы сайта</h1>
-      <p class="lead">Интерактивные сервисы Funds Lab: опрос, конвертер валют, инвестиционный калькулятор, календарь событий, полезные ссылки и статистика посещений.</p>
+      <p class="lead">Интерактивные сервисы Funds Lab: опрос, конвертер валют, инвестиционный калькулятор, календарь событий и статистика посещений.</p>
 
       <nav class="toc" aria-label="Содержание страницы">
         <h2>Содержание</h2>
@@ -500,7 +682,6 @@ function servicesPage() {
           <li><a href="#converter">Конвертер валют</a></li>
           <li><a href="#calculator">Инвестиционный калькулятор</a></li>
           <li><a href="#calendar">Календарь событий</a></li>
-          <li><a href="#links">Полезные ссылки</a></li>
           <li><a href="#stats">Статистика посещений</a></li>
         </ul>
       </nav>
@@ -595,12 +776,6 @@ function servicesPage() {
         </table>
       </section>
 
-      <section id="links">
-        <h2>Полезные ссылки</h2>
-        <p class="lead">Подборка внешних ресурсов, сгруппированных по категориям.</p>
-      ${linkSections}
-      </section>
-
       <section id="stats">
         <h2>Статистика посещений по разделам</h2>
         <p class="lead">Сколько раз был открыт каждый раздел сайта (данные хранятся в вашем браузере).</p>
@@ -623,8 +798,44 @@ function servicesPage() {
   return page({
     id: 'services',
     title: 'Сервисы сайта',
-    description: 'Сервисы Funds Lab: опрос, конвертер валют по курсу ЦБ РФ, инвестиционный калькулятор, календарь событий, полезные ссылки, статистика посещений.',
-    keywords: 'сервисы, опрос, конвертер валют, калькулятор, календарь, ссылки, статистика',
+    description: 'Сервисы Funds Lab: опрос, конвертер валют по курсу ЦБ РФ, инвестиционный калькулятор, календарь событий, статистика посещений.',
+    keywords: 'сервисы, опрос, конвертер валют, калькулятор, календарь, статистика',
+    body,
+  })
+}
+
+function contactsPage() {
+  const body = `      <h1>Контакты</h1>
+      <p class="lead">Автор и учебные реквизиты проекта Funds Lab.</p>
+
+      <table class="data-table">
+        <caption>Контактная информация</caption>
+        <tbody>
+          <tr>
+            <td>Автор</td>
+            <td>Корнюшкин Игорь</td>
+          </tr>
+          <tr>
+            <td>Группа</td>
+            <td>БИЗ-Б23</td>
+          </tr>
+          <tr>
+            <td>Адрес сайта</td>
+            <td><a href="https://igrgrya.github.io/web_app/" target="_blank" rel="noopener">igrgrya.github.io/web_app</a></td>
+          </tr>
+          <tr>
+            <td>Репозиторий</td>
+            <td><a href="https://github.com/igrgrya/web_app" target="_blank" rel="noopener">github.com/igrgrya/web_app</a></td>
+          </tr>
+        </tbody>
+      </table>`
+
+  register('contacts', 'Контакты', 'contacts.html')
+  return page({
+    id: 'contacts',
+    title: 'Контакты',
+    description: 'Контакты проекта Funds Lab: автор, учебная группа, адрес сайта и репозиторий.',
+    keywords: 'контакты, автор, обратная связь, Funds Lab',
     body,
   })
 }
@@ -666,13 +877,12 @@ function aboutPage() {
           <li>Конвертер валют</li>
           <li>Инвестиционный калькулятор</li>
           <li>Календарь событий</li>
-          <li>Коллекция полезных ссылок</li>
         </ul>
       </section>
 
       <section id="plan">
         <h2>Структура сайта и план развития</h2>
-        <p>Сайт состоит из 10 статических страниц, по одной на каждый пункт меню (+ техническая 404): Главная, Биржи, Новости, XML, БД, RSS, Поиск, Форум, Сервисы, О проекте.</p>
+        <p>Сайт состоит из 10 статических страниц: Главная, Новости, Биржи, История бирж, Новичку, Глоссарий, Риски, Ссылки, Контакты, О проекте. Отдельно вынесены сервисные страницы (Поиск, Форум и Сервисы), страницы-заглушки XML, БД и RSS под лабораторные работы №2–4 и техническая страница 404.</p>
         <p>Дальнейшее развитие — по лабораторным работам:</p>
         <ul>
           <li>№2 — раздел «Каталог инструментов» на XML + XSL-преобразование;</li>
@@ -839,13 +1049,19 @@ function main() {
   const files = {}
   files['index.html'] = homePage()
   files['exchanges.html'] = exchangesPage()
+  files['history.html'] = historyPage()
+  files['beginners.html'] = beginnersPage()
+  files['glossary.html'] = glossaryPage()
+  files['risks.html'] = risksPage()
   files['news.html'] = newsListPage()
+  files['contacts.html'] = contactsPage()
   files['xml.html'] = xmlPage()
   files['db.html'] = dbPage()
   files['rss.html'] = rssPage()
   files['search.html'] = searchPage()
   files['forum.html'] = forumPage()
   files['services.html'] = servicesPage()
+  files['links.html'] = linksPage()
   files['about.html'] = aboutPage()
   files['404.html'] = notFoundPage()
 

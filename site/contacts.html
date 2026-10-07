@@ -3,27 +3,27 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Поиск по сайту — Funds Lab</title>
-  <meta name="description" content="Поиск по новостям и страницам сайта Funds Lab по ключевому слову.">
-  <meta name="keywords" content="поиск, поиск по сайту, новости, страницы">
+  <title>Контакты — Funds Lab</title>
+  <meta name="description" content="Контакты проекта Funds Lab: автор, учебная группа, адрес сайта и репозиторий.">
+  <meta name="keywords" content="контакты, автор, обратная связь, Funds Lab">
   <meta name="author" content="Funds Lab">
-  <meta property="og:title" content="Поиск по сайту — Funds Lab">
-  <meta property="og:description" content="Поиск по новостям и страницам сайта Funds Lab по ключевому слову.">
+  <meta property="og:title" content="Контакты — Funds Lab">
+  <meta property="og:description" content="Контакты проекта Funds Lab: автор, учебная группа, адрес сайта и репозиторий.">
   <meta property="og:type" content="website">
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=563d11fdeb">
   <link rel="stylesheet" href="styles.css?v=563d11fdeb">
 </head>
-<body data-page="search">
+<body data-page="contacts">
   <div class="site-shell">
     <header class="site-header">
     <div class="site-header-inner">
       <a class="brand" href="index.html">Funds Lab</a>
       <nav aria-label="Основная навигация">
-        <ul class="nav-list"><li><a href="index.html">Главная</a></li><li><a href="news.html">Новости</a></li><li><a href="exchanges.html">Биржи</a></li><li><a href="history.html">История бирж</a></li><li><a href="beginners.html">Новичку</a></li><li><a href="glossary.html">Глоссарий</a></li><li><a href="risks.html">Риски</a></li><li><a href="links.html">Ссылки</a></li><li><a href="contacts.html">Контакты</a></li><li><a href="about.html">О проекте</a></li></ul>
+        <ul class="nav-list"><li><a href="index.html">Главная</a></li><li><a href="news.html">Новости</a></li><li><a href="exchanges.html">Биржи</a></li><li><a href="history.html">История бирж</a></li><li><a href="beginners.html">Новичку</a></li><li><a href="glossary.html">Глоссарий</a></li><li><a href="risks.html">Риски</a></li><li><a href="links.html">Ссылки</a></li><li><a href="contacts.html" aria-current="page">Контакты</a></li><li><a href="about.html">О проекте</a></li></ul>
       </nav>
     </div>
     <nav class="nav-extra" aria-label="Сервисы и лабораторные работы">
-      <ul class="nav-list nav-list--muted"><li><a href="search.html" aria-current="page">Поиск</a></li><li><a href="forum.html">Форум</a></li><li><a href="services.html">Сервисы</a></li><li><a href="xml.html">XML</a></li><li><a href="db.html">БД</a></li><li><a href="rss.html">RSS</a></li></ul>
+      <ul class="nav-list nav-list--muted"><li><a href="search.html">Поиск</a></li><li><a href="forum.html">Форум</a></li><li><a href="services.html">Сервисы</a></li><li><a href="xml.html">XML</a></li><li><a href="db.html">БД</a></li><li><a href="rss.html">RSS</a></li></ul>
     </nav>
     <form class="site-search" action="search.html" method="get" role="search">
       <input type="search" name="q" placeholder="Поиск по сайту: Сбербанк, ETF, дивиденды…" aria-label="Поиск по сайту">
@@ -35,16 +35,30 @@
     </div>
   </header>
     <main class="site-main">
-      <h1>Поиск по сайту</h1>
-      <p class="lead">Поиск по новостям и страницам Funds Lab по ключевому слову.</p>
+      <h1>Контакты</h1>
+      <p class="lead">Автор и учебные реквизиты проекта Funds Lab.</p>
 
-      <form class="stacked-form" onsubmit="return false">
-        <label>Ключевое слово
-          <input type="search" id="search-input" placeholder="Например: Сбербанк, ETF, дивиденды">
-        </label>
-      </form>
-
-      <div id="search-results"></div>
+      <table class="data-table">
+        <caption>Контактная информация</caption>
+        <tbody>
+          <tr>
+            <td>Автор</td>
+            <td>Корнюшкин Игорь</td>
+          </tr>
+          <tr>
+            <td>Группа</td>
+            <td>БИЗ-Б23</td>
+          </tr>
+          <tr>
+            <td>Адрес сайта</td>
+            <td><a href="https://igrgrya.github.io/web_app/" target="_blank" rel="noopener">igrgrya.github.io/web_app</a></td>
+          </tr>
+          <tr>
+            <td>Репозиторий</td>
+            <td><a href="https://github.com/igrgrya/web_app" target="_blank" rel="noopener">github.com/igrgrya/web_app</a></td>
+          </tr>
+        </tbody>
+      </table>
     </main>
     <footer class="site-footer">
     <nav aria-label="Дополнительные разделы">
@@ -55,7 +69,6 @@
   </footer>
   </div>
   <script src="data.js?v=563d11fdeb"></script>
-  <script src="search-index.js?v=563d11fdeb"></script>
   <script src="app.js?v=563d11fdeb"></script>
 </body>
 </html>
