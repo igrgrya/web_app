@@ -65,8 +65,6 @@ function findInstrument(id) {
   return instruments.find((i) => i.id === id)
 }
 
-const dateFmt = (value) => value
-
 /* Записи о страницах: нужны для статистики и sitemap.xml. */
 const registry = []
 
