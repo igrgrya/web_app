@@ -29,7 +29,17 @@ INSERT INTO instruments (ticker, name, instrument_type, exchange_id, sector_id, 
     ('AAPL', 'Apple Inc.',                     'stock', 2, 1, 'USD', 'Производитель электроники и ПО.',             '1980-12-12'),
     ('MSFT', 'Microsoft Corporation',          'stock', 2, 1, 'USD', 'Разработчик программного обеспечения.',       '1986-03-13'),
     ('SPY',  'SPDR S&P 500 ETF Trust',         'etf',   3, 2, 'USD', 'Фонд, отслеживающий индекс S&P 500.',         '1993-01-22'),
-    ('JNJ',  'Johnson & Johnson',              'stock', 3, 5, 'USD', 'Фармацевтика и медицинские изделия.',         '1944-09-25');
+    ('JNJ',  'Johnson & Johnson',              'stock', 3, 5, 'USD', 'Фармацевтика и медицинские изделия.',         '1944-09-25'),
+    ('ROSN', 'Роснефть',                       'stock', 1, 3, 'RUB', 'Нефтяная компания: добыча и переработка.',    '2006-05-11'),
+    ('VTBR', 'ВТБ',                            'stock', 1, 2, 'RUB', 'Государственный банк, сервисы для бизнеса.',  '1996-05-16'),
+    ('TCSG', 'Т-Технологии',                   'stock', 1, 2, 'RUB', 'Онлайн-банк и финансовая экосистема.',        '2019-10-21'),
+    ('MTSS', 'МТС',                            'stock', 1, 1, 'RUB', 'Телеком-оператор и цифровые сервисы.',        '2000-06-30'),
+    ('SNGS', 'Сургутнефтегаз',                 'stock', 1, 3, 'RUB', 'Нефтегазовая компания Западной Сибири.',      '1997-07-08'),
+    ('LQDT', 'LQDT Фонд ликвидности',          'etf',   1, 2, 'RUB', 'Фонд денежного рынка для свободных средств.', '2012-11-16'),
+    ('NVDA', 'NVIDIA Corporation',             'stock', 2, 1, 'USD', 'Графические процессоры и решения для ИИ.',    '1999-01-22'),
+    ('GOOGL', 'Alphabet Inc.',                 'stock', 2, 1, 'USD', 'Материнская компания Google.',                '2004-08-19'),
+    ('KO',   'The Coca-Cola Company',          'stock', 3, 4, 'USD', 'Производитель безалкогольных напитков.',      '1919-09-05'),
+    ('PG',   'The Procter & Gamble Company',   'stock', 3, 4, 'USD', 'Конгломерат потребительских товаров.',        '1891-06-13');
 
 -- Снимки цен (по одному на инструмент, условная "текущая" дата)
 INSERT INTO price_snapshots (instrument_id, price, change_percent, volume, as_of_date) VALUES
@@ -40,7 +50,17 @@ INSERT INTO price_snapshots (instrument_id, price, change_percent, volume, as_of
     (5, 227.80,  0.55, 48000000, CURRENT_DATE),
     (6, 415.10,  0.90, 21000000, CURRENT_DATE),
     (7, 560.75,  0.30, 60000000, CURRENT_DATE),
-    (8, 158.40, -0.15,  6500000, CURRENT_DATE);
+    (8, 158.40, -0.15,  6500000, CURRENT_DATE),
+    (9, 562.40,  0.75,  3400000, CURRENT_DATE),
+    (10, 91.50, -1.10,  8700000, CURRENT_DATE),
+    (11, 3280.00, 1.45,  560000, CURRENT_DATE),
+    (12, 232.10, -0.30,  2100000, CURRENT_DATE),
+    (13, 27.85,  0.20, 15000000, CURRENT_DATE),
+    (14, 1.06,   0.03,  4500000, CURRENT_DATE),
+    (15, 134.70, 2.30, 190000000, CURRENT_DATE),
+    (16, 176.40, 0.85, 26000000, CURRENT_DATE),
+    (17, 63.20, -0.10, 14000000, CURRENT_DATE),
+    (18, 164.90, 0.40,  6100000, CURRENT_DATE);
 
 -- Новости
 INSERT INTO news (title, body, related_instrument_id) VALUES
