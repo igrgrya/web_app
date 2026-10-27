@@ -41,6 +41,7 @@ const ASSET_VERSION = createHash('sha1')
   )
   .update(readFileSync(join(SRC, 'app.js'), 'utf8'))
   .update(readFileSync(join(SRC, 'styles.css'), 'utf8'))
+  .update(readFileSync(join(SRC, 'catalog.xsl'), 'utf8'))
   .update(readFileSync(join(SRC, '../assets/hero.png')))
   .digest('hex')
   .slice(0, 10)
@@ -1105,6 +1106,7 @@ function main() {
   /* Стили, скрипты, картинки. */
   copyFileSync(join(SRC, 'styles.css'), join(OUT, 'styles.css'))
   copyFileSync(join(SRC, 'app.js'), join(OUT, 'app.js'))
+  copyFileSync(join(SRC, 'catalog.xsl'), join(OUT, 'catalog.xsl'))
   copyFileSync(join(SRC, '../assets/hero.png'), join(OUT, 'assets/hero.png'))
   copyFileSync(join(ROOT, 'frontend/public/favicon.svg'), join(OUT, 'assets/favicon.svg'))
 
