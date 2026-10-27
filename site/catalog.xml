@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<catalog>
+  <instrument id="1" ticker="SBER">
+    <name>Сбербанк</name>
+    <type>stock</type>
+    <exchange>MOEX</exchange>
+    <sector>Финансы</sector>
+    <price currency="RUB">285.5</price>
+    <changePercent>1.2</changePercent>
+    <volume>15000000</volume>
+  </instrument>
+  <instrument id="2" ticker="GAZP">
+    <name>Газпром</name>
+    <type>stock</type>
+    <exchange>MOEX</exchange>
+    <sector>Энергетика</sector>
+    <price currency="RUB">168.2</price>
+    <changePercent>-0.85</changePercent>
+    <volume>9800000</volume>
+  </instrument>
+  <instrument id="3" ticker="LKOH">
+    <name>Лукойл</name>
+    <type>stock</type>
+    <exchange>MOEX</exchange>
+    <sector>Энергетика</sector>
+    <price currency="RUB">7150</price>
+    <changePercent>0.4</changePercent>
+    <volume>1200000</volume>
+  </instrument>
+  <instrument id="4" ticker="FXIT">
+    <name>FinEx Технологии ETF</name>
+    <type>etf</type>
+    <exchange>MOEX</exchange>
+    <sector>Технологии</sector>
+    <price currency="RUB">42.3</price>
+    <changePercent>2.1</changePercent>
+    <volume>320000</volume>
+  </instrument>
+  <instrument id="5" ticker="AAPL">
+    <name>Apple Inc.</name>
+    <type>stock</type>
+    <exchange>NASDAQ</exchange>
+    <sector>Технологии</sector>
+    <price currency="USD">227.8</price>
+    <changePercent>0.55</changePercent>
+    <volume>48000000</volume>
+  </instrument>
+  <instrument id="6" ticker="MSFT">
+    <name>Microsoft Corporation</name>
+    <type>stock</type>
+    <exchange>NASDAQ</exchange>
+    <sector>Технологии</sector>
+    <price currency="USD">415.1</price>
+    <changePercent>0.9</changePercent>
+    <volume>21000000</volume>
+  </instrument>
+  <instrument id="7" ticker="SPY">
+    <name>SPDR S&amp;P 500 ETF Trust</name>
+    <type>etf</type>
+    <exchange>NYSE</exchange>
+    <sector>Финансы</sector>
+    <price currency="USD">560.75</price>
+    <changePercent>0.3</changePercent>
+    <volume>60000000</volume>
+  </instrument>
+  <instrument id="8" ticker="JNJ">
+    <name>Johnson &amp; Johnson</name>
+    <type>stock</type>
+    <exchange>NYSE</exchange>
+    <sector>Здравоохранение</sector>
+    <price currency="USD">158.4</price>
+    <changePercent>-0.15</changePercent>
+    <volume>6500000</volume>
+  </instrument>
+  <instrument id="9" ticker="ROSN">
+    <name>Роснефть</name>
+    <type>stock</type>
+    <exchange>MOEX</exchange>
+    <sector>Энергетика</sector>
+    <price currency="RUB">562.4</price>
+    <changePercent>0.75</changePercent>
+    <volume>3400000</volume>
+  </instrument>
+  <instrument id="10" ticker="VTBR">
+    <name>ВТБ</name>
+    <type>stock</type>
+    <exchange>MOEX</exchange>
+    <sector>Финансы</sector>
+    <price currency="RUB">91.5</price>
+    <changePercent>-1.1</changePercent>
+    <volume>8700000</volume>
+  </instrument>
+  <instrument id="11" ticker="TCSG">
+    <name>Т-Технологии</name>
+    <type>stock</type>
+    <exchange>MOEX</exchange>
+    <sector>Финансы</sector>
+    <price currency="RUB">3280</price>
+    <changePercent>1.45</changePercent>
+    <volume>560000</volume>
+  </instrument>
+  <instrument id="12" ticker="MTSS">
+    <name>МТС</name>
+    <type>stock</type>
+    <exchange>MOEX</exchange>
+    <sector>Технологии</sector>
+    <price currency="RUB">232.1</price>
+    <changePercent>-0.3</changePercent>
+    <volume>2100000</volume>
+  </instrument>
+  <instrument id="13" ticker="SNGS">
+    <name>Сургутнефтегаз</name>
+    <type>stock</type>
+    <exchange>MOEX</exchange>
+    <sector>Энергетика</sector>
+    <price currency="RUB">27.85</price>
+    <changePercent>0.2</changePercent>
+    <volume>15000000</volume>
+  </instrument>
+  <instrument id="14" ticker="LQDT">
+    <name>LQDT Фонд ликвидности</name>
+    <type>etf</type>
+    <exchange>MOEX</exchange>
+    <sector>Финансы</sector>
+    <price currency="RUB">1.06</price>
+    <changePercent>0.03</changePercent>
+    <volume>4500000</volume>
+  </instrument>
+  <instrument id="15" ticker="NVDA">
+    <name>NVIDIA Corporation</name>
+    <type>stock</type>
+    <exchange>NASDAQ</exchange>
+    <sector>Технологии</sector>
+    <price currency="USD">134.7</price>
+    <changePercent>2.3</changePercent>
+    <volume>190000000</volume>
+  </instrument>
+  <instrument id="16" ticker="GOOGL">
+    <name>Alphabet Inc.</name>
+    <type>stock</type>
+    <exchange>NASDAQ</exchange>
+    <sector>Технологии</sector>
+    <price currency="USD">176.4</price>
+    <changePercent>0.85</changePercent>
+    <volume>26000000</volume>
+  </instrument>
+  <instrument id="17" ticker="KO">
+    <name>The Coca-Cola Company</name>
+    <type>stock</type>
+    <exchange>NYSE</exchange>
+    <sector>Потребительский сектор</sector>
+    <price currency="USD">63.2</price>
+    <changePercent>-0.1</changePercent>
+    <volume>14000000</volume>
+  </instrument>
+  <instrument id="18" ticker="PG">
+    <name>The Procter &amp; Gamble Company</name>
+    <type>stock</type>
+    <exchange>NYSE</exchange>
+    <sector>Потребительский сектор</sector>
+    <price currency="USD">164.9</price>
+    <changePercent>0.4</changePercent>
+    <volume>6100000</volume>
+  </instrument>
+</catalog>
