@@ -65,6 +65,33 @@ function findInstrument(id) {
   return instruments.find((i) => i.id === id)
 }
 
+/* XML-каталог инструментов (лабораторная работа №2): выгружается из тех же
+   seed-данных, что и остальные страницы, поэтому XML не разъедется с сайтом.
+   exchange/sector — код биржи и название сектора (а не id), чтобы документ
+   читался человеком без обращения к сайту. */
+function buildCatalogXml(instruments, exchanges, sectors) {
+  const rows = instruments
+    .map((item) => {
+      const exchange = exchanges.find((e) => e.id === item.exchangeId)
+      const sector = sectors.find((s) => s.id === item.sectorId)
+      return `  <instrument id="${esc(item.id)}" ticker="${esc(item.ticker)}">
+    <name>${esc(item.name)}</name>
+    <type>${esc(item.type)}</type>
+    <exchange>${esc(exchange ? exchange.code : '')}</exchange>
+    <sector>${esc(sector ? sector.name : '')}</sector>
+    <price currency="${esc(item.currency)}">${esc(item.price)}</price>
+    <changePercent>${esc(item.changePercent)}</changePercent>
+    <volume>${esc(item.volume)}</volume>
+  </instrument>`
+    })
+    .join('\n')
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<catalog>
+${rows}
+</catalog>
+`
+}
+
 /* Записи о страницах: нужны для статистики и sitemap.xml. */
 const registry = []
 
@@ -1062,6 +1089,9 @@ function main() {
   files['404.html'] = notFoundPage()
 
   Object.entries(files).forEach(([name, content]) => writeOut(name, content))
+
+  /* XML-каталог для лабораторной работы №2 (детерминированный: без дат генерации). */
+  writeOut('catalog.xml', buildCatalogXml(instruments, exchanges, sectors))
 
   /* Данные для клиентских сервисов. */
   const data = {
