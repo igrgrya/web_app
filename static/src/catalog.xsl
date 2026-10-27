@@ -20,8 +20,16 @@
   <!-- Поиск по подстроке в названии или тикере, без учёта регистра. -->
   <xsl:param name="query" select="''"/>
 
-  <!-- Русский формат чисел: запятая в дробной части, пробел между разрядами. -->
-  <xsl:decimal-format name="ru" decimal-separator="," grouping-separator=" "/>
+  <!-- Русский формат чисел (запятая в дробной части, пробел между разрядами):
+       число форматируется стандартным паттерном, затем символы ".,"
+       заменяются через translate(). Именованный xsl:decimal-format не
+       используется намеренно: libxslt (Chromium) трактует разделители в
+       самом паттерне по именованному формату, что ломает "#,##0.00". -->
+  <xsl:template name="ru-number">
+    <xsl:param name="value"/>
+    <xsl:param name="pattern"/>
+    <xsl:value-of select="translate(format-number($value, $pattern), '.,', ', ')"/>
+  </xsl:template>
 
   <!-- Регистронезависимый поиск: translate() по латинице и кириллице (включая Ё/ё). -->
   <xsl:variable name="lowercase">абвгдеёжзийклмнопрстуфхцчшщъыьэюяabcdefghijklmnopqrstuvwxyz</xsl:variable>
@@ -100,7 +108,10 @@
       <td><xsl:value-of select="sector"/></td>
       <!-- Цена: число в русском формате + знак валюты из атрибута currency. -->
       <td class="catalog-num">
-        <xsl:value-of select="format-number(price, '#,##0.00', 'ru')"/>
+        <xsl:call-template name="ru-number">
+          <xsl:with-param name="value" select="price"/>
+          <xsl:with-param name="pattern" select="'#,##0.00'"/>
+        </xsl:call-template>
         <xsl:choose>
           <xsl:when test="price/@currency = 'USD'"> $</xsl:when>
           <xsl:otherwise> ₽</xsl:otherwise>
@@ -110,13 +121,22 @@
       <td class="catalog-num">
         <xsl:choose>
           <xsl:when test="changePercent &gt; 0">
-            <span class="change-up">+<xsl:value-of select="format-number(changePercent, '#,##0.00', 'ru')"/> %</span>
+            <span class="change-up">+<xsl:call-template name="ru-number">
+                <xsl:with-param name="value" select="changePercent"/>
+                <xsl:with-param name="pattern" select="'#,##0.00'"/>
+              </xsl:call-template> %</span>
           </xsl:when>
           <xsl:when test="changePercent &lt; 0">
-            <span class="change-down"><xsl:value-of select="format-number(changePercent, '#,##0.00', 'ru')"/> %</span>
+            <span class="change-down"><xsl:call-template name="ru-number">
+                <xsl:with-param name="value" select="changePercent"/>
+                <xsl:with-param name="pattern" select="'#,##0.00'"/>
+              </xsl:call-template> %</span>
           </xsl:when>
           <xsl:otherwise>
-            <xsl:value-of select="format-number(changePercent, '#,##0.00', 'ru')"/> %
+            <xsl:call-template name="ru-number">
+              <xsl:with-param name="value" select="changePercent"/>
+              <xsl:with-param name="pattern" select="'#,##0.00'"/>
+            </xsl:call-template> %
           </xsl:otherwise>
         </xsl:choose>
       </td>
@@ -124,10 +144,16 @@
       <td class="catalog-num">
         <xsl:choose>
           <xsl:when test="volume &gt;= 1000000">
-            <xsl:value-of select="format-number(volume div 1000000, '#,##0.0', 'ru')"/> млн
+            <xsl:call-template name="ru-number">
+              <xsl:with-param name="value" select="volume div 1000000"/>
+              <xsl:with-param name="pattern" select="'#,##0.0'"/>
+            </xsl:call-template> млн
           </xsl:when>
           <xsl:otherwise>
-            <xsl:value-of select="format-number(volume div 1000, '#,##0.0', 'ru')"/> тыс.
+            <xsl:call-template name="ru-number">
+              <xsl:with-param name="value" select="volume div 1000"/>
+              <xsl:with-param name="pattern" select="'#,##0.0'"/>
+            </xsl:call-template> тыс.
           </xsl:otherwise>
         </xsl:choose>
       </td>
