@@ -726,6 +726,92 @@
     setInterval(render, 60000)
   }
 
+  /* --- Каталог инструментов: XML + XSLT (лабораторная работа №2) ------ */
+
+  // Страница загружает catalog.xml и catalog.xsl, применяет XSL-шаблон
+  // через XSLTProcessor и подставляет параметры сортировки/фильтров
+  // при каждом изменении контролов. Страница строится заново целиком.
+  function initCatalog() {
+    var output = byId('catalog-output')
+    if (!output) return
+
+    // XSLTProcessor поддерживают все актуальные браузеры; для остальных
+    // показываем сообщение и не роняем остальные сервисы страницы.
+    if (typeof XSLTProcessor === 'undefined' || typeof DOMParser === 'undefined') {
+      var fallback = byId('catalog-fallback')
+      if (fallback) fallback.hidden = false
+      output.innerHTML = '<p class="empty-state">Браузер не поддерживает XSLT-преобразование, таблица каталога недоступна.</p>'
+      return
+    }
+
+    var xmlDoc = null
+    var processor = null
+    var searchTimer = null
+
+    function parseXml(text) {
+      var doc = new DOMParser().parseFromString(text, 'application/xml')
+      if (doc.getElementsByTagName('parsererror').length) {
+        throw new Error('не удалось разобрать XML')
+      }
+      return doc
+    }
+
+    function render() {
+      if (!xmlDoc || !processor) return
+      processor.setParameter(null, 'sortKey', byId('catalog-sort-key').value)
+      processor.setParameter(null, 'sortDir', byId('catalog-sort-dir').value)
+      processor.setParameter(null, 'filterExchange', byId('catalog-filter-exchange').value)
+      processor.setParameter(null, 'filterType', byId('catalog-filter-type').value)
+      processor.setParameter(null, 'filterSector', byId('catalog-filter-sector').value)
+      processor.setParameter(null, 'query', byId('catalog-search').value.trim())
+      output.innerHTML = ''
+      output.appendChild(processor.transformToFragment(xmlDoc, document))
+    }
+
+    function bindControls() {
+      var selects = ['catalog-sort-key', 'catalog-sort-dir', 'catalog-filter-exchange', 'catalog-filter-type', 'catalog-filter-sector']
+      for (var i = 0; i < selects.length; i++) {
+        byId(selects[i]).addEventListener('change', render)
+      }
+      // Поиск: лёгкий debounce, чтобы не пересобирать таблицу на каждый символ.
+      byId('catalog-search').addEventListener('input', function () {
+        if (searchTimer) clearTimeout(searchTimer)
+        searchTimer = setTimeout(render, 200)
+      })
+      // form.reset() возвращает все контролы к значениям из разметки.
+      byId('catalog-reset').addEventListener('click', function () {
+        byId('catalog-form').reset()
+        render()
+      })
+    }
+
+    // Версия ассетов из data-атрибута: браузер не подхватит устаревший
+    // catalog.xml/catalog.xsl из кэша GitHub Pages.
+    var version = output.getAttribute('data-asset-version')
+    var suffix = version ? '?v=' + version : ''
+
+    Promise.all([
+      fetch('catalog.xml' + suffix).then(function (response) {
+        if (!response.ok) throw new Error('HTTP ' + response.status)
+        return response.text()
+      }),
+      fetch('catalog.xsl' + suffix).then(function (response) {
+        if (!response.ok) throw new Error('HTTP ' + response.status)
+        return response.text()
+      }),
+    ])
+      .then(function (texts) {
+        xmlDoc = parseXml(texts[0])
+        processor = new XSLTProcessor()
+        processor.importStylesheet(parseXml(texts[1]))
+        bindControls()
+        render()
+      })
+      .catch(function () {
+        output.innerHTML = '<p class="empty-state">Не удалось загрузить каталог: файлы catalog.xml и catalog.xsl должны открываться по HTTP, а не с диска.</p>'
+      })
+  }
+
   /* --- Запуск --------------------------------------------------------- */
 
   function init() {
@@ -745,6 +831,7 @@
     initConverter()
     initCalculator()
     initExchangeClock()
+    initCatalog()
 
     // Ссылки вида news.html#news-2 ведут на свёрнутый <details> —
     // раскрываем целевой блок. Важно: после initNewsForm(), чтобы
