@@ -944,46 +944,74 @@ function notFoundPage() {
 
 /* --- Страницы-заглушки для следующих лабораторных работ --------------- */
 
+/* --- Каталог инструментов (лабораторная работа №2) -------------------- */
+
+/* Страница каталога: данные живут в catalog.xml, таблица строится
+   XSLT-преобразованием в браузере (XSL-шаблон — static/src/catalog.xsl). */
 function xmlPage() {
-  const sample = instruments
-    .slice(0, 2)
-    .map(
-      (item) => `  <instrument ticker="${esc(item.ticker)}">
-    <name>${esc(item.name)}</name>
-    <type>${esc(item.type)}</type>
-    <exchange>${esc(findExchange(item.exchangeId) ? findExchange(item.exchangeId).code : '')}</exchange>
-    <price currency="${esc(item.currency)}">${esc(item.price)}</price>
-    <changePercent>${esc(item.changePercent)}</changePercent>
-  </instrument>`,
-    )
-    .join('\n')
-  const xmlSample = `<?xml version="1.0" encoding="UTF-8"?>
-<catalog>
-${sample}
-</catalog>`
+  const sectorOptions = sectors
+    .map((sector) => `<option value="${esc(sector.name)}">${esc(sector.name)}</option>`)
+    .join('\n            ')
 
-  const body = `      <h1>XML-данные каталога</h1>
-      <p class="lead">Раздел „Каталог инструментов" появится на сайте в лабораторной работе №2: реестр инструментов будет храниться в XML-файле и загружаться на страницу средствами JavaScript.</p>
+  const body = `      <h1>Каталог инструментов</h1>
+      <p class="lead">Данные каталога хранятся в XML-файле, а таблица строится XSLT-преобразованием прямо в браузере: выберите сортировку и фильтры — страница покажет нужную выборку из каталога.</p>
 
-      <h2>Планируемая структура XML-документа</h2>
-      <p>Пример XML-описания инструментов каталога (фрагмент):</p>
-      <pre class="code-block"><code>${esc(xmlSample)}</code></pre>
+      <form class="catalog-controls" id="catalog-form" aria-label="Управление каталогом" onsubmit="return false">
+        <label>Сортировка
+          <select id="catalog-sort-key">
+            <option value="ticker">по тикеру</option>
+            <option value="name">по названию</option>
+            <option value="price">по цене</option>
+            <option value="changePercent">по изменению за день</option>
+            <option value="volume">по объёму торгов</option>
+          </select>
+        </label>
+        <label>Направление
+          <select id="catalog-sort-dir">
+            <option value="ascending">по возрастанию</option>
+            <option value="descending">по убыванию</option>
+          </select>
+        </label>
+        <label>Биржа
+          <select id="catalog-filter-exchange">
+            <option value="">все</option>
+            <option value="MOEX">MOEX</option>
+            <option value="NASDAQ">NASDAQ</option>
+            <option value="NYSE">NYSE</option>
+          </select>
+        </label>
+        <label>Тип
+          <select id="catalog-filter-type">
+            <option value="">все</option>
+            <option value="stock">акции</option>
+            <option value="etf">ETF</option>
+          </select>
+        </label>
+        <label>Сектор
+          <select id="catalog-filter-sector">
+            <option value="">все</option>
+            ${sectorOptions}
+          </select>
+        </label>
+        <label>Поиск
+          <input type="search" id="catalog-search" placeholder="Название или тикер">
+        </label>
+        <button type="button" id="catalog-reset">Сбросить</button>
+      </form>
 
-      <h2>Что будет реализовано</h2>
-      <ul>
-        <li>XML-файл с полным каталогом инструментов (элементы, атрибуты, вложенность).</li>
-        <li>Загрузка и разбор XML на клиенте (DOM Parser / fetch).</li>
-        <li>Отрисовка таблицы каталога из XML-данных с фильтрацией по бирже и сектору.</li>
-      </ul>
+      <div class="table-scroll" id="catalog-output" data-asset-version="${ASSET_VERSION}">
+        <p class="empty-state">Загрузка каталога…</p>
+      </div>
+      <p id="catalog-fallback" class="empty-state" hidden>Ваш браузер не поддерживает XSLT-преобразования: таблица каталога недоступна.</p>
 
-      <p class="muted">Страница-заглушка: раздел будет реализован в лабораторной работе №2.</p>`
+      <p class="muted">Исходные данные: <a href="catalog.xml" target="_blank" rel="noopener">catalog.xml</a>, стилевая таблица: <a href="catalog.xsl" target="_blank" rel="noopener">catalog.xsl</a>. Загрузку файлов и преобразование выполняет браузер (XSLTProcessor).</p>`
 
   register('xml', 'XML', 'xml.html')
   return page({
     id: 'xml',
-    title: 'XML',
-    description: 'XML-хранение данных каталога Funds Lab — заглушка лабораторной работы №2.',
-    keywords: 'XML, данные, каталог, разметка',
+    title: 'Каталог инструментов',
+    description: 'Каталог инструментов Funds Lab: акции и ETF с сортировкой, фильтрами и поиском; данные хранятся в XML, таблица строится XSLT-преобразованием в браузере.',
+    keywords: 'XML, XSLT, каталог инструментов, акции, ETF, сортировка, фильтры, выборка',
     body,
   })
 }
