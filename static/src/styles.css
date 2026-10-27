@@ -684,6 +684,82 @@ code {
   border-color: var(--border);
 }
 
+/* --- Каталог инструментов: XML + XSLT (лабораторная работа №2) -------- */
+
+/* Горизонтальная прокрутка: на узких экранах таблица каталога
+   скроллится, а не ломает вёрстку страницы. */
+.table-scroll {
+  overflow-x: auto;
+  margin-bottom: 24px;
+}
+
+.catalog-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  align-items: flex-end;
+  margin-bottom: 24px;
+}
+
+.catalog-controls label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 14px;
+  color: var(--text-h);
+}
+
+.catalog-controls select,
+.catalog-controls input {
+  font: inherit;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--text-h);
+}
+
+.catalog-controls button {
+  font: inherit;
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--text-h);
+  cursor: pointer;
+}
+
+.catalog-controls button:hover {
+  border-color: var(--accent-border);
+  color: var(--accent);
+}
+
+.catalog-counter {
+  margin: 0 0 8px;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.catalog-ticker {
+  font: 600 15px/145% var(--mono);
+  color: var(--text-h);
+  white-space: nowrap;
+}
+
+.catalog-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.change-up {
+  color: var(--up);
+}
+
+.change-down {
+  color: var(--down);
+}
+
 /* --- Подвал ---------------------------------------------------------- */
 
 .site-footer {
