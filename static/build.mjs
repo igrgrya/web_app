@@ -118,7 +118,7 @@ const NAV = [
   { id: 'search', label: 'Поиск', url: 'search.html' },
   { id: 'forum', label: 'Форум', url: 'forum.html' },
   { id: 'services', label: 'Сервисы', url: 'services.html' },
-  { id: 'xml', label: 'XML', url: 'xml.html' },
+  { id: 'xml', label: 'XML (лаб. №2)', url: 'xml.html' },
   { id: 'db', label: 'БД', url: 'db.html' },
   { id: 'rss', label: 'RSS', url: 'rss.html' },
 ]
@@ -1011,7 +1011,7 @@ function xmlPage() {
 
       <p class="muted">Исходные данные: <a href="catalog.xml" target="_blank" rel="noopener">catalog.xml</a>, стилевая таблица: <a href="catalog.xsl" target="_blank" rel="noopener">catalog.xsl</a>. Загрузку файлов и преобразование выполняет браузер (XSLTProcessor).</p>`
 
-  register('xml', 'XML', 'xml.html')
+  register('xml', 'XML (лаб. №2)', 'xml.html')
   return page({
     id: 'xml',
     title: 'Каталог инструментов',

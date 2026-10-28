@@ -101,7 +101,7 @@ window.FUNDS_LAB_PAGES = [
   },
   {
     "id": "xml",
-    "label": "XML",
+    "label": "XML (лаб. №2)",
     "url": "xml.html"
   },
   {
