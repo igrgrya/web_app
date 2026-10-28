@@ -142,10 +142,7 @@ function navLink(item, active) {
 function header(active) {
   return `<header class="site-header">
     <div class="site-header-inner">
-      <div class="brand-block">
-        <a class="brand" href="index.html">Funds Lab</a>
-        <a class="brand-lab" href="xml.html">Лабораторная работа №2 — Каталог инструментов (XML + XSLT)</a>
-      </div>
+      <a class="brand" href="index.html">Funds Lab</a>
       <form class="site-search" action="search.html" method="get" role="search">
         <input type="search" name="q" placeholder="Поиск по сайту…" aria-label="Поиск по сайту">
         <button type="submit">Найти</button>
@@ -319,6 +316,7 @@ function homePage() {
         <img src="assets/hero.png?v=${ASSET_VERSION}" alt="Иллюстрация: график роста биржевых инструментов" width="170" height="179" class="hero-image">
         <div>
           <h1>Funds Lab</h1>
+          <p class="lab-link"><a href="xml.html">Лабораторная работа №2 — Каталог инструментов (XML + XSLT)</a></p>
           <p class="lead">Учебный проект по дисциплине «Веб-программирование»: интерактивный сайт о фондах, акциях и биржах, с новостями рынка, биржами и сервисами для сообщества инвесторов.</p>
         </div>
       </div>
