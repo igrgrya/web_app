@@ -752,6 +752,22 @@ code {
   white-space: nowrap;
 }
 
+/* Сортировка кликом по заголовку колонки каталога. */
+.data-table th.sortable {
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.data-table th.sortable:hover {
+  color: var(--accent);
+}
+
+.sort-arrow {
+  display: inline-block;
+  margin-left: 4px;
+  font-size: 12px;
+}
+
 .change-up {
   color: var(--up);
 }

@@ -35,6 +35,33 @@
   <xsl:variable name="lowercase">абвгдеёжзийклмнопрстуфхцчшщъыьэюяabcdefghijklmnopqrstuvwxyz</xsl:variable>
   <xsl:variable name="uppercase">АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯABCDEFGHIJKLMNOPQRSTUVWXYZ</xsl:variable>
 
+  <!-- Заголовок сортируемой колонки: клик обрабатывает app.js
+       (см. initCatalog). На активной колонке — стрелка направления
+       и aria-sort для скринридеров. -->
+  <xsl:template name="head-cell">
+    <xsl:param name="key"/>
+    <xsl:param name="label"/>
+    <th scope="col" class="sortable" data-sort-key="{$key}" title="Сортировать по этому столбцу">
+      <xsl:if test="$sortKey = $key">
+        <xsl:attribute name="aria-sort">
+          <xsl:choose>
+            <xsl:when test="$sortDir = 'descending'">descending</xsl:when>
+            <xsl:otherwise>ascending</xsl:otherwise>
+          </xsl:choose>
+        </xsl:attribute>
+      </xsl:if>
+      <xsl:value-of select="$label"/>
+      <xsl:if test="$sortKey = $key">
+        <span class="sort-arrow">
+          <xsl:choose>
+            <xsl:when test="$sortDir = 'descending'">▼</xsl:when>
+            <xsl:otherwise>▲</xsl:otherwise>
+          </xsl:choose>
+        </span>
+      </xsl:if>
+    </th>
+  </xsl:template>
+
   <xsl:template match="/catalog">
     <xsl:variable name="q" select="translate($query, $uppercase, $lowercase)"/>
     <!-- Выборка: три фильтра плюс поиск по названию или тикеру. -->
@@ -49,14 +76,38 @@
       <caption>Каталог инструментов</caption>
       <thead>
         <tr>
-          <th scope="col">Тикер</th>
-          <th scope="col">Название</th>
-          <th scope="col">Тип</th>
-          <th scope="col">Биржа</th>
-          <th scope="col">Сектор</th>
-          <th scope="col">Цена</th>
-          <th scope="col">Изм. за день</th>
-          <th scope="col">Объём торгов</th>
+          <xsl:call-template name="head-cell">
+            <xsl:with-param name="key" select="'ticker'"/>
+            <xsl:with-param name="label" select="'Тикер'"/>
+          </xsl:call-template>
+          <xsl:call-template name="head-cell">
+            <xsl:with-param name="key" select="'name'"/>
+            <xsl:with-param name="label" select="'Название'"/>
+          </xsl:call-template>
+          <xsl:call-template name="head-cell">
+            <xsl:with-param name="key" select="'type'"/>
+            <xsl:with-param name="label" select="'Тип'"/>
+          </xsl:call-template>
+          <xsl:call-template name="head-cell">
+            <xsl:with-param name="key" select="'exchange'"/>
+            <xsl:with-param name="label" select="'Биржа'"/>
+          </xsl:call-template>
+          <xsl:call-template name="head-cell">
+            <xsl:with-param name="key" select="'sector'"/>
+            <xsl:with-param name="label" select="'Сектор'"/>
+          </xsl:call-template>
+          <xsl:call-template name="head-cell">
+            <xsl:with-param name="key" select="'price'"/>
+            <xsl:with-param name="label" select="'Цена'"/>
+          </xsl:call-template>
+          <xsl:call-template name="head-cell">
+            <xsl:with-param name="key" select="'changePercent'"/>
+            <xsl:with-param name="label" select="'Изм. за день'"/>
+          </xsl:call-template>
+          <xsl:call-template name="head-cell">
+            <xsl:with-param name="key" select="'volume'"/>
+            <xsl:with-param name="label" select="'Объём торгов'"/>
+          </xsl:call-template>
         </tr>
       </thead>
       <tbody>
@@ -67,6 +118,21 @@
           <xsl:when test="$sortKey = 'name'">
             <xsl:apply-templates select="$filtered">
               <xsl:sort select="name" data-type="text" order="{$sortDir}" lang="ru"/>
+            </xsl:apply-templates>
+          </xsl:when>
+          <xsl:when test="$sortKey = 'type'">
+            <xsl:apply-templates select="$filtered">
+              <xsl:sort select="type" data-type="text" order="{$sortDir}"/>
+            </xsl:apply-templates>
+          </xsl:when>
+          <xsl:when test="$sortKey = 'exchange'">
+            <xsl:apply-templates select="$filtered">
+              <xsl:sort select="exchange" data-type="text" order="{$sortDir}"/>
+            </xsl:apply-templates>
+          </xsl:when>
+          <xsl:when test="$sortKey = 'sector'">
+            <xsl:apply-templates select="$filtered">
+              <xsl:sort select="sector" data-type="text" order="{$sortDir}" lang="ru"/>
             </xsl:apply-templates>
           </xsl:when>
           <xsl:when test="$sortKey = 'price'">
