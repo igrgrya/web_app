@@ -963,6 +963,9 @@ function xmlPage() {
           <select id="catalog-sort-key">
             <option value="ticker">по тикеру</option>
             <option value="name">по названию</option>
+            <option value="type">по типу</option>
+            <option value="exchange">по бирже</option>
+            <option value="sector">по сектору</option>
             <option value="price">по цене</option>
             <option value="changePercent">по изменению за день</option>
             <option value="volume">по объёму торгов</option>

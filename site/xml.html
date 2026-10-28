@@ -10,8 +10,8 @@
   <meta property="og:title" content="Каталог инструментов — Funds Lab">
   <meta property="og:description" content="Каталог инструментов Funds Lab: акции и ETF с сортировкой, фильтрами и поиском; данные хранятся в XML, таблица строится XSLT-преобразованием в браузере.">
   <meta property="og:type" content="website">
-  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=194638ca03">
-  <link rel="stylesheet" href="styles.css?v=194638ca03">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=c741ba0d93">
+  <link rel="stylesheet" href="styles.css?v=c741ba0d93">
 </head>
 <body data-page="xml">
   <div class="site-shell">
@@ -42,6 +42,9 @@
           <select id="catalog-sort-key">
             <option value="ticker">по тикеру</option>
             <option value="name">по названию</option>
+            <option value="type">по типу</option>
+            <option value="exchange">по бирже</option>
+            <option value="sector">по сектору</option>
             <option value="price">по цене</option>
             <option value="changePercent">по изменению за день</option>
             <option value="volume">по объёму торгов</option>
@@ -84,7 +87,7 @@
         <button type="button" id="catalog-reset">Сбросить</button>
       </form>
 
-      <div class="table-scroll" id="catalog-output" data-asset-version="194638ca03">
+      <div class="table-scroll" id="catalog-output" data-asset-version="c741ba0d93">
         <p class="empty-state">Загрузка каталога…</p>
       </div>
       <p id="catalog-fallback" class="empty-state" hidden>Ваш браузер не поддерживает XSLT-преобразования: таблица каталога недоступна.</p>
@@ -99,7 +102,7 @@
     <p class="author-note">Учебный проект по дисциплине «Веб-программирование». Автор: студент группы БИЗ-Б23, Корнюшкин Игорь.</p>
   </footer>
   </div>
-  <script src="data.js?v=194638ca03"></script>
-  <script src="app.js?v=194638ca03"></script>
+  <script src="data.js?v=c741ba0d93"></script>
+  <script src="app.js?v=c741ba0d93"></script>
 </body>
 </html>

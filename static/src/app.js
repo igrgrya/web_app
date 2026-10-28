@@ -747,6 +747,8 @@
     var xmlDoc = null
     var processor = null
     var searchTimer = null
+    // Числовые колонки при первом клике удобнее смотреть от большего к меньшему.
+    var NUMERIC_SORT_KEYS = ['price', 'changePercent', 'volume']
 
     function parseXml(text) {
       var doc = new DOMParser().parseFromString(text, 'application/xml')
@@ -781,6 +783,29 @@
       // form.reset() возвращает все контролы к значениям из разметки.
       byId('catalog-reset').addEventListener('click', function () {
         byId('catalog-form').reset()
+        render()
+      })
+
+      // Сортировка кликом по заголовку колонки. Слушатель висит на
+      // контейнере: таблица при каждом рендере перерисовывается целиком,
+      // а делегирование переживает замену её содержимого.
+      output.addEventListener('click', function (event) {
+        var node = event.target
+        while (node && node !== output && node.tagName !== 'TH') {
+          node = node.parentNode
+        }
+        if (!node || node === output || node.tagName !== 'TH') return
+        var key = node.getAttribute('data-sort-key')
+        if (!key) return
+        var keySelect = byId('catalog-sort-key')
+        var dirSelect = byId('catalog-sort-dir')
+        if (keySelect.value === key) {
+          // Повторный клик по активной колонке меняет направление.
+          dirSelect.value = dirSelect.value === 'ascending' ? 'descending' : 'ascending'
+        } else {
+          keySelect.value = key
+          dirSelect.value = NUMERIC_SORT_KEYS.indexOf(key) !== -1 ? 'descending' : 'ascending'
+        }
         render()
       })
     }
