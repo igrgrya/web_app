@@ -142,7 +142,10 @@ function navLink(item, active) {
 function header(active) {
   return `<header class="site-header">
     <div class="site-header-inner">
-      <a class="brand" href="index.html">Funds Lab</a>
+      <div class="brand-block">
+        <a class="brand" href="index.html">Funds Lab</a>
+        <a class="brand-lab" href="xml.html">Лабораторная работа №2 — Каталог инструментов (XML + XSLT)</a>
+      </div>
       <form class="site-search" action="search.html" method="get" role="search">
         <input type="search" name="q" placeholder="Поиск по сайту…" aria-label="Поиск по сайту">
         <button type="submit">Найти</button>
