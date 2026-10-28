@@ -118,7 +118,7 @@ const NAV = [
   { id: 'search', label: 'Поиск', url: 'search.html' },
   { id: 'forum', label: 'Форум', url: 'forum.html' },
   { id: 'services', label: 'Сервисы', url: 'services.html' },
-  { id: 'xml', label: 'XML', url: 'xml.html' },
+  { id: 'xml', label: 'XML (лаб. №2)', url: 'xml.html' },
   { id: 'db', label: 'БД', url: 'db.html' },
   { id: 'rss', label: 'RSS', url: 'rss.html' },
 ]
@@ -142,7 +142,10 @@ function navLink(item, active) {
 function header(active) {
   return `<header class="site-header">
     <div class="site-header-inner">
-      <a class="brand" href="index.html">Funds Lab</a>
+      <div class="brand-block">
+        <a class="brand" href="index.html">Funds Lab</a>
+        <a class="brand-lab" href="xml.html">Лабораторная работа №2 — Каталог инструментов (XML + XSLT)</a>
+      </div>
       <form class="site-search" action="search.html" method="get" role="search">
         <input type="search" name="q" placeholder="Поиск по сайту…" aria-label="Поиск по сайту">
         <button type="submit">Найти</button>
@@ -1011,7 +1014,7 @@ function xmlPage() {
 
       <p class="muted">Исходные данные: <a href="catalog.xml" target="_blank" rel="noopener">catalog.xml</a>, стилевая таблица: <a href="catalog.xsl" target="_blank" rel="noopener">catalog.xsl</a>. Загрузку файлов и преобразование выполняет браузер (XSLTProcessor).</p>`
 
-  register('xml', 'XML', 'xml.html')
+  register('xml', 'XML (лаб. №2)', 'xml.html')
   return page({
     id: 'xml',
     title: 'Каталог инструментов',

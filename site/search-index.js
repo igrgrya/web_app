@@ -79,9 +79,9 @@ window.FUNDS_LAB_SEARCH = [
   },
   {
     "type": "Страница",
-    "title": "XML",
+    "title": "XML (лаб. №2)",
     "url": "xml.html",
-    "text": "XML"
+    "text": "XML (лаб. №2)"
   },
   {
     "type": "Страница",

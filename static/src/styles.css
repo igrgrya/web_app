@@ -112,6 +112,46 @@ code {
   text-decoration: none;
 }
 
+/* Отдельная ссылка на лабораторную работу №2 — под названием сайта. */
+.brand-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.brand-lab {
+  font-size: 13px;
+  color: var(--accent);
+  text-decoration: none;
+  /* Не отнимает ширину у поиска и информеров: длинная строка
+     переносится, на широких экранах умещается в одну линию. */
+  max-width: 390px;
+}
+
+/* Средние экраны: в строке шапки тесно, ссыла отводим узкую колонку
+   с переносом на две строки. */
+@media (min-width: 769px) and (max-width: 1100px) {
+  .brand-lab {
+    max-width: 210px;
+  }
+}
+
+/* Узкие экраны: шапка складывается в стек, ссылке доступна вся ширина. */
+@media (max-width: 768px) {
+  .site-header-inner {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .brand-lab {
+    max-width: none;
+  }
+}
+
+.brand-lab:hover {
+  text-decoration: underline;
+}
+
 .nav-list {
   list-style: none;
   display: flex;
