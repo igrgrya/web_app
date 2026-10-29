@@ -15,4 +15,9 @@ lab2_screenshots/
 lab3_plan.md
 lab3_screenshots/
 lab3_report*.docx
+lab3_render/
+generate_lab3_report.js
+node_modules/
+package.json
+package-lock.json
 dir/
