@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>БД — Funds Lab</title>
-  <meta name="description" content="База данных PostgreSQL для каталога и новостей Funds Lab — заглушка лабораторной работы №3.">
-  <meta name="keywords" content="база данных, PostgreSQL, SQLAlchemy, FastAPI">
+  <title>Приложение с доступом к БД — Funds Lab</title>
+  <meta name="description" content="Лабораторная работа №3 Funds Lab: веб-приложение с динамическим доступом к PostgreSQL — FastAPI + SQLAlchemy, каталог, поиск, агрегаты, графики цен.">
+  <meta name="keywords" content="база данных, PostgreSQL, SQLAlchemy, FastAPI, лабораторная работа 3, графики">
   <meta name="author" content="Funds Lab">
-  <meta property="og:title" content="БД — Funds Lab">
-  <meta property="og:description" content="База данных PostgreSQL для каталога и новостей Funds Lab — заглушка лабораторной работы №3.">
+  <meta property="og:title" content="Приложение с доступом к БД — Funds Lab">
+  <meta property="og:description" content="Лабораторная работа №3 Funds Lab: веб-приложение с динамическим доступом к PostgreSQL — FastAPI + SQLAlchemy, каталог, поиск, агрегаты, графики цен.">
   <meta property="og:type" content="website">
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=497971bb48">
   <link rel="stylesheet" href="styles.css?v=497971bb48">
@@ -29,17 +29,40 @@
     </div>
     <div class="nav-main">
       <nav aria-label="Основная навигация">
-        <ul class="nav-list"><li><a href="index.html">Главная</a></li><li><a href="news.html">Новости</a></li><li><a href="exchanges.html">Биржи</a></li><li><a href="history.html">История</a></li><li><a href="beginners.html">Новичку</a></li><li><a href="glossary.html">Глоссарий</a></li><li><a href="risks.html">Риски</a></li><li><a href="links.html">Ссылки</a></li><li><a href="contacts.html">Контакты</a></li><li><a href="about.html">О проекте</a></li><li><a href="search.html">Поиск</a></li><li><a href="forum.html">Форум</a></li><li><a href="services.html">Сервисы</a></li><li><a href="xml.html">XML (лаб. №2)</a></li><li><a href="db.html" aria-current="page">БД</a></li><li><a href="rss.html">RSS</a></li></ul>
+        <ul class="nav-list"><li><a href="index.html">Главная</a></li><li><a href="news.html">Новости</a></li><li><a href="exchanges.html">Биржи</a></li><li><a href="history.html">История</a></li><li><a href="beginners.html">Новичку</a></li><li><a href="glossary.html">Глоссарий</a></li><li><a href="risks.html">Риски</a></li><li><a href="links.html">Ссылки</a></li><li><a href="contacts.html">Контакты</a></li><li><a href="about.html">О проекте</a></li><li><a href="search.html">Поиск</a></li><li><a href="forum.html">Форум</a></li><li><a href="services.html">Сервисы</a></li><li><a href="xml.html">XML (лаб. №2)</a></li><li><a href="db.html" aria-current="page">БД (лаб. №3)</a></li><li><a href="rss.html">RSS</a></li></ul>
       </nav>
     </div>
   </header>
     <main class="site-main">
-      <h1>База данных</h1>
-      <p class="lead">Сейчас данные сайта встроены в статические страницы. В лабораторной работе №3 каталог, новости и события переедут в базу данных PostgreSQL, а доступ к ним появится через backend на FastAPI + SQLAlchemy.</p>
+      <h1>Лабораторная работа №3 — приложение с доступом к БД</h1>
+      <p class="lead">Динамическое веб-приложение поверх базы данных PostgreSQL: каталог инструментов, поиск, агрегаты по секторам, лидеры торгового дня и графики динамики цен. Backend — FastAPI + SQLAlchemy, данные хранятся в PostgreSQL, фронтенд приложения построен на Chart.js.</p>
 
-      <h2>Планируемая структура таблиц</h2>
+      <p class="lab-link"><a href="http://127.0.0.1:8000/">Открыть приложение (при запущенном backend: backend/start.bat → http://127.0.0.1:8000)</a></p>
+      <p class="muted">GitHub Pages отдаёт только статические файлы, поэтому серверная часть запускается локально: <code>backend/start.bat</code> (или <code>uvicorn app.main:app</code> из каталога backend). Интерактивная документация API — <a href="http://127.0.0.1:8000/docs">Swagger UI на /docs</a>.</p>
+
+      <h2>Типы запросов к базе данных</h2>
       <table class="data-table">
-        <caption>Проект схемы базы данных</caption>
+        <caption>Пять типов SQL-запросов, реализованных в приложении</caption>
+        <thead>
+          <tr>
+            <th scope="col">№</th>
+            <th scope="col">Запрос</th>
+            <th scope="col">SQL-приёмы</th>
+            <th scope="col">Где в интерфейсе</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Q1</td><td>Каталог инструментов</td><td>SELECT с JOIN четырёх таблиц, фильтры, сортировка</td><td>Таблица каталога (клик по заголовку колонки)</td></tr>
+          <tr><td>Q2</td><td>Поиск по тикеру и названию</td><td>Параметризованный ILIKE с экранированием</td><td>Строка поиска над таблицей</td></tr>
+          <tr><td>Q3</td><td>Агрегаты по секторам</td><td>GROUP BY, COUNT / AVG / SUM</td><td>Столбчатая диаграмма и таблица</td></tr>
+          <tr><td>Q4</td><td>Лидеры роста и падения</td><td>ORDER BY + LIMIT</td><td>Две таблицы «лидеры дня»</td></tr>
+          <tr><td>Q5</td><td>Карточка инструмента и история цен</td><td>Выбор по ключу, срез последних дат</td><td>Линейный график и карточка</td></tr>
+        </tbody>
+      </table>
+
+      <h2>Структура таблиц</h2>
+      <table class="data-table">
+        <caption>Схема базы данных funds_lab (db/schema.sql)</caption>
         <thead>
           <tr>
             <th scope="col">Таблица</th>
@@ -50,14 +73,12 @@
         <tbody>
           <tr><td>exchanges</td><td>Биржи: код, название, страна, часовой пояс</td><td>1—M instruments</td></tr>
           <tr><td>sectors</td><td>Секторы экономики</td><td>1—M instruments</td></tr>
-          <tr><td>instruments</td><td>Каталог: тикер, название, тип, цена, объём торгов</td><td>FK → exchanges, sectors</td></tr>
-          <tr><td>news</td><td>Новости рынка, связь с инструментами</td><td>FK → instruments</td></tr>
-          <tr><td>events</td><td>Календарь событий (отчётности, дивиденды)</td><td>FK → instruments</td></tr>
-          <tr><td>ratings</td><td>Оценки инструментов пользователями</td><td>FK → instruments</td></tr>
+          <tr><td>instruments</td><td>Каталог: тикер, название, тип, биржа, сектор, валюта</td><td>FK → exchanges, sectors</td></tr>
+          <tr><td>price_snapshots</td><td>Снимки цен: цена, изменение, объём, дата</td><td>FK → instruments</td></tr>
         </tbody>
       </table>
 
-      <p class="muted">Страница-заглушка: раздел будет реализован в лабораторной работе №3.</p>
+      <p class="muted">Исходники приложения: каталог <code>backend/</code> репозитория (модели — app/models.py, запросы — app/main.py, схема и тестовые данные — db/). Графики построены на локальной копии Chart.js, без внешних CDN.</p>
     </main>
     <footer class="site-footer">
     <nav aria-label="Дополнительные разделы">

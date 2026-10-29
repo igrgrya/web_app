@@ -119,7 +119,7 @@ const NAV = [
   { id: 'forum', label: 'Форум', url: 'forum.html' },
   { id: 'services', label: 'Сервисы', url: 'services.html' },
   { id: 'xml', label: 'XML (лаб. №2)', url: 'xml.html' },
-  { id: 'db', label: 'БД', url: 'db.html' },
+  { id: 'db', label: 'БД (лаб. №3)', url: 'db.html' },
   { id: 'rss', label: 'RSS', url: 'rss.html' },
 ]
 
@@ -317,6 +317,7 @@ function homePage() {
         <div>
           <h1>Funds Lab</h1>
           <p class="lab-link"><a href="xml.html">Лабораторная работа №2 — Каталог инструментов (XML + XSLT)</a></p>
+          <p class="lab-link"><a href="db.html">Лабораторная работа №3 — Приложение с доступом к БД (FastAPI + PostgreSQL)</a></p>
           <p class="lead">Учебный проект по дисциплине «Веб-программирование»: интерактивный сайт о фондах, акциях и биржах, с новостями рынка, биржами и сервисами для сообщества инвесторов.</p>
         </div>
       </div>
@@ -883,7 +884,7 @@ function aboutPage() {
         <ul>
           <li>Frontend: HTML5, CSS3, JavaScript (статические страницы)</li>
           <li>XML + XSLT — клиентское XSLT-преобразование (каталог инструментов)</li>
-          <li>Backend (со следующих лабораторных работ): FastAPI + SQLAlchemy</li>
+          <li>Backend (лабораторная работа №3): FastAPI + SQLAlchemy, приложение запускается локально</li>
           <li>База данных: PostgreSQL</li>
         </ul>
       </section>
@@ -897,6 +898,7 @@ function aboutPage() {
           <li>Добавление новостей (форма на странице новостей)</li>
           <li>Мировые часы и статус сессий бирж</li>
           <li>Каталог инструментов с сортировкой и фильтрами (XML + XSLT)</li>
+          <li>Приложение с доступом к БД: каталог, поиск, агрегаты, графики цен (FastAPI + PostgreSQL)</li>
           <li>Форум</li>
           <li>Гостевая книга</li>
           <li>Опрос</li>
@@ -909,11 +911,11 @@ function aboutPage() {
 
       <section id="plan">
         <h2>Структура сайта и план развития</h2>
-        <p>Сайт состоит из 10 статических страниц: Главная, Новости, Биржи, История бирж, Новичку, Глоссарий, Риски, Ссылки, Контакты, О проекте. Кроме статических, на сайте есть сервисные страницы (Поиск, Форум, Сервисы), каталог инструментов на XML + XSLT, страницы-заглушки БД и RSS под лабораторные работы №3–4 и техническая страница 404.</p>
+        <p>Сайт состоит из 10 статических страниц: Главная, Новости, Биржи, История бирж, Новичку, Глоссарий, Риски, Ссылки, Контакты, О проекте. Кроме статических, на сайте есть сервисные страницы (Поиск, Форум, Сервисы), каталог инструментов на XML + XSLT (лабораторная работа №2), страница лабораторной работы №3 с описанием приложения с доступом к БД, RSS-заглушка под лабораторную работу №4 и техническая страница 404.</p>
         <p>Дальнейшее развитие — по лабораторным работам:</p>
         <ul>
           <li>№2 — каталог инструментов на XML + XSLT — выполнена;</li>
-          <li>№3 — PostgreSQL + FastAPI (схема в db/schema.sql), новости переедут в БД;</li>
+          <li>№3 — приложение с доступом к БД (PostgreSQL + FastAPI, схема в db/schema.sql) — выполнена, приложение запускается локально (backend/start.bat);</li>
           <li>№4 — RSS-лента из новостей БД.</li>
         </ul>
       </section>
@@ -1022,13 +1024,40 @@ function xmlPage() {
   })
 }
 
-function dbPage() {
-  const body = `      <h1>База данных</h1>
-      <p class="lead">Сейчас данные сайта встроены в статические страницы. В лабораторной работе №3 каталог, новости и события переедут в базу данных PostgreSQL, а доступ к ним появится через backend на FastAPI + SQLAlchemy.</p>
+/* --- Приложение с доступом к БД (лабораторная работа №3) -------------- */
 
-      <h2>Планируемая структура таблиц</h2>
+/* Страница лабораторной работы №3: само приложение (FastAPI + PostgreSQL)
+   работает локально на http://127.0.0.1:8000 — здесь описание и точка входа. */
+function dbPage() {
+  const body = `      <h1>Лабораторная работа №3 — приложение с доступом к БД</h1>
+      <p class="lead">Динамическое веб-приложение поверх базы данных PostgreSQL: каталог инструментов, поиск, агрегаты по секторам, лидеры торгового дня и графики динамики цен. Backend — FastAPI + SQLAlchemy, данные хранятся в PostgreSQL, фронтенд приложения построен на Chart.js.</p>
+
+      <p class="lab-link"><a href="http://127.0.0.1:8000/">Открыть приложение (при запущенном backend: backend/start.bat → http://127.0.0.1:8000)</a></p>
+      <p class="muted">GitHub Pages отдаёт только статические файлы, поэтому серверная часть запускается локально: <code>backend/start.bat</code> (или <code>uvicorn app.main:app</code> из каталога backend). Интерактивная документация API — <a href="http://127.0.0.1:8000/docs">Swagger UI на /docs</a>.</p>
+
+      <h2>Типы запросов к базе данных</h2>
       <table class="data-table">
-        <caption>Проект схемы базы данных</caption>
+        <caption>Пять типов SQL-запросов, реализованных в приложении</caption>
+        <thead>
+          <tr>
+            <th scope="col">№</th>
+            <th scope="col">Запрос</th>
+            <th scope="col">SQL-приёмы</th>
+            <th scope="col">Где в интерфейсе</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Q1</td><td>Каталог инструментов</td><td>SELECT с JOIN четырёх таблиц, фильтры, сортировка</td><td>Таблица каталога (клик по заголовку колонки)</td></tr>
+          <tr><td>Q2</td><td>Поиск по тикеру и названию</td><td>Параметризованный ILIKE с экранированием</td><td>Строка поиска над таблицей</td></tr>
+          <tr><td>Q3</td><td>Агрегаты по секторам</td><td>GROUP BY, COUNT / AVG / SUM</td><td>Столбчатая диаграмма и таблица</td></tr>
+          <tr><td>Q4</td><td>Лидеры роста и падения</td><td>ORDER BY + LIMIT</td><td>Две таблицы «лидеры дня»</td></tr>
+          <tr><td>Q5</td><td>Карточка инструмента и история цен</td><td>Выбор по ключу, срез последних дат</td><td>Линейный график и карточка</td></tr>
+        </tbody>
+      </table>
+
+      <h2>Структура таблиц</h2>
+      <table class="data-table">
+        <caption>Схема базы данных funds_lab (db/schema.sql)</caption>
         <thead>
           <tr>
             <th scope="col">Таблица</th>
@@ -1039,21 +1068,19 @@ function dbPage() {
         <tbody>
           <tr><td>exchanges</td><td>Биржи: код, название, страна, часовой пояс</td><td>1—M instruments</td></tr>
           <tr><td>sectors</td><td>Секторы экономики</td><td>1—M instruments</td></tr>
-          <tr><td>instruments</td><td>Каталог: тикер, название, тип, цена, объём торгов</td><td>FK → exchanges, sectors</td></tr>
-          <tr><td>news</td><td>Новости рынка, связь с инструментами</td><td>FK → instruments</td></tr>
-          <tr><td>events</td><td>Календарь событий (отчётности, дивиденды)</td><td>FK → instruments</td></tr>
-          <tr><td>ratings</td><td>Оценки инструментов пользователями</td><td>FK → instruments</td></tr>
+          <tr><td>instruments</td><td>Каталог: тикер, название, тип, биржа, сектор, валюта</td><td>FK → exchanges, sectors</td></tr>
+          <tr><td>price_snapshots</td><td>Снимки цен: цена, изменение, объём, дата</td><td>FK → instruments</td></tr>
         </tbody>
       </table>
 
-      <p class="muted">Страница-заглушка: раздел будет реализован в лабораторной работе №3.</p>`
+      <p class="muted">Исходники приложения: каталог <code>backend/</code> репозитория (модели — app/models.py, запросы — app/main.py, схема и тестовые данные — db/). Графики построены на локальной копии Chart.js, без внешних CDN.</p>`
 
-  register('db', 'БД', 'db.html')
+  register('db', 'БД (лаб. №3)', 'db.html')
   return page({
     id: 'db',
-    title: 'БД',
-    description: 'База данных PostgreSQL для каталога и новостей Funds Lab — заглушка лабораторной работы №3.',
-    keywords: 'база данных, PostgreSQL, SQLAlchemy, FastAPI',
+    title: 'Приложение с доступом к БД',
+    description: 'Лабораторная работа №3 Funds Lab: веб-приложение с динамическим доступом к PostgreSQL — FastAPI + SQLAlchemy, каталог, поиск, агрегаты, графики цен.',
+    keywords: 'база данных, PostgreSQL, SQLAlchemy, FastAPI, лабораторная работа 3, графики',
     body,
   })
 }
