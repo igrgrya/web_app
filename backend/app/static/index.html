@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Funds Lab — приложение лабораторной работы №3</title>
+<link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">Funds Lab <span class="lab-badge">Лабораторная работа №3</span></div>
+  <p class="tagline">Веб-приложение с динамическим доступом к БД &middot; FastAPI + SQLAlchemy + PostgreSQL</p>
+</header>
+
+<main>
+
+  <section id="catalog-section">
+    <h2>Каталог инструментов <span class="q-badge">Q1: JOIN + фильтры + сортировка &middot; Q2: поиск</span></h2>
+    <div class="controls">
+      <select id="f-exchange" aria-label="Биржа"><option value="">Все биржи</option></select>
+      <select id="f-sector" aria-label="Сектор"><option value="">Все секторы</option></select>
+      <select id="f-type" aria-label="Тип">
+        <option value="">Все типы</option>
+        <option value="stock">Акции</option>
+        <option value="etf">ETF</option>
+        <option value="fund">Фонды</option>
+        <option value="bond">Облигации</option>
+      </select>
+      <input id="f-query" type="search" placeholder="Поиск по тикеру или названию…" aria-label="Поиск">
+      <button id="btn-reset" type="button">Сброс</button>
+    </div>
+    <table id="catalog" class="data">
+      <thead>
+        <tr>
+          <th data-sort="ticker">Тикер</th>
+          <th data-sort="name">Название</th>
+          <th data-sort="type">Тип</th>
+          <th data-sort="exchange">Биржа</th>
+          <th data-sort="sector">Сектор</th>
+          <th data-sort="price" class="num">Цена</th>
+          <th data-sort="change" class="num">Изм., %</th>
+          <th data-sort="volume" class="num">Объём</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <p id="catalog-status" class="status" role="status"></p>
+  </section>
+
+  <section id="sectors-section">
+    <h2>Агрегаты по секторам <span class="q-badge">Q3: GROUP BY + COUNT/AVG/SUM</span></h2>
+    <div class="split">
+      <div class="chart-box"><canvas id="sectors-chart" aria-label="Диаграмма числа инструментов по секторам"></canvas></div>
+      <table id="sectors-table" class="data">
+        <thead><tr><th>Сектор</th><th class="num">Инстр.</th><th class="num">Ср. цена</th><th class="num">Сумм. объём</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="movers-section">
+    <h2>Лидеры последнего торгового дня <span class="q-badge">Q4: ORDER BY + LIMIT</span></h2>
+    <div class="split">
+      <div>
+        <h3 class="up">Рост ▲</h3>
+        <table id="gainers" class="data">
+          <thead><tr><th>Тикер</th><th>Название</th><th class="num">Цена</th><th class="num">Изм., %</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div>
+        <h3 class="down">Падение ▼</h3>
+        <table id="losers" class="data">
+          <thead><tr><th>Тикер</th><th>Название</th><th class="num">Цена</th><th class="num">Изм., %</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section id="chart-section">
+    <h2>Динамика цены <span class="q-badge">Q5: карточка инструмента + история снимков</span></h2>
+    <div class="controls">
+      <select id="chart-instrument" aria-label="Инструмент"></select>
+      <select id="chart-days" aria-label="Период">
+        <option value="10">10 торговых дней</option>
+        <option value="30" selected>30 торговых дней</option>
+      </select>
+    </div>
+    <div class="split">
+      <div class="chart-box"><canvas id="price-chart" aria-label="График цены"></canvas></div>
+      <div id="instrument-card" class="card">Выберите инструмент в таблице или списке выше.</div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  Funds Lab &middot; лабораторная работа №3 &middot;
+  API-документация: <a href="/docs">/docs</a> (Swagger UI) &middot;
+  <a href="https://igrgrya.github.io/web_app/">на сайт</a>
+</footer>
+
+<script src="/static/vendor/chart.umd.min.js"></script>
+<script src="/static/app.js"></script>
+</body>
+</html>
