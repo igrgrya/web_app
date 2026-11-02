@@ -21,3 +21,10 @@ node_modules/
 package.json
 package-lock.json
 dir/
+
+# Local Sites checkout and publication archive
+/hosted-lab3/
+/lab3-site.tar.gz
+# Keep the cloud source manifest and instructions in GitHub
+!hosting/package.json
+!hosting/README.md

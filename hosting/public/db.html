@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Инструменты рынка — Funds Lab</title>
+  <meta name="description" content="Лабораторная работа №3 Funds Lab: веб-приложение с динамическим доступом к D1 — Cloudflare Workers, каталог, поиск, агрегаты, графики цен.">
+  <meta name="keywords" content="база данных, D1, SQLAlchemy, Cloudflare Workers, лабораторная работа 3, графики">
+  <meta name="author" content="Funds Lab">
+  <meta property="og:title" content="Приложение с доступом к БД — Funds Lab">
+  <meta property="og:description" content="Лабораторная работа №3 Funds Lab: веб-приложение с динамическим доступом к D1 — Cloudflare Workers, каталог, поиск, агрегаты, графики цен.">
+  <meta property="og:type" content="website">
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg?v=497971bb48">
+  <link rel="stylesheet" href="/styles.css?v=497971bb48">
+<link rel="stylesheet" href="/static/integrated.css?v=3">
+</head>
+<body data-page="db">
+  <div class="site-shell">
+    <header class="site-header">
+    <div class="site-header-inner">
+      <a class="brand" href="/index.html">Funds Lab</a>
+      <form class="site-search" action="/search.html" method="get" role="search">
+        <input type="search" name="q" placeholder="Поиск по сайту…" aria-label="Поиск по сайту">
+        <button type="submit">Найти</button>
+      </form>
+      <div class="informers">
+        <div class="informer informer--weather" id="weather-widget">Погода: загрузка…</div>
+        <div class="informer informer--currency" id="currency-widget">Курсы валют: загрузка…</div>
+      </div>
+    </div>
+    <div class="nav-main">
+      <nav aria-label="Основная навигация">
+        <ul class="nav-list"><li><a href="/index.html">Главная</a></li><li><a href="/news.html">Новости</a></li><li><a href="/exchanges.html">Биржи</a></li><li><a href="/history.html">История</a></li><li><a href="/beginners.html">Новичку</a></li><li><a href="/glossary.html">Глоссарий</a></li><li><a href="/risks.html">Риски</a></li><li><a href="/links.html">Ссылки</a></li><li><a href="/contacts.html">Контакты</a></li><li><a href="/about.html">О проекте</a></li><li><a href="/search.html">Поиск</a></li><li><a href="/forum.html">Форум</a></li><li><a href="/services.html">Сервисы</a></li><li><a href="/xml.html">XML (лаб. №2)</a></li><li><a href="/db.html" aria-current="page">БД (лаб. №3)</a></li><li><a href="/rss.html">RSS</a></li></ul>
+      </nav>
+    </div>
+  </header>
+    <main class="site-main">
+      <h1>Инструменты рынка</h1>
+      <p class="lead">Каталог, поиск и графики котировок — лабораторная работа №3.</p>
+      <p class="muted">Учебные данные. Выберите фильтры или нажмите на инструмент, чтобы посмотреть историю цены.</p>
+      <div class="lab3-tools">
+
+  <section id="catalog-section">
+    <h2>Каталог инструментов</h2>
+    <div class="controls">
+      <select id="f-exchange" aria-label="Биржа"><option value="">Все биржи</option></select>
+      <select id="f-sector" aria-label="Сектор"><option value="">Все секторы</option></select>
+      <select id="f-type" aria-label="Тип">
+        <option value="">Все типы</option>
+        <option value="stock">Акции</option>
+        <option value="etf">ETF</option>
+        <option value="fund">Фонды</option>
+        <option value="bond">Облигации</option>
+      </select>
+      <input id="f-query" type="search" placeholder="Поиск по тикеру или названию…" aria-label="Поиск">
+      <button id="btn-reset" type="button">Сброс</button>
+    </div>
+    <div class="lab3-table-scroll"><table id="catalog" class="data">
+      <thead>
+        <tr>
+          <th data-sort="ticker">Тикер</th>
+          <th data-sort="name">Название</th>
+          <th data-sort="type">Тип</th>
+          <th data-sort="exchange">Биржа</th>
+          <th data-sort="sector">Сектор</th>
+          <th data-sort="price" class="num">Цена</th>
+          <th data-sort="change" class="num">Изм., %</th>
+          <th data-sort="volume" class="num">Объём</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table></div>
+    <p id="catalog-status" class="status" role="status"></p>
+  </section>
+
+  <section id="sectors-section">
+    <h2>Агрегаты по секторам</h2>
+    <div class="split">
+      <div class="chart-box"><canvas id="sectors-chart" aria-label="Диаграмма числа инструментов по секторам"></canvas></div>
+      <div class="lab3-table-scroll"><table id="sectors-table" class="data">
+        <thead><tr><th>Сектор</th><th>Валюта</th><th class="num">Инстр.</th><th class="num">Ср. цена</th><th class="num">Сумм. объём</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <section id="movers-section">
+    <h2>Лидеры последнего торгового дня</h2>
+    <div class="split">
+      <div>
+        <h3 class="up">Рост ▲</h3>
+        <div class="lab3-table-scroll"><table id="gainers" class="data">
+          <thead><tr><th>Тикер</th><th>Название</th><th class="num">Цена</th><th class="num">Изм., %</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </div>
+      <div>
+        <h3 class="down">Падение ▼</h3>
+        <div class="lab3-table-scroll"><table id="losers" class="data">
+          <thead><tr><th>Тикер</th><th>Название</th><th class="num">Цена</th><th class="num">Изм., %</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="chart-section">
+    <h2>Динамика цены</h2>
+    <div class="controls">
+      <select id="chart-instrument" aria-label="Инструмент"></select>
+      <select id="chart-days" aria-label="Период">
+        <option value="10">10 торговых дней</option>
+        <option value="30" selected>30 торговых дней</option>
+      </select>
+    </div>
+    <div class="split">
+      <div class="chart-box"><canvas id="price-chart" aria-label="График цены"></canvas></div>
+      <div id="instrument-card" class="card">Выберите инструмент в таблице или списке выше.</div>
+    </div>
+  </section>
+
+</div>
+    </main>
+    <footer class="site-footer">
+    <nav aria-label="Дополнительные разделы">
+      <ul class="nav-list nav-list--footer"><li><a href="/forum.html#guestbook">Гостевая книга</a></li><li><a href="/services.html#poll">Опрос</a></li><li><a href="/services.html#converter">Конвертер валют</a></li><li><a href="/services.html#calculator">Инвестиционный калькулятор</a></li><li><a href="/links.html">Ссылки</a></li><li><a href="/services.html#calendar">Календарь событий</a></li><li><a href="/services.html#stats">Статистика посещений</a></li></ul>
+    </nav>
+    <p class="visit-counter">Всего посещений сайта: <span data-visit-total>0</span></p>
+    <p class="author-note">Учебный проект по дисциплине «Веб-программирование». Автор: студент группы БИЗ-Б23, Корнюшкин Игорь.</p>
+  </footer>
+  </div>
+  <script src="/data.js?v=497971bb48"></script>
+  <script src="/app.js?v=497971bb48"></script>
+<script src="/static/vendor/chart.umd.min.js"></script>
+<script src="/static/app.js?v=3"></script>
+</body>
+</html>

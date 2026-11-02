@@ -1,0 +1,808 @@
+/* =====================================================================
+   Funds Lab — стили статического сайта (лабораторная работа №1).
+   Собственных зависимостей нет: чистый CSS, без сборщика.
+   ===================================================================== */
+
+:root {
+  --text: #475569;
+  --text-h: #0f172a;
+  --bg: #f6f9fd;
+  --panel: #ffffff;
+  --border: #d8e1ec;
+  --code-bg: #eef3f9;
+  --accent: #2563eb;
+  --accent-bg: rgba(37, 99, 235, 0.09);
+  --accent-border: rgba(37, 99, 235, 0.4);
+  --up: #16a34a;
+  --down: #dc2626;
+  --shadow: rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --mono: ui-monospace, Consolas, monospace;
+  font: 18px/145% var(--sans);
+  color: var(--text);
+  background: var(--bg);
+  color-scheme: light;
+}
+
+@media (max-width: 1024px) {
+  :root {
+    font-size: 16px;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+}
+
+.site-shell {
+  width: 1126px;
+  max-width: 100%;
+  margin: 0 auto;
+  border-inline: 1px solid var(--border);
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+}
+
+h1,
+h2,
+h3 {
+  font-weight: 600;
+  color: var(--text-h);
+  line-height: 118%;
+}
+
+h1 {
+  font-size: 44px;
+  letter-spacing: -1px;
+  margin: 24px 0;
+}
+
+h2 {
+  font-size: 24px;
+  margin: 24px 0 8px;
+}
+
+h3 {
+  font-size: 19px;
+  margin: 16px 0 8px;
+}
+
+p {
+  margin: 0 0 12px;
+}
+
+a {
+  color: var(--accent);
+}
+
+code {
+  font-family: var(--mono);
+  font-size: 15px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--code-bg);
+  color: var(--text-h);
+}
+
+/* --- Шапка и навигация ---------------------------------------------- */
+
+.site-header {
+  border-bottom: 1px solid var(--border);
+}
+
+.site-header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 14px 32px;
+}
+
+.brand {
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--text-h);
+  text-decoration: none;
+}
+
+.brand-lab:hover {
+  text-decoration: underline;
+}
+
+.nav-list {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-list a {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 6px;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.nav-list a:hover,
+.nav-list a[aria-current='page'] {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.nav-list--footer {
+  font-size: 15px;
+}
+
+/* Единое меню одной строкой: все 16 пунктов. При сужении окна кегль
+   плавно уменьшается (clamp, паддинги и гэп — в em), ниже порога
+   читаемости строка прокручивается по горизонтали, но не переносится. */
+.nav-main {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 0 32px 12px;
+}
+
+.nav-main::-webkit-scrollbar {
+  display: none;
+}
+
+.nav-main > nav {
+  flex: 1;
+  min-width: 0;
+}
+
+.nav-main .nav-list {
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  font-size: clamp(9.5px, 0.8vw + 3.5px, 13px);
+  gap: 0.25em;
+}
+
+.nav-main .nav-list a {
+  padding: 0.3em 0.5em;
+  white-space: nowrap;
+}
+
+/* --- Основное содержимое -------------------------------------------- */
+
+.site-main {
+  flex-grow: 1;
+  padding: 32px;
+}
+
+@media (max-width: 640px) {
+  .site-main,
+  .site-header-inner,
+  .site-footer,
+  .nav-main {
+    padding-inline: 16px;
+  }
+
+  /* На телефоне ряд 1 складывается в стек: бренд, поиск, информеры. */
+  .site-header-inner {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .site-search input {
+    flex: 1;
+    width: auto;
+  }
+
+  .informers {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+
+  .informer--currency {
+    min-width: auto;
+  }
+}
+
+.lead {
+  color: var(--text);
+  max-width: 75ch;
+  font-size: 19px;
+  margin-bottom: 16px;
+}
+
+.muted {
+  color: var(--text);
+  opacity: 0.7;
+  font-size: 14px;
+}
+
+.breadcrumb {
+  margin-bottom: 8px;
+}
+
+.change--up {
+  color: var(--up);
+}
+
+.change--down {
+  color: var(--down);
+}
+
+/* --- Главная: hero, сетка -------------------------------------------- */
+
+.hero-block {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.hero-image {
+  flex-shrink: 0;
+}
+
+/* Ссылка на лабораторную работу №2 на главной странице — под названием сайта. */
+.lab-link {
+  margin: -14px 0 12px;
+  font-size: 15px;
+}
+
+.section-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+}
+
+@media (max-width: 768px) {
+  .hero-block {
+    flex-direction: column;
+    text-align: center;
+  }
+  .section-grid {
+    grid-template-columns: 1fr;
+  }
+  h1 {
+    font-size: 32px;
+  }
+}
+
+.toc {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+}
+
+.toc h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+.toc ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+/* --- Поиск и информеры в шапке -------------------------------------- */
+
+.site-search {
+  display: flex;
+  gap: 6px;
+}
+
+.site-search input {
+  font: inherit;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--text-h);
+  min-width: 0;
+  width: 220px;
+}
+
+.site-search button {
+  font: inherit;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--accent-border);
+  background: var(--accent-bg);
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.informers {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  justify-content: flex-end;
+  gap: 6px;
+  flex-wrap: nowrap;
+}
+
+.informer {
+  border-radius: 10px;
+  padding: 5px 10px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.informer strong {
+  font-size: 14px;
+}
+
+/* Курсовой информер — самый длинный: сжимается первым (текст переносится
+   внутри пилюли), чтобы ряд 1 не переезжал на новую строку. */
+.informer--currency {
+  min-width: 0;
+}
+
+.informer--weather {
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+  color: #0c4a6e;
+}
+
+.informer--currency {
+  background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+  color: #14532d;
+}
+
+.rate-up {
+  color: var(--up);
+}
+
+.rate-down {
+  color: var(--down);
+}
+
+/* --- Раскрывающиеся блоки: каталог, новости, форум ------------------- */
+
+.instrument-card,
+.news-item,
+.glossary-item,
+.forum-topic-block {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+  margin-bottom: 12px;
+}
+
+.instrument-card summary,
+.news-item summary,
+.glossary-item summary,
+.forum-topic-block summary {
+  cursor: pointer;
+  padding: 14px 16px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.instrument-card summary:hover,
+.news-item summary:hover,
+.glossary-item summary:hover,
+.forum-topic-block summary:hover {
+  color: var(--accent);
+}
+
+.instrument-card:target,
+.news-item:target,
+.glossary-item:target,
+.forum-topic-block:target {
+  border-color: var(--accent-border);
+}
+
+.instrument-card > :not(summary),
+.news-item > :not(summary),
+.glossary-item > :not(summary),
+.forum-topic-block > :not(summary) {
+  margin-inline: 16px;
+}
+
+/* Нумерованные шаги на странице «Новичку». */
+.steps-list {
+  margin: 0 0 16px;
+  padding-left: 24px;
+}
+
+.steps-list li {
+  margin-bottom: 8px;
+}
+
+.code-block {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  overflow-x: auto;
+  font: 14px/150% var(--mono);
+}
+
+/* --- Карточки -------------------------------------------------------- */
+
+.card-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 16px;
+  display: grid;
+  gap: 12px;
+}
+
+.card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  background: var(--panel);
+}
+
+.card h2,
+.card h3 {
+  font-size: 19px;
+  margin: 0 0 4px;
+}
+
+/* --- Таблицы --------------------------------------------------------- */
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 24px;
+}
+
+.data-table caption {
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-h);
+  padding-bottom: 8px;
+}
+
+.data-table th,
+.data-table td {
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.data-table th {
+  color: var(--text-h);
+  font-weight: 600;
+  background: var(--panel);
+}
+
+.filter-bar {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.filter-bar select {
+  margin-left: 4px;
+  font: inherit;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text-h);
+}
+
+/* --- Карточка инструмента ------------------------------------------- */
+
+.fact-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px 32px;
+  margin: 16px 0 32px;
+  padding: 0;
+}
+
+.fact-list div {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
+}
+
+.fact-list dt {
+  font-size: 13px;
+  color: var(--text);
+  opacity: 0.8;
+}
+
+.fact-list dd {
+  margin: 0;
+  color: var(--text-h);
+  font-size: 18px;
+}
+
+@media (max-width: 640px) {
+  .fact-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --- Рейтинг --------------------------------------------------------- */
+
+.star-rating-stars {
+  display: flex;
+  gap: 4px;
+  margin: 8px 0;
+}
+
+.star {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 30px;
+  line-height: 1;
+  color: var(--border);
+  padding: 0;
+}
+
+.star--filled {
+  color: var(--accent);
+}
+
+/* --- Формы ----------------------------------------------------------- */
+
+.stacked-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 480px;
+  margin-bottom: 24px;
+}
+
+.stacked-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 14px;
+  color: var(--text-h);
+}
+
+.stacked-form input,
+.stacked-form textarea,
+.stacked-form select {
+  font: inherit;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text-h);
+}
+
+.stacked-form button {
+  align-self: flex-start;
+  font: inherit;
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: 1px solid var(--accent-border);
+  background: var(--accent-bg);
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.stacked-form button:hover {
+  border-color: var(--accent);
+}
+
+.empty-state {
+  color: var(--text);
+  opacity: 0.7;
+}
+
+.success-state {
+  color: var(--up);
+}
+
+/* --- Опрос ----------------------------------------------------------- */
+
+.poll-options {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 520px;
+  margin: 0 0 16px;
+}
+
+.poll-options button {
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text-h);
+  cursor: pointer;
+}
+
+.poll-options button:hover {
+  border-color: var(--accent-border);
+}
+
+.poll-result {
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 14px;
+  overflow: hidden;
+}
+
+.poll-result-bar {
+  position: absolute;
+  inset: 0;
+  background: var(--accent-bg);
+  z-index: 0;
+}
+
+.poll-result span {
+  position: relative;
+  z-index: 1;
+}
+
+/* --- Мировые часы бирж ------------------------------------------------ */
+
+.clock-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  list-style: none;
+  padding: 0;
+}
+
+.clock-card h3 {
+  margin: 0 0 8px;
+  font-size: 19px;
+}
+
+.clock-time {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-h);
+  margin: 0 0 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+.session-badge {
+  display: inline-block;
+  margin: 0;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  border: 1px solid var(--border);
+  background: var(--code-bg);
+  color: var(--text);
+}
+
+.session-badge--open {
+  border-color: var(--up);
+  background: rgba(22, 163, 74, 0.1);
+  color: var(--up);
+}
+
+.session-badge--closed {
+  border-color: var(--border);
+}
+
+/* --- Каталог инструментов: XML + XSLT (лабораторная работа №2) -------- */
+
+/* Горизонтальная прокрутка: на узких экранах таблица каталога
+   скроллится, а не ломает вёрстку страницы. */
+.table-scroll {
+  overflow-x: auto;
+  margin-bottom: 24px;
+}
+
+.catalog-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  align-items: flex-end;
+  margin-bottom: 24px;
+}
+
+.catalog-controls label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 14px;
+  color: var(--text-h);
+}
+
+.catalog-controls select,
+.catalog-controls input {
+  font: inherit;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--text-h);
+}
+
+.catalog-controls button {
+  font: inherit;
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--text-h);
+  cursor: pointer;
+}
+
+.catalog-controls button:hover {
+  border-color: var(--accent-border);
+  color: var(--accent);
+}
+
+.catalog-counter {
+  margin: 0 0 8px;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.catalog-ticker {
+  font: 600 15px/145% var(--mono);
+  color: var(--text-h);
+  white-space: nowrap;
+}
+
+.catalog-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Сортировка кликом по заголовку колонки каталога. */
+.data-table th.sortable {
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.data-table th.sortable:hover {
+  color: var(--accent);
+}
+
+.sort-arrow {
+  display: inline-block;
+  margin-left: 4px;
+  font-size: 12px;
+}
+
+.change-up {
+  color: var(--up);
+}
+
+.change-down {
+  color: var(--down);
+}
+
+/* --- Подвал ---------------------------------------------------------- */
+
+.site-footer {
+  border-top: 1px solid var(--border);
+  padding: 24px 32px;
+  margin-top: 32px;
+}
+
+.visit-counter {
+  margin-top: 12px;
+  font-size: 14px;
+  color: var(--text);
+  opacity: 0.85;
+}
+
+.author-note {
+  font-size: 14px;
+  color: var(--text);
+  opacity: 0.85;
+}
