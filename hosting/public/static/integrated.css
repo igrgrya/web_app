@@ -1,0 +1,137 @@
+
+.lab3-tools {
+  --accent: #2563eb;
+  --accent-dark: #1d4ed8;
+  --up: #16a34a;
+  --down: #dc2626;
+  --text: #1f2937;
+  --muted: #6b7280;
+  --line: #e5e7eb;
+  --bg: #f8fafc;
+}
+.lab3-tools * { box-sizing: border-box; }
+.lab3-tools {
+  margin: 0;
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  color: var(--text);
+  background: var(--bg);
+  line-height: 1.5;
+}
+.lab3-tools .topbar {
+  background: #fff;
+  border-bottom: 1px solid var(--line);
+  padding: 16px 24px;
+}
+.lab3-tools .brand { font-size: 22px; font-weight: 700; }
+.lab3-tools .lab-badge {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--accent);
+  border-radius: 999px;
+  padding: 2px 12px;
+  margin-left: 8px;
+  vertical-align: 2px;
+}
+.lab3-tools .tagline { margin: 4px 0 0; color: var(--muted); font-size: 14px; }
+.lab3-tools { max-width: 1180px; margin: 0 auto; padding: 24px 16px 8px; }
+.lab3-tools section {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 18px 20px;
+  margin-bottom: 22px;
+}
+.lab3-tools h2 { font-size: 18px; margin: 0 0 14px; }
+.lab3-tools h3 { font-size: 15px; margin: 0 0 8px; }
+.lab3-tools .q-badge {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-dark);
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 999px;
+  padding: 2px 10px;
+  margin-left: 8px;
+  vertical-align: 1px;
+  white-space: nowrap;
+}
+.lab3-tools .controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.lab3-tools .controls select, .lab3-tools .controls input, .lab3-tools .controls button {
+  font: inherit;
+  font-size: 14px;
+  padding: 7px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--text);
+}
+.lab3-tools .controls input[type="search"] { flex: 1 1 220px; min-width: 180px; }
+.lab3-tools .controls button { cursor: pointer; }
+.lab3-tools .controls button:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+.lab3-tools table.data { width: 100%; border-collapse: collapse; font-size: 14px; }
+.lab3-tools table.data th, .lab3-tools table.data td {
+  border-bottom: 1px solid var(--line);
+  padding: 8px 10px;
+  text-align: left;
+}
+.lab3-tools table.data th.num, .lab3-tools table.data td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.lab3-tools table.data thead th {
+  background: #f1f5f9;
+  border-bottom: 2px solid var(--line);
+  white-space: nowrap;
+}
+.lab3-tools table.data thead th[data-sort] { cursor: pointer; user-select: none; }
+.lab3-tools table.data thead th[data-sort]:hover { color: var(--accent-dark); }
+.lab3-tools table.data thead th.sorted { color: var(--accent-dark); }
+.lab3-tools table.data tbody tr:hover { background: #f8fafc; }
+.lab3-tools table.data tbody tr.clickable { cursor: pointer; }
+.lab3-tools .up { color: var(--up); }
+.lab3-tools .down { color: var(--down); }
+.lab3-tools .cell-up { color: var(--up); font-weight: 600; }
+.lab3-tools .cell-down { color: var(--down); font-weight: 600; }
+.lab3-tools .status { color: var(--muted); font-size: 13px; min-height: 1em; margin: 10px 0 0; }
+.lab3-tools .split { display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start; }
+.lab3-tools .split > * { flex: 1 1 320px; min-width: 280px; }
+.lab3-tools .chart-box {
+  position: relative;
+  height: 300px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  background: #fff;
+}
+.lab3-tools .card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 14px;
+  background: #f8fafc;
+}
+.lab3-tools .card h4 { margin: 0 0 6px; font-size: 15px; }
+.lab3-tools .card .muted { color: var(--muted); font-size: 13px; }
+.lab3-tools .footer {
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+  padding: 12px 16px 28px;
+}
+.lab3-tools .footer a { color: var(--accent); text-decoration: none; }
+.lab3-tools .footer a:hover { text-decoration: underline; }
+@media (max-width: 720px) {
+.lab3-tools .lab-badge, .lab3-tools .q-badge { display: inline-block; margin: 6px 0 0; }
+.lab3-tools table.data { font-size: 13px; }
+.lab3-tools table.data th, .lab3-tools table.data td { padding: 6px 6px; }
+}
+
+.lab3-tools { padding: 0; max-width: none; margin: 24px 0 0; background: transparent; }
+.lab3-tools section { min-width: 0; }
+.lab3-tools .lab3-table-scroll { width: 100%; overflow-x: auto; }
+.lab3-tools .split > * { min-width: 0; }
+.lab3-tools .btn-chart { border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; background: white; cursor: pointer; }
+@media (max-width: 720px) {
+ .lab3-tools section { padding: 14px 10px; }
+ .lab3-tools .controls > * { max-width: 100%; min-width: 0; }
+ .lab3-tools .split { gap: 14px; }
+ .lab3-tools .chart-box { flex-basis: 100%; }
+}

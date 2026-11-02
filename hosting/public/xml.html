@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Каталог инструментов — Funds Lab</title>
+  <meta name="description" content="Каталог инструментов Funds Lab: акции и ETF с сортировкой, фильтрами и поиском; данные хранятся в XML, таблица строится XSLT-преобразованием в браузере.">
+  <meta name="keywords" content="XML, XSLT, каталог инструментов, акции, ETF, сортировка, фильтры, выборка">
+  <meta name="author" content="Funds Lab">
+  <meta property="og:title" content="Каталог инструментов — Funds Lab">
+  <meta property="og:description" content="Каталог инструментов Funds Lab: акции и ETF с сортировкой, фильтрами и поиском; данные хранятся в XML, таблица строится XSLT-преобразованием в браузере.">
+  <meta property="og:type" content="website">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=497971bb48">
+  <link rel="stylesheet" href="styles.css?v=497971bb48">
+</head>
+<body data-page="xml">
+  <div class="site-shell">
+    <header class="site-header">
+    <div class="site-header-inner">
+      <a class="brand" href="index.html">Funds Lab</a>
+      <form class="site-search" action="search.html" method="get" role="search">
+        <input type="search" name="q" placeholder="Поиск по сайту…" aria-label="Поиск по сайту">
+        <button type="submit">Найти</button>
+      </form>
+      <div class="informers">
+        <div class="informer informer--weather" id="weather-widget">Погода: загрузка…</div>
+        <div class="informer informer--currency" id="currency-widget">Курсы валют: загрузка…</div>
+      </div>
+    </div>
+    <div class="nav-main">
+      <nav aria-label="Основная навигация">
+        <ul class="nav-list"><li><a href="index.html">Главная</a></li><li><a href="news.html">Новости</a></li><li><a href="exchanges.html">Биржи</a></li><li><a href="history.html">История</a></li><li><a href="beginners.html">Новичку</a></li><li><a href="glossary.html">Глоссарий</a></li><li><a href="risks.html">Риски</a></li><li><a href="links.html">Ссылки</a></li><li><a href="contacts.html">Контакты</a></li><li><a href="about.html">О проекте</a></li><li><a href="search.html">Поиск</a></li><li><a href="forum.html">Форум</a></li><li><a href="services.html">Сервисы</a></li><li><a href="xml.html" aria-current="page">XML (лаб. №2)</a></li><li><a href="db.html">БД (лаб. №3)</a></li><li><a href="rss.html">RSS</a></li></ul>
+      </nav>
+    </div>
+  </header>
+    <main class="site-main">
+      <h1>Каталог инструментов</h1>
+      <p class="lead">Данные каталога хранятся в XML-файле, а таблица строится XSLT-преобразованием прямо в браузере: выберите сортировку и фильтры — страница покажет нужную выборку из каталога.</p>
+
+      <form class="catalog-controls" id="catalog-form" aria-label="Управление каталогом" onsubmit="return false">
+        <label>Сортировка
+          <select id="catalog-sort-key">
+            <option value="ticker">по тикеру</option>
+            <option value="name">по названию</option>
+            <option value="type">по типу</option>
+            <option value="exchange">по бирже</option>
+            <option value="sector">по сектору</option>
+            <option value="price">по цене</option>
+            <option value="changePercent">по изменению за день</option>
+            <option value="volume">по объёму торгов</option>
+          </select>
+        </label>
+        <label>Направление
+          <select id="catalog-sort-dir">
+            <option value="ascending">по возрастанию</option>
+            <option value="descending">по убыванию</option>
+          </select>
+        </label>
+        <label>Биржа
+          <select id="catalog-filter-exchange">
+            <option value="">все</option>
+            <option value="MOEX">MOEX</option>
+            <option value="NASDAQ">NASDAQ</option>
+            <option value="NYSE">NYSE</option>
+          </select>
+        </label>
+        <label>Тип
+          <select id="catalog-filter-type">
+            <option value="">все</option>
+            <option value="stock">акции</option>
+            <option value="etf">ETF</option>
+          </select>
+        </label>
+        <label>Сектор
+          <select id="catalog-filter-sector">
+            <option value="">все</option>
+            <option value="Технологии">Технологии</option>
+            <option value="Финансы">Финансы</option>
+            <option value="Энергетика">Энергетика</option>
+            <option value="Потребительский сектор">Потребительский сектор</option>
+            <option value="Здравоохранение">Здравоохранение</option>
+          </select>
+        </label>
+        <label>Поиск
+          <input type="search" id="catalog-search" placeholder="Название или тикер">
+        </label>
+        <button type="button" id="catalog-reset">Сбросить</button>
+      </form>
+
+      <div class="table-scroll" id="catalog-output" data-asset-version="497971bb48">
+        <p class="empty-state">Загрузка каталога…</p>
+      </div>
+      <p id="catalog-fallback" class="empty-state" hidden>Ваш браузер не поддерживает XSLT-преобразования: таблица каталога недоступна.</p>
+
+      <p class="muted">Исходные данные: <a href="catalog.xml" target="_blank" rel="noopener">catalog.xml</a>, стилевая таблица: <a href="catalog.xsl" target="_blank" rel="noopener">catalog.xsl</a>. Загрузку файлов и преобразование выполняет браузер (XSLTProcessor).</p>
+    </main>
+    <footer class="site-footer">
+    <nav aria-label="Дополнительные разделы">
+      <ul class="nav-list nav-list--footer"><li><a href="forum.html#guestbook">Гостевая книга</a></li><li><a href="services.html#poll">Опрос</a></li><li><a href="services.html#converter">Конвертер валют</a></li><li><a href="services.html#calculator">Инвестиционный калькулятор</a></li><li><a href="links.html">Ссылки</a></li><li><a href="services.html#calendar">Календарь событий</a></li><li><a href="services.html#stats">Статистика посещений</a></li></ul>
+    </nav>
+    <p class="visit-counter">Всего посещений сайта: <span data-visit-total>0</span></p>
+    <p class="author-note">Учебный проект по дисциплине «Веб-программирование». Автор: студент группы БИЗ-Б23, Корнюшкин Игорь.</p>
+  </footer>
+  </div>
+  <script src="data.js?v=497971bb48"></script>
+  <script src="app.js?v=497971bb48"></script>
+</body>
+</html>

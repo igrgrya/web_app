@@ -1,0 +1,40 @@
+import assert from 'node:assert/strict';
+import {DatabaseSync} from 'node:sqlite';
+import {readFileSync} from 'node:fs';
+const db=new DatabaseSync(':memory:');
+db.exec(readFileSync(new URL('../drizzle/0000_catalog.sql',import.meta.url),'utf8'));
+function prepare(sql){let args=[];return{bind(...values){args=values;return this;},async first(){return db.prepare(sql).get(...args)??null;},async all(){return{results:db.prepare(sql).all(...args)};},run(){db.prepare(sql).run(...args);}};}
+const env={DB:{prepare,async batch(statements){db.exec('BEGIN');try{for(const s of statements)s.run();db.exec('COMMIT');}catch(e){db.exec('ROLLBACK');throw e;}}}};
+const {default:worker}=await import('../dist/server/index.js');
+let checks=0;
+async function get(path,status=200){const r=await worker.fetch(new Request('https://example.test'+path),env);assert.equal(r.status,status,path);checks++;return r.headers.get('content-type')?.includes('json')?r.json():r.text();}
+assert.equal((await get('/api/health')).price_snapshots,558);
+const cat=await get('/api/instruments');assert.equal(cat.length,18);
+for(const [query,filter] of [['exchange=MOEX',r=>r.exchange==='MOEX'],['instrument_type=etf',r=>r.type==='etf'],['sector='+encodeURIComponent('Технологии'),r=>r.sector==='Технологии']])assert.deepEqual((await get('/api/instruments?'+query)).map(r=>r.id),cat.filter(filter).map(r=>r.id));
+assert.equal((await get('/api/search?q='+encodeURIComponent('ГАЗ'))).length,2);
+const params=new URLSearchParams({q:'a',exchange:'NASDAQ',sector:'Технологии',instrument_type:'stock',sort:'price',direction:'desc'});
+const expected=cat.filter(r=>r.exchange==='NASDAQ'&&r.sector==='Технологии'&&r.type==='stock'&&(r.ticker+' '+r.name).toLowerCase().includes('a')).sort((a,b)=>b.price-a.price);
+assert.deepEqual((await get('/api/search?'+params)).map(r=>r.id),expected.map(r=>r.id));
+assert.deepEqual((await get('/api/search?'+params+'&limit=1')).map(r=>r.id),expected.slice(0,1).map(r=>r.id));
+for(const q of ['%.__',"';DROP TABLE instruments;--",'qqqqzz'])assert.deepEqual(await get('/api/search?q='+encodeURIComponent(q)),[]);
+for(const base of ['/api/search?q=a&','/api/instruments?'])for(const [param,status]of [['sort=DROP',400],['direction=sideways',422],['instrument_type=crypto',422]])await get(base+param,status);
+for(const path of ['/api/search?q=','/api/top-movers?limit=0','/api/instruments/abc','/api/instruments/1/prices?days=400'])await get(path,422);
+await get('/api/instruments/999',404);await get('/api/instruments/999/prices',404);
+const groups=await get('/api/sectors/summary');assert.equal(groups.reduce((n,r)=>n+r.instruments_count,0),18);
+for(const r of groups){const items=cat.filter(i=>i.sector===r.sector&&i.currency===r.currency);assert.equal(r.instruments_count,items.length);assert.ok(Math.abs(r.avg_price-items.reduce((n,i)=>n+i.price,0)/items.length)<.011);}
+const series=await get('/api/instruments/1/prices');assert.equal(series.length,30);assert.equal(series.at(-1).date,(await get('/api/instruments/1')).as_of_date);
+assert.equal((await get('/api/instruments/1/prices?days=1')).length,1);
+const movers=await get('/api/top-movers');assert.equal(movers.gainers.length,5);assert.equal(movers.gainers[0].change_percent,Math.max(...cat.map(r=>r.change_percent)));
+assert.ok((await get('/')).includes('Funds Lab'));assert.ok((await get('/db.html')).includes('id="catalog"'));assert.ok((await get('/lab3/')).includes('sectors-chart'));
+for(const path of ['/static/app.js','/static/styles.css','/static/vendor/chart.umd.min.js','/styles.css','/app.js'])await get(path);
+const integrated=await get('/db.html');
+assert.ok(integrated.includes('class="site-header"'));
+assert.ok(integrated.includes('aria-label="Основная навигация"'));
+assert.ok(integrated.includes('class="brand" href="/index.html"'));
+assert.ok(!integrated.includes('target="_blank"'));
+assert.equal(integrated,await get('/lab3/'));
+await get('/static/integrated.css');
+await get('/missing',404);
+const r=await worker.fetch(new Request('https://example.test/api/instruments',{method:'POST'}),env);assert.equal(r.status,405);
+assert.equal((await get('/api/health')).instruments,18);
+console.log(`PASS: ${checks} HTTP checks plus SQL/result assertions`);

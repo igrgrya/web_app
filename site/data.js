@@ -106,7 +106,7 @@ window.FUNDS_LAB_PAGES = [
   },
   {
     "id": "db",
-    "label": "БД",
+    "label": "БД (лаб. №3)",
     "url": "db.html"
   },
   {

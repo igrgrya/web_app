@@ -85,9 +85,9 @@ window.FUNDS_LAB_SEARCH = [
   },
   {
     "type": "Страница",
-    "title": "БД",
+    "title": "БД (лаб. №3)",
     "url": "db.html",
-    "text": "БД"
+    "text": "БД (лаб. №3)"
   },
   {
     "type": "Страница",

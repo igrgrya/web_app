@@ -1,0 +1,878 @@
+/* =====================================================================
+   Funds Lab — сервисы статического сайта (лабораторная работа №1).
+   Бэкенда ещё нет, поэтому все пользовательские данные (счётчик,
+   гостевая книга, форум, рейтинги, опрос, подписка) хранятся в
+   localStorage браузера. В лабораторной работе №3 этот файл заменится
+   запросами к FastAPI, а разметка страниц останется прежней.
+   ===================================================================== */
+
+(function () {
+  'use strict'
+
+  var SEED = window.FUNDS_LAB_SEED || { forumTopics: [], guestbookEntries: [], poll: null }
+  var PAGES = window.FUNDS_LAB_PAGES || []
+  var KEYS = {
+    visits: 'funds_lab_visits',
+    pageViews: 'funds_lab_page_views',
+    guestbook: 'funds_lab_guestbook',
+    forumTopics: 'funds_lab_forum_topics',
+    news: 'funds_lab_news',
+    poll: 'funds_lab_poll',
+    pollVoted: 'funds_lab_poll_voted',
+    subscribers: 'funds_lab_subscribers'
+  }
+  // Признак "в этом заходе уже посчитано" живёт в sessionStorage: он
+  // сбрасывается при закрытии вкладки/браузера, поэтому каждый новый
+  // заход считается заново, а переходы внутри сайта — нет.
+  var VISIT_FLAG = 'funds_lab_visit_counted'
+
+  function readJSON(key, fallback) {
+    try {
+      var raw = window.localStorage.getItem(key)
+      return raw ? JSON.parse(raw) : fallback
+    } catch (e) {
+      return fallback
+    }
+  }
+
+  function writeJSON(key, value) {
+    try {
+      window.localStorage.setItem(key, JSON.stringify(value))
+    } catch (e) {
+      /* хранилище недоступно — сервис просто не сохранится */
+    }
+  }
+
+  function esc(value) {
+    return String(value === null || value === undefined ? '' : value).replace(/[&<>"']/g, function (ch) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]
+    })
+  }
+
+  function today() {
+    return new Date().toISOString().slice(0, 10)
+  }
+
+  function nextId(items) {
+    return items.length ? Math.max.apply(null, items.map(function (i) { return i.id })) + 1 : 1
+  }
+
+  function byId(id) {
+    return document.getElementById(id)
+  }
+
+  /* --- Счётчик посещений (обязательный сервис) ----------------------- */
+
+  function getPageViews() {
+    return readJSON(KEYS.pageViews, {})
+  }
+
+  function recordPageView(pageId) {
+    if (!pageId) return
+    var views = getPageViews()
+    views[pageId] = (views[pageId] || 0) + 1
+    writeJSON(KEYS.pageViews, views)
+  }
+
+  function getTotalViews() {
+    var views = getPageViews()
+    return Object.keys(views).reduce(function (sum, key) { return sum + views[key] }, 0)
+  }
+
+  // Счётчик посещений сайта. Правила:
+  //   +1  — заход на сайт (набрал адрес, открыл вкладку, пришёл снаружи)
+  //         и обновление страницы (F5);
+  //    0  — переход по ссылке внутри сайта, кнопки "назад/вперёд".
+  // Тип перехода берём из Navigation Timing API, а для старых браузеров
+  // оставляем запасной вариант через sessionStorage.
+  function getTotalVisits() {
+    return readJSON(KEYS.visits, 0)
+  }
+
+  function shouldCountVisit() {
+    try {
+      var entries = window.performance && window.performance.getEntriesByType
+        ? window.performance.getEntriesByType('navigation')
+        : []
+      var type = entries && entries[0] ? entries[0].type : ''
+      if (type === 'reload') return true
+      if (type === 'navigate') {
+        var referrer = document.referrer || ''
+        return referrer.indexOf(window.location.origin) !== 0
+      }
+      if (!type) {
+        if (window.sessionStorage.getItem(VISIT_FLAG)) return false
+        window.sessionStorage.setItem(VISIT_FLAG, '1')
+        return true
+      }
+      return false
+    } catch (e) {
+      return true
+    }
+  }
+
+  function recordVisit() {
+    if (shouldCountVisit()) {
+      writeJSON(KEYS.visits, getTotalVisits() + 1)
+    }
+  }
+
+  function renderCounter() {
+    var total = getTotalVisits()
+    var nodes = document.querySelectorAll('[data-visit-total]')
+    for (var i = 0; i < nodes.length; i++) {
+      nodes[i].textContent = total
+    }
+  }
+
+  /* --- Гостевая книга (обязательный сервис) -------------------------- */
+
+  function getGuestbookEntries() {
+    return readJSON(KEYS.guestbook, SEED.guestbookEntries)
+  }
+
+  function addGuestbookEntry(data) {
+    var entries = getGuestbookEntries()
+    entries.unshift({
+      id: nextId(entries),
+      authorName: data.authorName,
+      email: data.email,
+      message: data.message,
+      createdAt: today()
+    })
+    writeJSON(KEYS.guestbook, entries)
+    return entries
+  }
+
+  function renderGuestbook() {
+    var list = byId('guestbook-list')
+    if (!list) return
+    var entries = getGuestbookEntries()
+    if (!entries.length) {
+      list.innerHTML = '<li class="empty-state">Записей пока нет — станьте первым.</li>'
+      return
+    }
+    list.innerHTML = entries.map(function (entry) {
+      return '<li class="card"><p>' + esc(entry.message) + '</p>' +
+        '<p class="muted">' + esc(entry.authorName) + ' &middot; ' + esc(entry.createdAt) + '</p></li>'
+    }).join('')
+  }
+
+  function initGuestbook() {
+    var form = byId('guestbook-form')
+    if (!form) return
+    renderGuestbook()
+    form.addEventListener('submit', function (event) {
+      event.preventDefault()
+      var name = form.elements.authorName.value.trim()
+      var email = form.elements.email.value.trim()
+      var message = form.elements.message.value.trim()
+      if (!name || !message) return
+      addGuestbookEntry({ authorName: name, email: email, message: message })
+      renderGuestbook()
+      form.reset()
+    })
+  }
+
+  /* --- Форум (обязательный сервис) ----------------------------------- */
+
+  function getForumTopics() {
+    return readJSON(KEYS.forumTopics, SEED.forumTopics)
+  }
+
+  function addForumTopic(data) {
+    var topics = getForumTopics()
+    var topic = { id: nextId(topics), title: data.title, authorName: data.authorName, createdAt: today(), replies: [] }
+    topics.unshift(topic)
+    writeJSON(KEYS.forumTopics, topics)
+    return topic
+  }
+
+  function addForumReply(topicId, data) {
+    var topics = getForumTopics()
+    var updated = topics.map(function (topic) {
+      if (topic.id !== Number(topicId)) return topic
+      topic.replies = topic.replies || []
+      topic.replies.push({ id: nextId(topic.replies), authorName: data.authorName, message: data.message, createdAt: today() })
+      return topic
+    })
+    writeJSON(KEYS.forumTopics, updated)
+    return updated.filter(function (topic) { return topic.id === Number(topicId) })[0]
+  }
+
+  function renderForumList(openTopicId) {
+    var list = byId('forum-list')
+    if (!list) return
+    var topics = getForumTopics()
+    list.innerHTML = topics.map(function (topic) {
+      var replies = topic.replies || []
+      var replyItems = replies.length
+        ? replies.map(function (reply) {
+            return '<li class="card"><p>' + esc(reply.message) + '</p>' +
+              '<p class="muted">' + esc(reply.authorName) + ' &middot; ' + esc(reply.createdAt) + '</p></li>'
+          }).join('')
+        : '<li class="empty-state">Ответов пока нет.</li>'
+      return '<details class="forum-topic-block" id="topic-' + topic.id + '"' +
+          (openTopicId === topic.id ? ' open' : '') + '>' +
+        '<summary><strong>' + esc(topic.title) + '</strong> — ' + esc(topic.authorName) + ', ' +
+          esc(topic.createdAt) + ' &middot; ответов: ' + replies.length + '</summary>' +
+        '<ul class="card-list">' + replyItems + '</ul>' +
+        '<form class="stacked-form reply-form" data-topic-id="' + topic.id + '">' +
+          '<label>Ваше имя <input name="authorName" required></label>' +
+          '<label>Сообщение <textarea name="message" rows="3" required></textarea></label>' +
+          '<button type="submit">Ответить</button>' +
+        '</form>' +
+      '</details>'
+    }).join('')
+
+    // Формы ответов: одна внутри каждой темы.
+    var forms = list.querySelectorAll('.reply-form')
+    for (var i = 0; i < forms.length; i++) {
+      forms[i].addEventListener('submit', function (event) {
+        event.preventDefault()
+        var form = event.currentTarget
+        var authorName = form.elements.authorName.value.trim()
+        var message = form.elements.message.value.trim()
+        if (!authorName || !message) return
+        addForumReply(form.getAttribute('data-topic-id'), { authorName: authorName, message: message })
+        renderForumList(Number(form.getAttribute('data-topic-id')))
+      })
+    }
+  }
+
+  function initForum() {
+    var form = byId('forum-form')
+    if (!form) return
+    renderForumList()
+    form.addEventListener('submit', function (event) {
+      event.preventDefault()
+      var authorName = form.elements.authorName.value.trim()
+      var title = form.elements.title.value.trim()
+      if (!authorName || !title) return
+      var topic = addForumTopic({ title: title, authorName: authorName })
+      renderForumList(topic.id)
+      form.reset()
+    })
+  }
+
+  /* --- Форма добавления новости (дополнительный сервис) -------------- */
+
+  function getUserNews() {
+    return readJSON(KEYS.news, [])
+  }
+
+  function addUserNews(entry) {
+    var list = getUserNews()
+    list.unshift(entry)
+    writeJSON(KEYS.news, list)
+    return list
+  }
+
+  function userNewsItemHtml(item) {
+    return '<details class="news-item news-item--user" id="news-' + esc(item.id) + '">' +
+      '<summary><strong>' + esc(item.title) + '</strong> <span class="muted">' + esc(item.publishedAt) + '</span></summary>' +
+      '<p>' + esc(item.body) + '</p>' +
+      '<p class="muted">добавлено через форму</p>' +
+      '</details>'
+  }
+
+  function renderUserNews() {
+    var list = byId('news-list')
+    if (!list) return
+    var rendered = list.querySelectorAll('.news-item--user')
+    for (var i = 0; i < rendered.length; i++) {
+      rendered[i].remove()
+    }
+    getUserNews().forEach(function (item) {
+      list.insertAdjacentHTML('afterbegin', userNewsItemHtml(item))
+    })
+  }
+
+  function initNewsForm() {
+    var form = byId('news-form')
+    if (!form) return
+    renderUserNews()
+    form.addEventListener('submit', function (event) {
+      event.preventDefault()
+      var title = form.elements.title.value.trim()
+      var body = form.elements.body.value.trim()
+      if (!title || !body) return
+      addUserNews({ id: 'user-' + Date.now(), title: title, body: body, publishedAt: today(), user: true })
+      renderUserNews()
+      form.reset()
+    })
+  }
+
+  /* --- Опрос (дополнительный сервис) --------------------------------- */
+
+  function getPoll() {
+    return readJSON(KEYS.poll, SEED.poll)
+  }
+
+  function hasVotedInPoll() {
+    return readJSON(KEYS.pollVoted, false)
+  }
+
+  function castPollVote(optionId) {
+    var poll = getPoll()
+    if (!poll || hasVotedInPoll()) return poll
+    poll.options = poll.options.map(function (option) {
+      if (option.id === Number(optionId)) option.votes = (option.votes || 0) + 1
+      return option
+    })
+    writeJSON(KEYS.poll, poll)
+    writeJSON(KEYS.pollVoted, true)
+    return poll
+  }
+
+  function initPoll() {
+    var box = byId('poll')
+    if (!box) return
+
+    function render() {
+      var poll = getPoll()
+      if (!poll) {
+        box.innerHTML = '<p class="empty-state">Опрос пока не создан.</p>'
+        return
+      }
+      var voted = hasVotedInPoll()
+      var total = poll.options.reduce(function (sum, option) { return sum + (option.votes || 0) }, 0)
+      var items = poll.options.map(function (option) {
+        if (voted) {
+          var percent = total > 0 ? Math.round(((option.votes || 0) / total) * 100) : 0
+          return '<li><div class="poll-result"><div class="poll-result-bar" style="width:' + percent + '%"></div>' +
+            '<span>' + esc(option.text) + ' — ' + percent + '% (' + (option.votes || 0) + ')</span></div></li>'
+        }
+        return '<li><button type="button" data-option="' + option.id + '">' + esc(option.text) + '</button></li>'
+      }).join('')
+      box.querySelector('[data-poll-question]').textContent = poll.question
+      box.querySelector('.poll-options').innerHTML = items
+      box.querySelector('[data-poll-note]').textContent = voted
+        ? 'Спасибо, ваш голос учтён. Всего голосов: ' + total + '.'
+        : ''
+      var buttons = box.querySelectorAll('[data-option]')
+      for (var i = 0; i < buttons.length; i++) {
+        buttons[i].addEventListener('click', function (event) {
+          castPollVote(event.currentTarget.getAttribute('data-option'))
+          render()
+        })
+      }
+    }
+
+    render()
+  }
+
+  /* --- Подписка на рассылку (дополнительный сервис) ------------------ */
+
+  function getSubscribers() {
+    return readJSON(KEYS.subscribers, [])
+  }
+
+  function initSubscribe() {
+    var form = byId('subscribe-form')
+    if (!form) return
+    var count = byId('subscriber-count')
+    var note = byId('subscribe-success')
+
+    function render() {
+      if (count) count.textContent = getSubscribers().length
+    }
+
+    render()
+    form.addEventListener('submit', function (event) {
+      event.preventDefault()
+      var email = form.elements.email.value.trim()
+      if (!email) return
+      var list = getSubscribers()
+      if (list.indexOf(email) === -1) {
+        list.push(email)
+        writeJSON(KEYS.subscribers, list)
+      }
+      if (note) note.hidden = false
+      form.reset()
+      render()
+    })
+  }
+
+  /* --- Поиск по сайту (обязательный сервис) -------------------------- */
+
+  function initSearch() {
+    var input = byId('search-input')
+    var results = byId('search-results')
+    if (!input || !results) return
+    // Статичный индекс дополняется новостями, добавленными через форму.
+    var userNews = getUserNews().map(function (item) {
+      return { type: 'Новость', title: item.title, url: 'news.html#news-' + item.id, text: item.title + ' ' + item.body }
+    })
+    var index = (window.FUNDS_LAB_SEARCH || []).concat(userNews)
+
+    function render() {
+      var q = input.value.trim().toLowerCase()
+      if (!q) {
+        results.innerHTML = ''
+        return
+      }
+      var found = index.filter(function (item) {
+        return (item.title + ' ' + item.text).toLowerCase().indexOf(q) !== -1
+      })
+      if (!found.length) {
+        results.innerHTML = '<p class="empty-state">Ничего не найдено по запросу «' + esc(input.value) + '».</p>'
+        return
+      }
+      results.innerHTML = '<ul class="card-list">' + found.map(function (item) {
+        return '<li class="card"><a href="' + esc(item.url) + '">' + esc(item.title) + '</a>' +
+          '<p class="muted">' + esc(item.type) + '</p></li>'
+      }).join('') + '</ul>'
+    }
+
+    input.addEventListener('input', render)
+
+    // Запрос из формы поиска в шапке: search.html?q=...
+    var initialQuery = new URLSearchParams(window.location.search).get('q')
+    if (initialQuery) {
+      input.value = initialQuery
+      render()
+    }
+  }
+
+  /* --- Статистика по разделам (дополнительный сервис) ---------------- */
+
+  function initStats() {
+    var body = byId('stats-body')
+    if (!body) return
+    var views = getPageViews()
+    var rows = PAGES.map(function (page) {
+      return { label: page.label, url: page.url, count: views[page.id] || 0 }
+    }).sort(function (a, b) { return b.count - a.count })
+    body.innerHTML = rows.map(function (row) {
+      return '<tr><td>' + esc(row.label) + '</td><td><a href="' + esc(row.url) + '">' + esc(row.url) + '</a></td>' +
+        '<td>' + row.count + '</td></tr>'
+    }).join('')
+  }
+
+  /* --- Внешние сервисы: погода и курсы валют ------------------------- */
+
+  // Запрос JSON с таймаутом: не даём виджету "висеть", если сервис
+  // недоступен (например, заблокирован провайдером).
+  function fetchJSON(url, timeoutMs) {
+    var options = {}
+    var controller = null
+    var timer = null
+    if (typeof AbortController !== 'undefined') {
+      controller = new AbortController()
+      options.signal = controller.signal
+      timer = setTimeout(function () { controller.abort() }, timeoutMs)
+    }
+    return fetch(url, options)
+      .then(function (response) {
+        if (!response.ok) throw new Error('HTTP ' + response.status)
+        return response.json()
+      })
+      .then(
+        function (data) { if (timer) clearTimeout(timer); return data },
+        function (error) { if (timer) clearTimeout(timer); throw error },
+      )
+  }
+
+  function formatNumber(value, digits) {
+    return Number(value).toFixed(digits)
+  }
+
+  // Подбор иконки по коду погоды WMO (open-meteo).
+  function weatherIcon(code) {
+    if (code >= 95) return '⛈'
+    if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return '🌧'
+    if ((code >= 71 && code <= 77) || code === 85 || code === 86) return '❄'
+    if (code <= 1) return '☀'
+    if (code === 2) return '🌤'
+    if (code <= 48) return '☁'
+    return '🌡'
+  }
+
+  function initWeather() {
+    var box = byId('weather-widget')
+    if (!box) return
+    // Основной источник — open-meteo, запасной — wttr.in.
+    fetchJSON('https://api.open-meteo.com/v1/forecast?latitude=55.0968&longitude=36.6103&current=temperature_2m,wind_speed_10m,weather_code&timezone=Europe/Moscow', 8000)
+      .then(function (data) {
+        var current = data && data.current
+        if (!current) throw new Error('no data')
+        box.innerHTML = '<span>' + weatherIcon(current.weather_code) + '</span> Обнинск: <strong>' +
+          current.temperature_2m + ' °C</strong>, ветер ' + current.wind_speed_10m + ' м/с'
+      })
+      .catch(function () {
+        return fetchJSON('https://wttr.in/Obninsk?format=j1', 8000).then(function (data) {
+          var current = data && data.current_condition && data.current_condition[0]
+          if (!current) throw new Error('no data')
+          box.innerHTML = '<span>☁</span> Обнинск: <strong>' + current.temp_C +
+            ' °C</strong>, ветер ' + current.windspeedKmph + ' км/ч'
+        })
+      })
+      .catch(function () { box.textContent = 'Не удалось загрузить погоду.' })
+  }
+
+  function initCurrency() {
+    var box = byId('currency-widget')
+    if (!box) return
+    // Основной источник — курс ЦБ РФ (доступен из России, поддерживает рубль),
+    // запасной — open.er-api.com.
+    fetchJSON('https://www.cbr-xml-daily.ru/daily_json.js', 8000)
+      .then(function (data) {
+        var valute = data && data.Valute
+        if (!valute) throw new Error('no data')
+        function rubPerUnit(code) {
+          var value = valute[code]
+          if (!value || typeof value.Value !== 'number') return null
+          return value.Value / (value.Nominal || 1)
+        }
+        // Стрелка изменения курса к предыдущему дню.
+        function rateArrow(code) {
+          var value = valute[code]
+          if (!value || typeof value.Value !== 'number') return ''
+          var diff = value.Value - (value.Previous || value.Value)
+          if (diff > 0) return '<span class="rate-up">▲</span>'
+          if (diff < 0) return '<span class="rate-down">▼</span>'
+          return ''
+        }
+        var usd = rubPerUnit('USD')
+        var eur = rubPerUnit('EUR')
+        var cny = rubPerUnit('CNY')
+        if (usd === null) throw new Error('no data')
+        var date = data.Date ? new Date(data.Date).toLocaleDateString('ru-RU') : ''
+        box.innerHTML = 'ЦБ РФ' + (date ? ' на ' + date : '') + ': ' +
+          '1 USD — <strong>' + formatNumber(usd, 2) + ' ₽</strong>' + rateArrow('USD') + ', ' +
+          '1 EUR — <strong>' + (eur === null ? '—' : formatNumber(eur, 2) + ' ₽') + '</strong>' + rateArrow('EUR') + ', ' +
+          '1 CNY — <strong>' + (cny === null ? '—' : formatNumber(cny, 2) + ' ₽') + '</strong>' + rateArrow('CNY')
+      })
+      .catch(function () {
+        return fetchJSON('https://open.er-api.com/v6/latest/USD', 8000).then(function (data) {
+          var rates = data && data.rates
+          if (!rates || typeof rates.RUB !== 'number') throw new Error('no data')
+          box.innerHTML = '1 USD — <strong>' + formatNumber(rates.RUB, 2) + ' ₽</strong>, ' +
+            '1 EUR — <strong>' + formatNumber(rates.RUB / rates.EUR, 2) + ' ₽</strong>, ' +
+            '1 CNY — <strong>' + formatNumber(rates.RUB / rates.CNY, 2) + ' ₽</strong>'
+        })
+      })
+      .catch(function () { box.textContent = 'Не удалось загрузить курсы валют.' })
+  }
+
+  /* --- Конвертер валют (дополнительный сервис) ----------------------- */
+
+  function initConverter() {
+    var form = byId('converter-form')
+    if (!form) return
+    var resultBox = byId('converter-result')
+    var rateBox = byId('converter-rate')
+    var cachedRates = null
+
+    // Курс ЦБ РФ: рублей за единицу валюты (RUB = 1).
+    function rubRates(data) {
+      var valute = data && data.Valute
+      if (!valute) return null
+      var rates = { RUB: 1 }
+      ;['USD', 'EUR', 'CNY'].forEach(function (code) {
+        var value = valute[code]
+        if (value && typeof value.Value === 'number') {
+          rates[code] = value.Value / (value.Nominal || 1)
+        }
+      })
+      return rates.USD && rates.EUR && rates.CNY ? rates : null
+    }
+
+    function show(amount, from, to, rates) {
+      // Русский формат: 1 000,00 (десятичная запятая).
+      function fmt(value) {
+        return value.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+      }
+      resultBox.textContent = fmt(amount) + ' ' + from + ' = ' + fmt((amount * rates[from]) / rates[to]) + ' ' + to
+      resultBox.hidden = false
+      var date = cachedRates.date ? new Date(cachedRates.date).toLocaleDateString('ru-RU') : ''
+      rateBox.textContent = 'Курс ЦБ РФ' + (date ? ' на ' + date : '') + ': 1 USD — ' +
+        fmt(rates.USD) + ' ₽, 1 EUR — ' + fmt(rates.EUR) + ' ₽, 1 CNY — ' + fmt(rates.CNY) + ' ₽'
+    }
+
+    function convert() {
+      var amount = Number(form.elements.amount.value)
+      var from = form.elements.from.value
+      var to = form.elements.to.value
+      if (!amount || amount < 0) return
+      if (cachedRates) {
+        show(amount, from, to, cachedRates.rates)
+        return
+      }
+      resultBox.textContent = 'Загрузка курсов…'
+      resultBox.hidden = false
+      fetchJSON('https://www.cbr-xml-daily.ru/daily_json.js', 8000)
+        .then(function (data) {
+          var rates = rubRates(data)
+          if (!rates) throw new Error('no data')
+          cachedRates = { rates: rates, date: data.Date }
+          show(amount, from, to, rates)
+        })
+        .catch(function () {
+          resultBox.textContent = 'Курсы временно недоступны'
+        })
+    }
+
+    form.addEventListener('submit', function (event) {
+      event.preventDefault()
+      convert()
+    })
+  }
+
+  /* --- Инвестиционный калькулятор (дополнительный сервис) ------------ */
+
+  function initCalculator() {
+    var form = byId('calculator-form')
+    if (!form) return
+    var resultBox = byId('calculator-result')
+    var table = byId('calculator-years')
+    var tbody = table ? table.querySelector('tbody') : null
+
+    function money(value) {
+      return Math.round(value).toLocaleString('ru-RU') + ' ₽'
+    }
+
+    function yearsWord(n) {
+      var mod10 = n % 10
+      var mod100 = n % 100
+      if (mod10 === 1 && mod100 !== 11) return 'год'
+      if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return 'года'
+      return 'лет'
+    }
+
+    form.addEventListener('submit', function (event) {
+      event.preventDefault()
+      var balance = Number(form.elements.initial.value)
+      var monthly = Number(form.elements.monthly.value)
+      var rate = Number(form.elements.rate.value)
+      var years = Number(form.elements.years.value)
+      if (isNaN(balance) || isNaN(monthly) || isNaN(rate) || !years || years < 1) return
+      if (balance < 0 || monthly < 0 || rate < 0) return
+
+      // Сложный процент с ежегодной капитализацией: за год баланс
+      // растёт на rate% и на 12 ежемесячных пополнений.
+      var invested = balance
+      var rows = ''
+      for (var year = 1; year <= years; year++) {
+        balance = balance * (1 + rate / 100) + monthly * 12
+        invested += monthly * 12
+        rows += '<tr><td>' + year + '</td><td>' + money(balance) + '</td><td>' + money(invested) + '</td></tr>'
+      }
+
+      resultBox.textContent = 'Итого через ' + years + ' ' + yearsWord(years) + ': ' + money(balance) +
+        ' (вложено ' + money(invested) + ', доход ' + money(balance - invested) + ')'
+      resultBox.hidden = false
+      if (tbody) {
+        tbody.innerHTML = rows
+        table.hidden = false
+      }
+    })
+  }
+
+  /* --- Мировые часы бирж (дополнительный сервис) --------------------- */
+
+  function initExchangeClock() {
+    var cards = document.querySelectorAll('.clock-card')
+    if (!cards.length) return
+
+    function pad(value) {
+      return (value < 10 ? '0' : '') + value
+    }
+
+    function toMinutes(hhmm) {
+      var parts = hhmm.split(':')
+      return Number(parts[0]) * 60 + Number(parts[1])
+    }
+
+    function render() {
+      var now = new Date()
+      for (var i = 0; i < cards.length; i++) {
+        var card = cards[i]
+        var timeEl = card.querySelector('.clock-time')
+        var badgeEl = card.querySelector('.session-badge')
+        try {
+          var parts = new Intl.DateTimeFormat('en-US', {
+            timeZone: card.getAttribute('data-tz'),
+            hour: '2-digit',
+            minute: '2-digit',
+            weekday: 'short',
+            hour12: false,
+          }).formatToParts(now)
+          var part = function (type) {
+            for (var j = 0; j < parts.length; j++) {
+              if (parts[j].type === type) return parts[j].value
+            }
+            return ''
+          }
+          var weekday = part('weekday')
+          var minutes = (Number(part('hour')) % 24) * 60 + Number(part('minute'))
+          if (timeEl) timeEl.textContent = pad(Math.floor(minutes / 60)) + ':' + pad(minutes % 60)
+          var isWorkday = weekday !== 'Sat' && weekday !== 'Sun'
+          var isOpen = isWorkday &&
+            minutes >= toMinutes(card.getAttribute('data-open')) &&
+            minutes < toMinutes(card.getAttribute('data-close'))
+          if (badgeEl) {
+            badgeEl.textContent = isOpen ? 'сессия открыта' : 'сессия закрыта'
+            badgeEl.className = 'session-badge ' + (isOpen ? 'session-badge--open' : 'session-badge--closed')
+          }
+        } catch (e) {
+          if (timeEl) timeEl.textContent = '--:--'
+        }
+      }
+    }
+
+    render()
+    setInterval(render, 60000)
+  }
+
+  /* --- Каталог инструментов: XML + XSLT (лабораторная работа №2) ------ */
+
+  // Страница загружает catalog.xml и catalog.xsl, применяет XSL-шаблон
+  // через XSLTProcessor и подставляет параметры сортировки/фильтров
+  // при каждом изменении контролов. Страница строится заново целиком.
+  function initCatalog() {
+    var output = byId('catalog-output')
+    if (!output) return
+
+    // XSLTProcessor поддерживают все актуальные браузеры; для остальных
+    // показываем сообщение и не роняем остальные сервисы страницы.
+    if (typeof XSLTProcessor === 'undefined' || typeof DOMParser === 'undefined') {
+      var fallback = byId('catalog-fallback')
+      if (fallback) fallback.hidden = false
+      output.innerHTML = '<p class="empty-state">Браузер не поддерживает XSLT-преобразование, таблица каталога недоступна.</p>'
+      return
+    }
+
+    var xmlDoc = null
+    var processor = null
+    var searchTimer = null
+    // Числовые колонки при первом клике удобнее смотреть от большего к меньшему.
+    var NUMERIC_SORT_KEYS = ['price', 'changePercent', 'volume']
+
+    function parseXml(text) {
+      var doc = new DOMParser().parseFromString(text, 'application/xml')
+      if (doc.getElementsByTagName('parsererror').length) {
+        throw new Error('не удалось разобрать XML')
+      }
+      return doc
+    }
+
+    function render() {
+      if (!xmlDoc || !processor) return
+      processor.setParameter(null, 'sortKey', byId('catalog-sort-key').value)
+      processor.setParameter(null, 'sortDir', byId('catalog-sort-dir').value)
+      processor.setParameter(null, 'filterExchange', byId('catalog-filter-exchange').value)
+      processor.setParameter(null, 'filterType', byId('catalog-filter-type').value)
+      processor.setParameter(null, 'filterSector', byId('catalog-filter-sector').value)
+      processor.setParameter(null, 'query', byId('catalog-search').value.trim())
+      output.innerHTML = ''
+      output.appendChild(processor.transformToFragment(xmlDoc, document))
+    }
+
+    function bindControls() {
+      var selects = ['catalog-sort-key', 'catalog-sort-dir', 'catalog-filter-exchange', 'catalog-filter-type', 'catalog-filter-sector']
+      for (var i = 0; i < selects.length; i++) {
+        byId(selects[i]).addEventListener('change', render)
+      }
+      // Поиск: лёгкий debounce, чтобы не пересобирать таблицу на каждый символ.
+      byId('catalog-search').addEventListener('input', function () {
+        if (searchTimer) clearTimeout(searchTimer)
+        searchTimer = setTimeout(render, 200)
+      })
+      // form.reset() возвращает все контролы к значениям из разметки.
+      byId('catalog-reset').addEventListener('click', function () {
+        byId('catalog-form').reset()
+        render()
+      })
+
+      // Сортировка кликом по заголовку колонки. Слушатель висит на
+      // контейнере: таблица при каждом рендере перерисовывается целиком,
+      // а делегирование переживает замену её содержимого.
+      output.addEventListener('click', function (event) {
+        var node = event.target
+        while (node && node !== output && node.tagName !== 'TH') {
+          node = node.parentNode
+        }
+        if (!node || node === output || node.tagName !== 'TH') return
+        var key = node.getAttribute('data-sort-key')
+        if (!key) return
+        var keySelect = byId('catalog-sort-key')
+        var dirSelect = byId('catalog-sort-dir')
+        if (keySelect.value === key) {
+          // Повторный клик по активной колонке меняет направление.
+          dirSelect.value = dirSelect.value === 'ascending' ? 'descending' : 'ascending'
+        } else {
+          keySelect.value = key
+          dirSelect.value = NUMERIC_SORT_KEYS.indexOf(key) !== -1 ? 'descending' : 'ascending'
+        }
+        render()
+      })
+    }
+
+    // Версия ассетов из data-атрибута: браузер не подхватит устаревший
+    // catalog.xml/catalog.xsl из кэша GitHub Pages.
+    var version = output.getAttribute('data-asset-version')
+    var suffix = version ? '?v=' + version : ''
+
+    Promise.all([
+      fetch('catalog.xml' + suffix).then(function (response) {
+        if (!response.ok) throw new Error('HTTP ' + response.status)
+        return response.text()
+      }),
+      fetch('catalog.xsl' + suffix).then(function (response) {
+        if (!response.ok) throw new Error('HTTP ' + response.status)
+        return response.text()
+      }),
+    ])
+      .then(function (texts) {
+        xmlDoc = parseXml(texts[0])
+        processor = new XSLTProcessor()
+        processor.importStylesheet(parseXml(texts[1]))
+        bindControls()
+        render()
+      })
+      .catch(function () {
+        output.innerHTML = '<p class="empty-state">Не удалось загрузить каталог: файлы catalog.xml и catalog.xsl должны открываться по HTTP, а не с диска.</p>'
+      })
+  }
+
+  /* --- Запуск --------------------------------------------------------- */
+
+  function init() {
+    var pageId = document.body.getAttribute('data-page')
+    recordPageView(pageId)
+    recordVisit()
+
+    initGuestbook()
+    initForum()
+    initNewsForm()
+    initPoll()
+    initSubscribe()
+    initSearch()
+    initStats()
+    initWeather()
+    initCurrency()
+    initConverter()
+    initCalculator()
+    initExchangeClock()
+    initCatalog()
+
+    // Ссылки вида news.html#news-2 ведут на свёрнутый <details> —
+    // раскрываем целевой блок. Важно: после initNewsForm(), чтобы
+    // якоря пользовательских новостей уже существовали в DOM.
+    var hash = window.location.hash
+    if (hash) {
+      var anchor = document.getElementById(decodeURIComponent(hash.slice(1)))
+      if (anchor && anchor.tagName === 'DETAILS') anchor.open = true
+    }
+
+    renderCounter()
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init)
+  } else {
+    init()
+  }
+})()

@@ -11,3 +11,20 @@ DEPLOY.md
 explanation.md
 CLAUDE.md
 lab2_xml_xslt_plan.md
+lab2_screenshots/
+lab3_plan.md
+lab3_screenshots/
+lab3_report*.docx
+lab3_render/
+generate_lab3_report.js
+node_modules/
+package.json
+package-lock.json
+dir/
+
+# Local Sites checkout and publication archive
+/hosted-lab3/
+/lab3-site.tar.gz
+# Keep the cloud source manifest and instructions in GitHub
+!hosting/package.json
+!hosting/README.md

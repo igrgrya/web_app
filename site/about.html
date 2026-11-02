@@ -29,7 +29,7 @@
     </div>
     <div class="nav-main">
       <nav aria-label="Основная навигация">
-        <ul class="nav-list"><li><a href="index.html">Главная</a></li><li><a href="news.html">Новости</a></li><li><a href="exchanges.html">Биржи</a></li><li><a href="history.html">История</a></li><li><a href="beginners.html">Новичку</a></li><li><a href="glossary.html">Глоссарий</a></li><li><a href="risks.html">Риски</a></li><li><a href="links.html">Ссылки</a></li><li><a href="contacts.html">Контакты</a></li><li><a href="about.html" aria-current="page">О проекте</a></li><li><a href="search.html">Поиск</a></li><li><a href="forum.html">Форум</a></li><li><a href="services.html">Сервисы</a></li><li><a href="xml.html">XML (лаб. №2)</a></li><li><a href="db.html">БД</a></li><li><a href="rss.html">RSS</a></li></ul>
+        <ul class="nav-list"><li><a href="index.html">Главная</a></li><li><a href="news.html">Новости</a></li><li><a href="exchanges.html">Биржи</a></li><li><a href="history.html">История</a></li><li><a href="beginners.html">Новичку</a></li><li><a href="glossary.html">Глоссарий</a></li><li><a href="risks.html">Риски</a></li><li><a href="links.html">Ссылки</a></li><li><a href="contacts.html">Контакты</a></li><li><a href="about.html" aria-current="page">О проекте</a></li><li><a href="search.html">Поиск</a></li><li><a href="forum.html">Форум</a></li><li><a href="services.html">Сервисы</a></li><li><a href="xml.html">XML (лаб. №2)</a></li><li><a href="db.html">БД (лаб. №3)</a></li><li><a href="rss.html">RSS</a></li></ul>
       </nav>
     </div>
   </header>
@@ -51,7 +51,7 @@
         <ul>
           <li>Frontend: HTML5, CSS3, JavaScript (статические страницы)</li>
           <li>XML + XSLT — клиентское XSLT-преобразование (каталог инструментов)</li>
-          <li>Backend (со следующих лабораторных работ): FastAPI + SQLAlchemy</li>
+          <li>Backend (лабораторная работа №3): FastAPI + SQLAlchemy, приложение запускается локально</li>
           <li>База данных: PostgreSQL</li>
         </ul>
       </section>
@@ -65,6 +65,7 @@
           <li>Добавление новостей (форма на странице новостей)</li>
           <li>Мировые часы и статус сессий бирж</li>
           <li>Каталог инструментов с сортировкой и фильтрами (XML + XSLT)</li>
+          <li>Приложение с доступом к БД: каталог, поиск, агрегаты, графики цен (FastAPI + PostgreSQL)</li>
           <li>Форум</li>
           <li>Гостевая книга</li>
           <li>Опрос</li>
@@ -77,11 +78,11 @@
 
       <section id="plan">
         <h2>Структура сайта и план развития</h2>
-        <p>Сайт состоит из 10 статических страниц: Главная, Новости, Биржи, История бирж, Новичку, Глоссарий, Риски, Ссылки, Контакты, О проекте. Кроме статических, на сайте есть сервисные страницы (Поиск, Форум, Сервисы), каталог инструментов на XML + XSLT, страницы-заглушки БД и RSS под лабораторные работы №3–4 и техническая страница 404.</p>
+        <p>Сайт состоит из 10 статических страниц: Главная, Новости, Биржи, История бирж, Новичку, Глоссарий, Риски, Ссылки, Контакты, О проекте. Кроме статических, на сайте есть сервисные страницы (Поиск, Форум, Сервисы), каталог инструментов на XML + XSLT (лабораторная работа №2), страница лабораторной работы №3 с описанием приложения с доступом к БД, RSS-заглушка под лабораторную работу №4 и техническая страница 404.</p>
         <p>Дальнейшее развитие — по лабораторным работам:</p>
         <ul>
           <li>№2 — каталог инструментов на XML + XSLT — выполнена;</li>
-          <li>№3 — PostgreSQL + FastAPI (схема в db/schema.sql), новости переедут в БД;</li>
+          <li>№3 — приложение с доступом к БД (PostgreSQL + FastAPI, схема в db/schema.sql) — выполнена, приложение запускается локально (backend/start.bat);</li>
           <li>№4 — RSS-лента из новостей БД.</li>
         </ul>
       </section>
