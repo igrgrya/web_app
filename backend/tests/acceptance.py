@@ -1,9 +1,14 @@
 # -*- coding: utf-8 -*-
 """Комплексная приёмка л.р. №3: БД + API. Запуск: backend/.venv/Scripts/python lab3_acceptance.py"""
-import json, re, datetime, urllib.request, urllib.parse, urllib.error
+import json, os, sys, urllib.request, urllib.parse, urllib.error
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from app.database import DATABASE_URL
+from sqlalchemy.engine import make_url
+sys.stdout.reconfigure(encoding="utf-8")
 import psycopg2
 
-BASE = "http://127.0.0.1:8000"
+BASE = os.environ.get("LAB3_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
 results = []
 def check(name, cond, detail=""):
     results.append((name, bool(cond), str(detail)))
@@ -22,22 +27,22 @@ def get(path):
         return e.code, data
 
 # ---------- БД ----------
-url = [l.strip().split("=",1)[1] for l in open(__import__("pathlib").Path(__file__).resolve().parent.parent / ".env", encoding="utf-8") if l.strip().startswith("DATABASE_URL=")][0]
-u = re.match(r"postgresql\+psycopg2://([^:]+):([^@]+)@([^:/]+):(\d+)/(\w+)", url)
-conn = psycopg2.connect(host=u.group(3), port=int(u.group(4)), dbname=u.group(5), user=u.group(1), password=u.group(2))
+url = make_url(DATABASE_URL)
+conn = psycopg2.connect(**url.translate_connect_args(username="user", database="dbname"))
 cur = conn.cursor()
 
 cur.execute("SELECT count(*) FROM instruments"); n_inst = cur.fetchone()[0]
 check("БД: 18 инструментов", n_inst == 18, n_inst)
 cur.execute("SELECT count(*) FROM price_snapshots"); n_snap = cur.fetchone()[0]
 check("БД: 558 снимков цен", n_snap == 558, n_snap)
-cur.execute("SELECT count(*) FROM price_snapshots WHERE as_of_date = CURRENT_DATE"); n_today = cur.fetchone()[0]
-check("БД: у всех 18 есть снимок на сегодня", n_today == 18, n_today)
-cur.execute("SELECT count(*), min(as_of_date), max(as_of_date) FROM price_snapshots WHERE as_of_date < CURRENT_DATE")
+cur.execute("SELECT max(as_of_date) FROM price_snapshots"); anchor_date = cur.fetchone()[0]
+cur.execute("SELECT count(*) FROM price_snapshots WHERE as_of_date = %s", (anchor_date,)); n_today = cur.fetchone()[0]
+check("БД: у всех 18 есть снимок на последнюю дату данных", n_today == 18, n_today)
+cur.execute("SELECT count(*), min(as_of_date), max(as_of_date) FROM price_snapshots WHERE as_of_date < %s", (anchor_date,))
 n_hist, d_min, d_max = cur.fetchone()
-check("БД: история 540 строк, завершается до сегодня", n_hist == 540 and d_max < datetime.date.today(), f"{n_hist}, {d_min}..{d_max}")
-cur.execute("""SELECT instrument_id, count(*) FROM price_snapshots WHERE as_of_date < CURRENT_DATE
-               GROUP BY instrument_id HAVING count(*) <> 30""")
+check("БД: история 540 строк, завершается до базовой даты", n_hist == 540 and d_max is not None and d_max < anchor_date, f"{n_hist}, {d_min}..{d_max}")
+cur.execute("""SELECT instrument_id, count(*) FROM price_snapshots WHERE as_of_date < %s
+               GROUP BY instrument_id HAVING count(*) <> 30""", (anchor_date,))
 check("БД: у каждого инструмента ровно 30 исторических дней", cur.rowcount == 0, cur.rowcount)
 cur.execute("SELECT count(*) FROM price_snapshots WHERE price <= 0")
 check("БД: нет нулевых/отрицательных цен", cur.fetchone()[0] == 0)
@@ -110,8 +115,16 @@ check("API: одиночная кавычка → 200 без 500", st == 200, st
 
 st, d = get("/api/sectors/summary")
 total = sum(r["instruments_count"] for r in d)
-check("API: агрегаты — 5 секторов, сумма = 18", st==200 and len(d)==5 and total==18, f"{len(d)}, sum={total}")
-check("API: Технологии: 6 шт, ср.цена 204.73", d[0]["sector"]=="Технологии" and d[0]["instruments_count"]==6 and d[0]["avg_price"]==204.73, d[0])
+expected_groups = {}
+for row in cat:
+    expected_groups.setdefault((row["sector"], row["currency"]), []).append(row)
+check("API: агрегаты — сектор и валюта, сумма = 18", st == 200 and len(d) == len(expected_groups) and total == 18)
+check("API: средние цены не смешивают валюты", all(
+    (r["sector"], r["currency"]) in expected_groups and
+    r["instruments_count"] == len(expected_groups[(r["sector"], r["currency"])]) and
+    abs(r["avg_price"] - round(sum(x["price"] for x in expected_groups[(r["sector"], r["currency"])]) / r["instruments_count"], 2)) < .011 and
+    r["total_volume"] == sum(x["volume"] for x in expected_groups[(r["sector"], r["currency"])])
+    for r in d))
 
 st, d = get("/api/top-movers?limit=5")
 cat_changes = sorted((r["change_percent"] for r in cat), reverse=True)
@@ -132,7 +145,7 @@ check("API: карточка id=abc → 422", st == 422, st)
 
 st, d = get("/api/instruments/1/prices?days=30")
 check("API: история SBER 30 точек, по возрастанию даты", st==200 and len(d)==30 and d[0]["date"] < d[-1]["date"], f"{len(d)}, {d[0]['date']}..{d[-1]['date']}")
-check("API: последняя точка истории = сегодня", d[-1]["date"] == datetime.date.today().isoformat(), d[-1]["date"])
+check("API: последняя точка истории = дата набора", d[-1]["date"] == anchor_date.isoformat(), d[-1]["date"])
 st, d = get("/api/instruments/1/prices?days=1")
 check("API: days=1 → 1 точка", st==200 and len(d)==1, len(d))
 st, d = get("/api/instruments/1/prices?days=400")
@@ -151,7 +164,20 @@ for asset in ["/static/app.js", "/static/styles.css", "/static/vendor/chart.umd.
     st, _ = get(asset)
     check(f"UI: {asset} 200", st == 200, st)
 
+# Регрессия: поиск одновременно с фильтрами и сортировкой, до LIMIT.
+params = {"q": "a", "exchange": "NASDAQ", "sector": "Технологии", "instrument_type": "stock", "sort": "price", "direction": "desc"}
+st, d = get("/api/search?" + urllib.parse.urlencode(params))
+expected = sorted([r for r in cat if "a" in (r["ticker"] + " " + r["name"]).lower() and r["exchange"] == "NASDAQ" and r["sector"] == "Технологии" and r["type"] == "stock"], key=lambda r: (-r["price"], r["ticker"]))
+check("API: поиск + три фильтра + сортировка", st == 200 and [r["id"] for r in d] == [r["id"] for r in expected])
+st, d = get("/api/search?" + urllib.parse.urlencode({**params, "limit": 1}))
+check("API: поиск ограничивается после сортировки", st == 200 and [r["id"] for r in d] == [r["id"] for r in expected[:1]])
+for suffix in ["sort=DROP", "direction=sideways", "instrument_type=crypto"]:
+    st, d = get("/api/search?q=a&" + suffix)
+    check("API: поиск отклоняет " + suffix, st == (400 if suffix.startswith("sort=") else 422))
+
 fails = [r for r in results if not r[1]]
 print(f"ИТОГ: {len(results)-len(fails)}/{len(results)} проверок пройдено")
 for name, ok, detail in results:
     print(f"  [{'PASS' if ok else 'FAIL'}] {name}" + (f" — {detail}" if detail and not ok else ""))
+
+sys.exit(1 if fails else 0)

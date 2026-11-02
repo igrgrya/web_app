@@ -2,16 +2,16 @@
 -- funds_lab — история цен за 30 торговых дней (для лабораторной работы №3)
 -- =====================================================================
 -- Дополняет db/seed.sql: для каждого инструмента создаёт по 30 дневных
--- снимков цены (будние дни) ПЕРЕД текущей датой. Ряд привязан к
--- сегодняшней цене из seed.sql и идёт «назад» детерминированным
+-- снимков цены (будние дни) ПЕРЕД последней датой данных. Ряд привязан к
+-- последней базовой цене из seed.sql и идёт «назад» детерминированным
 -- псевдослучайным обходом (комбинация синусов, без random()) —
 -- результат одинаков при каждом запуске. Эти данные нужны линейному
 -- графику динамики цены в приложении лабораторной №3.
 --
 -- change_percent везде считается ИЗ ФАКТИЧЕСКИХ ЦЕН (доходность к
 -- предыдущему торговому дню): у исторических дней — через LAG по ряду,
--- у сегодняшнего снимка — UPDATE по последнему историческому дню.
--- Поэтому значения seed.sql для сегодняшнего change_percent здесь
+-- у базового снимка — UPDATE по последнему историческому дню.
+-- Поэтому значения seed.sql для базового change_percent здесь
 -- пересчитываются: источником истины становится связка «цены + история».
 -- У самого старого исторического дня предыдущего нет — change_percent
 -- у него NULL (в UI не отображается).
@@ -23,25 +23,44 @@
 
 BEGIN;
 
--- Пересоздаём только историю; сегодняшний снимок цены из seed.sql не трогаем
-DELETE FROM price_snapshots WHERE as_of_date < CURRENT_DATE;
+-- Сериализуем перегенерацию и фиксируем дату самого свежего набора.
+LOCK TABLE price_snapshots IN SHARE ROW EXCLUSIVE MODE;
+CREATE TEMP TABLE history_anchor ON COMMIT DROP AS
+SELECT max(as_of_date) AS anchor_date FROM price_snapshots;
+DO $$
+BEGIN
+    IF (SELECT anchor_date FROM history_anchor) IS NULL OR EXISTS (
+        SELECT 1 FROM instruments i
+        WHERE NOT EXISTS (
+            SELECT 1 FROM price_snapshots p
+            WHERE p.instrument_id = i.id
+              AND p.as_of_date = (SELECT anchor_date FROM history_anchor)
+              AND p.price > 0
+        )
+    ) THEN
+        RAISE EXCEPTION 'Для генерации нужен полный набор положительных базовых цен. Данные не изменены.';
+    END IF;
+END $$;
+
+-- Пересоздаём только историю; базовый снимок цены из seed.sql не трогаем
+DELETE FROM price_snapshots WHERE as_of_date < (SELECT anchor_date FROM history_anchor);
 
 WITH calendar AS (
-    -- последние 30 будних дней до сегодняшнего
+    -- последние 30 будних дней до базового
     SELECT day
     FROM (
         SELECT d::date AS day,
                row_number() OVER (ORDER BY d DESC) AS recency
-        FROM generate_series(CURRENT_DATE - 45, CURRENT_DATE - 1, INTERVAL '1 day') AS g(d)
+        FROM generate_series((SELECT anchor_date FROM history_anchor) - 45, (SELECT anchor_date FROM history_anchor) - 1, INTERVAL '1 day') AS g(d)
         WHERE EXTRACT(ISODOW FROM d) < 6
     ) ranked
     WHERE recency <= 30
 ),
 base AS (
-    -- сегодняшний снимок каждого инструмента — точка привязки ряда
+    -- базовый снимок каждого инструмента — точка привязки ряда
     SELECT instrument_id, price AS cur_price, volume AS cur_volume
     FROM price_snapshots
-    WHERE as_of_date = CURRENT_DATE
+    WHERE as_of_date = (SELECT anchor_date FROM history_anchor)
 ),
 steps AS (
     -- дневная доходность (в долях): детерминированная комбинация синусов
@@ -58,8 +77,8 @@ steps AS (
     CROSS JOIN calendar c
 ),
 anchored AS (
-    -- цена i дней назад = сегодняшняя * exp(-сумма доходностей от i-го дня
-    -- до конца ряда): последний исторический день стыкуется с сегодняшней
+    -- цена i дней назад = базовая * exp(-сумма доходностей от i-го дня
+    -- до конца ряда): последний исторический день стыкуется с базовой
     -- ценой практически без скачка
     SELECT
         s.instrument_id,
@@ -97,17 +116,17 @@ SELECT
 FROM withprev
 ORDER BY instrument_id, day;
 
--- Сегодняшний change_percent = фактический сдвиг от последнего исторического дня
+-- Базовый change_percent = фактический сдвиг от последнего исторического дня
 UPDATE price_snapshots ps
 SET change_percent = ROUND((ps.price / h.price - 1) * 100, 2)
 FROM (
     SELECT DISTINCT ON (instrument_id) instrument_id, price
     FROM price_snapshots
-    WHERE as_of_date < CURRENT_DATE
+    WHERE as_of_date < (SELECT anchor_date FROM history_anchor)
     ORDER BY instrument_id, as_of_date DESC
 ) h
 WHERE ps.instrument_id = h.instrument_id
-  AND ps.as_of_date = CURRENT_DATE;
+  AND ps.as_of_date = (SELECT anchor_date FROM history_anchor);
 
 COMMIT;
 
@@ -117,7 +136,7 @@ SELECT count(*)                     AS history_rows,
        min(as_of_date)              AS from_date,
        max(as_of_date)              AS to_date
 FROM price_snapshots
-WHERE as_of_date < CURRENT_DATE;
+WHERE as_of_date < (SELECT max(as_of_date) FROM price_snapshots);
 
 SELECT count(*) AS inconsistent_percent
 FROM price_snapshots ps

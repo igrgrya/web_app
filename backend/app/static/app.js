@@ -46,11 +46,11 @@ const fExchange = document.getElementById("f-exchange");
 const fSector = document.getElementById("f-sector");
 const fType = document.getElementById("f-type");
 const fQuery = document.getElementById("f-query");
-const searchMode = { active: false };
+let catalogRequest = 0;
 
 function rowHtml(item) {
   const change = item.change_percent;
-  const changeCell = change === null ? "" :
+  const changeCell = change === null ? '<td class="num">—</td>' :
     `<td class="num ${change >= 0 ? "cell-up" : "cell-down"}">${change >= 0 ? "+" : ""}${fmtNum.format(change)}</td>`;
   return `<tr class="clickable" data-id="${item.id}">
     <td><strong>${esc(item.ticker)}</strong></td>
@@ -89,13 +89,15 @@ function catalogParams() {
 }
 
 async function loadCatalog() {
+  const request = ++catalogRequest;
   try {
     const items = await api("/api/instruments", catalogParams());
-    searchMode.active = false;
+    if (request !== catalogRequest) return;
     renderCatalog(items, `Каталог: ${items.length} инструментов. Сортировка: ${state.sort} ${state.direction === "asc" ? "▲" : "▼"} (SQL выполняется на сервере).`);
     highlightSortedColumn();
     fillFilterOnce(items);
   } catch (err) {
+    if (request !== catalogRequest) return;
     catalogStatus.textContent = `Ошибка: ${err.message}`;
   }
 }
@@ -103,11 +105,14 @@ async function loadCatalog() {
 async function runSearch() {
   const q = fQuery.value.trim();
   if (!q) { loadCatalog(); return; }
+  const request = ++catalogRequest;
   try {
-    const items = await api("/api/search", { q });
-    searchMode.active = true;
+    const items = await api("/api/search", { ...catalogParams(), q, limit: 100 });
+    if (request !== catalogRequest) return;
     renderCatalog(items, `Поиск «${q}» (Q2, ILIKE на сервере): найдено ${items.length}.`);
+    highlightSortedColumn();
   } catch (err) {
+    if (request !== catalogRequest) return;
     catalogStatus.textContent = `Ошибка: ${err.message}`;
   }
 }
@@ -136,11 +141,11 @@ document.querySelector("#catalog thead").addEventListener("click", (event) => {
     state.sort = key;
     state.direction = NUMERIC_SORT.has(key) ? "desc" : "asc";
   }
-  searchMode.active ? runSearch() : loadCatalog();
+  runSearch();
 });
 
 for (const control of [fExchange, fSector, fType]) {
-  control.addEventListener("change", () => (searchMode.active ? runSearch() : loadCatalog()));
+  control.addEventListener("change", runSearch);
 }
 
 let searchTimer = null;
@@ -150,6 +155,7 @@ fQuery.addEventListener("input", () => {
 });
 
 document.getElementById("btn-reset").addEventListener("click", () => {
+  clearTimeout(searchTimer);
   fExchange.value = "";
   fSector.value = "";
   fType.value = "";
@@ -171,6 +177,7 @@ async function loadSectors() {
   document.querySelector("#sectors-table tbody").innerHTML = rows.map((r) => `
     <tr>
       <td>${esc(r.sector)}</td>
+      <td>${esc(r.currency ?? "—")}</td>
       <td class="num">${r.instruments_count}</td>
       <td class="num">${r.avg_price === null ? "—" : fmtPrice.format(r.avg_price)}</td>
       <td class="num">${r.total_volume === null ? "—" : fmtNum.format(r.total_volume)}</td>
@@ -180,9 +187,9 @@ async function loadSectors() {
   state.sectorsChart = new Chart(document.getElementById("sectors-chart"), {
     type: "bar",
     data: {
-      labels: rows.map((r) => r.sector),
+      labels: rows.map((r) => `${r.sector} (${r.currency ?? "—"})`),
       datasets: [{
-        label: "Инструментов в секторе",
+        label: "Инструментов в секторе и валюте",
         data: rows.map((r) => r.instruments_count),
         backgroundColor: "rgba(37, 99, 235, 0.75)",
         borderRadius: 6,
@@ -198,7 +205,7 @@ async function loadSectors() {
             afterLabel: (ctx) => {
               const r = rows[ctx.dataIndex];
               const avg = r.avg_price === null ? "—" : fmtPrice.format(r.avg_price);
-              return [`Средняя цена: ${avg}`, `Суммарный объём: ${fmtNum.format(r.total_volume ?? 0)}`];
+              return [`Средняя цена: ${avg} ${r.currency ?? ""}`, `Суммарный объём: ${fmtNum.format(r.total_volume ?? 0)}`];
             },
           },
         },

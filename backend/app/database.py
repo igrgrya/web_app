@@ -5,6 +5,7 @@ DATABASE_URL читается из backend/.env (см. .env.example). Файл .
 """
 
 from pathlib import Path
+import os
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
@@ -27,7 +28,9 @@ def _load_env() -> dict[str, str]:
     return env
 
 
-DATABASE_URL = _load_env().get("DATABASE_URL", DEFAULT_URL)
+DATABASE_URL = os.environ.get("DATABASE_URL") or _load_env().get("DATABASE_URL", DEFAULT_URL)
+if DATABASE_URL.startswith(("postgres://", "postgresql://")):
+    DATABASE_URL = "postgresql+psycopg2://" + DATABASE_URL.split("://", 1)[1]
 
 engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 SessionLocal = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)

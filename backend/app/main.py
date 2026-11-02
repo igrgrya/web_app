@@ -143,14 +143,29 @@ def _escape_like(q: str) -> str:
 def search(
     q: str = Query(min_length=1, max_length=100, description="Подстрока тикера или названия"),
     limit: int = Query(20, ge=1, le=100),
+    exchange: Optional[str] = None,
+    sector: Optional[str] = None,
+    instrument_type: Optional[str] = Query(None, pattern="^(stock|etf|fund|bond)$"),
+    sort: str = "ticker",
+    direction: str = Query("asc", pattern="^(asc|desc)$"),
     db: Session = Depends(get_db),
 ):
     """Q2: параметризованный поиск ILIKE по тикеру и названию (регистронезависимый)."""
+    column = SORTABLE.get(sort)
+    if column is None:
+        raise HTTPException(status_code=400, detail="Неизвестная колонка сортировки")
     pattern = f"%{_escape_like(q)}%"
     stmt = _catalog_stmt(db).where(sa.or_(
         Instrument.ticker.ilike(pattern, escape="\\"),
         Instrument.name.ilike(pattern, escape="\\"),
-    )).order_by(Instrument.ticker.asc()).limit(limit)
+    ))
+    if exchange:
+        stmt = stmt.where(Exchange.code == exchange)
+    if sector:
+        stmt = stmt.where(Sector.name == sector)
+    if instrument_type:
+        stmt = stmt.where(Instrument.instrument_type == instrument_type)
+    stmt = stmt.order_by(column.desc() if direction == "desc" else column.asc(), Instrument.ticker.asc()).limit(limit)
     rows = db.execute(stmt).all()
     return [_instrument_dto(inst, snap) for inst, snap, _e, _s in rows]
 
@@ -162,6 +177,7 @@ def sectors_summary(db: Session = Depends(get_db)):
     stmt = (
         select(
             Sector.name.label("sector"),
+            Instrument.currency.label("currency"),
             func.count(Instrument.id).label("instruments_count"),
             func.avg(PriceSnapshot.price).label("avg_price"),
             func.sum(PriceSnapshot.volume).label("total_volume"),
@@ -171,13 +187,14 @@ def sectors_summary(db: Session = Depends(get_db)):
             PriceSnapshot.instrument_id == Instrument.id,
             PriceSnapshot.as_of_date == _latest_date(db),
         ), isouter=True)
-        .group_by(Sector.name)
-        .order_by(func.count(Instrument.id).desc(), Sector.name.asc())
+        .group_by(Sector.name, Instrument.currency)
+        .order_by(Sector.name.asc(), Instrument.currency.asc())
     )
     result = []
-    for name, cnt, avg_price, total_volume in db.execute(stmt).all():
+    for name, currency, cnt, avg_price, total_volume in db.execute(stmt).all():
         result.append({
             "sector": name,
+            "currency": currency,
             "instruments_count": cnt,
             "avg_price": round(float(avg_price), 2) if avg_price is not None else None,
             "total_volume": total_volume,
