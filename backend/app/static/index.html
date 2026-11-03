@@ -3,17 +3,58 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Funds Lab — приложение лабораторной работы №3</title>
+<title>Приложение с доступом к БД (лаб. №3) — Funds Lab</title>
 <link rel="stylesheet" href="/static/styles.css">
 </head>
-<body>
+<body data-page="db">
 
-<header class="topbar">
-  <div class="brand">Funds Lab <span class="lab-badge">Лабораторная работа №3</span></div>
-  <p class="tagline">Веб-приложение с динамическим доступом к БД &middot; FastAPI + SQLAlchemy + PostgreSQL</p>
+<div class="site-shell">
+
+<!-- Шапка — та же, что у страниц основного сайта (генератор static/build.mjs,
+     пункт меню «БД (лаб. №3)» активен). Приложение живёт на отдельном домене
+     (Render), поэтому ссылки меню ведут на абсолютные адреса сайта:
+     https://igrgrya.github.io/web_app/ — тот же SITE_URL, что в build.mjs.
+     Информеры погоды/курсов остаются только на страницах сайта: они питаются
+     скриптом site/app.js, которого у автономного приложения нет. -->
+<header class="site-header">
+  <div class="site-header-inner">
+    <a class="brand" href="https://igrgrya.github.io/web_app/index.html">Funds Lab</a>
+    <form class="site-search" action="https://igrgrya.github.io/web_app/search.html" method="get" role="search">
+      <input type="search" name="q" placeholder="Поиск по сайту…" aria-label="Поиск по сайту">
+      <button type="submit">Найти</button>
+    </form>
+  </div>
+  <div class="nav-main">
+    <nav aria-label="Основная навигация">
+      <ul class="nav-list">
+        <li><a href="https://igrgrya.github.io/web_app/index.html">Главная</a></li>
+        <li><a href="https://igrgrya.github.io/web_app/news.html">Новости</a></li>
+        <li><a href="https://igrgrya.github.io/web_app/exchanges.html">Биржи</a></li>
+        <li><a href="https://igrgrya.github.io/web_app/history.html">История</a></li>
+        <li><a href="https://igrgrya.github.io/web_app/beginners.html">Новичку</a></li>
+        <li><a href="https://igrgrya.github.io/web_app/glossary.html">Глоссарий</a></li>
+        <li><a href="https://igrgrya.github.io/web_app/risks.html">Риски</a></li>
+        <li><a href="https://igrgrya.github.io/web_app/links.html">Ссылки</a></li>
+        <li><a href="https://igrgrya.github.io/web_app/contacts.html">Контакты</a></li>
+        <li><a href="https://igrgrya.github.io/web_app/about.html">О проекте</a></li>
+        <li><a href="https://igrgrya.github.io/web_app/search.html">Поиск</a></li>
+        <li><a href="https://igrgrya.github.io/web_app/forum.html">Форум</a></li>
+        <li><a href="https://igrgrya.github.io/web_app/services.html">Сервисы</a></li>
+        <li><a href="https://igrgrya.github.io/web_app/xml.html">XML (лаб. №2)</a></li>
+        <li><a href="https://igrgrya.github.io/web_app/db.html" aria-current="page">БД (лаб. №3)</a></li>
+        <li><a href="https://igrgrya.github.io/web_app/rss.html">RSS</a></li>
+      </ul>
+    </nav>
+  </div>
 </header>
 
-<main>
+<main class="site-main">
+
+  <h1>Лабораторная работа №3 — приложение с доступом к БД</h1>
+  <p class="lead">Веб-приложение с динамическим доступом к базе данных: каталог инструментов,
+  поиск, агрегаты по секторам, лидеры торгового дня и графики динамики цен.
+  Backend — FastAPI + SQLAlchemy, СУБД — PostgreSQL, графики — Chart.js.
+  Описание запросов Q1–Q5 — на странице <a href="https://igrgrya.github.io/web_app/db.html">«БД (лаб. №3)»</a> основного сайта.</p>
 
   <section id="catalog-section">
     <h2>Каталог инструментов <span class="q-badge">Q1: JOIN + фильтры + сортировка &middot; Q2: поиск</span></h2>
@@ -100,8 +141,10 @@
 <footer class="footer">
   Funds Lab &middot; лабораторная работа №3 &middot;
   API-документация: <a href="/docs">/docs</a> (Swagger UI) &middot;
-  <a href="https://igrgrya.github.io/web_app/">на сайт</a>
+  <a href="https://igrgrya.github.io/web_app/db.html">страница лабораторной на сайте</a>
 </footer>
+
+</div>
 
 <script src="/static/vendor/chart.umd.min.js"></script>
 <script src="/static/app.js"></script>
