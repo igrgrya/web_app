@@ -1,0 +1,18 @@
+# Render Blueprint лабораторной №3: только веб-сервис (Docker, free).
+# База — внешняя (Aiven free): бесплатная БД Render истекает через 30 дней
+# после создания, а Aiven free не имеет срока действия и не требует карту.
+#
+# Применение: Render Dashboard → New + → Blueprint → выбрать репозиторий
+# (ветка main) → Render создаст сервис по этому файлу и запросит значение
+# DATABASE_URL — вставить строку подключения из Aiven (Connection information).
+services:
+  - type: web
+    runtime: docker
+    name: funds-lab3
+    plan: free
+    region: frankfurt          # после создания регион сменить нельзя
+    branch: main
+    autoDeployTrigger: commit  # пересборка на каждый push в main
+    envVars:
+      - key: DATABASE_URL
+        sync: false            # значение задаётся вручную при применении

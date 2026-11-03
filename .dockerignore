@@ -1,0 +1,18 @@
+# Контекст сборки Docker — в образ нужен только backend/.
+# Паттерны корневые: backend/app/static не трогаем.
+.git
+.venv
+backend/.venv
+node_modules
+**/__pycache__
+*.docx
+*.tar.gz
+lab2_screenshots
+lab3_screenshots
+lab3_render
+hosted-lab3
+hosting
+frontend
+site
+static
+dir
