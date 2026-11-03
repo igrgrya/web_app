@@ -35,8 +35,15 @@ check-host.net в РФ).
 ## 2. База данных (Aiven)
 
 1. https://console.aiven.io → **Create service** → **PostgreSQL**.
-2. План **Free**; провайдер/регион — доступный европейский (список на
-   Free-плане ограничен, например AWS Frankfurt); имя сервиса `funds-db`.
+2. ВАЖНО — не взять план по умолчанию: мастер подставляет платный
+   **Developer-1** с триальными кредитами ($50, но триал длится 30 дней —
+   потом сервис выключат до добавления оплаты). Нажать **Customize plan
+   and cloud** под карточкой плана и выбрать план **Free** ($0: 1 CPU /
+   1 ГБ RAM / 1 ГБ storage; по прайсу Aiven «Free plans do not have any
+   time limitations»). На Free-плане облако/регион назначается
+   автоматически — выбрать нельзя, для лабы нормально. Если плана Free в
+   диалоге нет — начинать создание через https://aiven.io/free-tier.
+   Имя сервиса `funds-db`.
 3. Дождаться статуса **Running** (несколько минут).
 4. Вкладка **Overview** → блок **Connection information** → **Service URL**
    вида
