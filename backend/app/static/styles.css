@@ -1,48 +1,196 @@
-/* Funds Lab — приложение лабораторной работы №3. Стили в духе основного сайта. */
+/* Funds Lab — приложение лабораторной работы №3.
+   Шапка и каркас страницы повторяют основной сайт (static/src/styles.css),
+   чтобы страница приложения открывалась как остальные страницы сайта;
+   расцветки интерфейса приложения — свои. */
 
 :root {
   --accent: #2563eb;
   --accent-dark: #1d4ed8;
+  --accent-bg: rgba(37, 99, 235, 0.09);   /* подсветка активного пункта меню */
+  --accent-border: rgba(37, 99, 235, 0.4);
   --up: #16a34a;
   --down: #dc2626;
-  --text: #1f2937;
+  --text: #475569;      /* базовый цвет текста — как на сайте */
+  --text-h: #0f172a;    /* заголовки */
   --muted: #6b7280;
   --line: #e5e7eb;
-  --bg: #f8fafc;
+  --border: #d8e1ec;    /* рамки шапки/каркаса — как на сайте */
+  --panel: #ffffff;
+  --bg: #f6f9fd;        /* фон страницы — как на сайте */
+  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
 }
 
 * { box-sizing: border-box; }
 
 body {
   margin: 0;
-  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-family: var(--sans);
   color: var(--text);
   background: var(--bg);
   line-height: 1.5;
 }
 
-.topbar {
-  background: #fff;
-  border-bottom: 1px solid var(--line);
-  padding: 16px 24px;
+a { color: var(--accent); }
+
+/* Каркас страницы сайта: центральная колонка с боковыми рамками. */
+.site-shell {
+  width: 1126px;
+  max-width: 100%;
+  margin: 0 auto;
+  border-inline: 1px solid var(--border);
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
 }
 
-.brand { font-size: 22px; font-weight: 700; }
-
-.lab-badge {
-  font-size: 13px;
+h1 {
+  font-size: 44px;
+  letter-spacing: -1px;
+  margin: 24px 0;
   font-weight: 600;
-  color: #fff;
-  background: var(--accent);
-  border-radius: 999px;
-  padding: 2px 12px;
-  margin-left: 8px;
-  vertical-align: 2px;
+  color: var(--text-h);
+  line-height: 118%;
 }
 
-.tagline { margin: 4px 0 0; color: var(--muted); font-size: 14px; }
+.lead {
+  color: var(--text);
+  max-width: 75ch;
+  font-size: 19px;
+  margin-bottom: 16px;
+}
 
-main { max-width: 1180px; margin: 0 auto; padding: 24px 16px 8px; }
+/* --- Шапка и навигация (перенос из static/src/styles.css) ------------ */
+
+.site-header {
+  border-bottom: 1px solid var(--border);
+  /* на сайте базовые 18px, здесь страница приложения компактнее */
+  font-size: 18px;
+}
+
+.site-header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 14px 32px;
+}
+
+.brand {
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--text-h);
+  text-decoration: none;
+}
+
+.brand:hover { text-decoration: underline; }
+
+.site-search {
+  display: flex;
+  gap: 6px;
+}
+
+.site-search input {
+  font: inherit;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--text-h);
+  min-width: 0;
+  width: 220px;
+}
+
+.site-search button {
+  font: inherit;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--accent-border);
+  background: var(--accent-bg);
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.nav-list {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-list a {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 6px;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.nav-list a:hover,
+.nav-list a[aria-current='page'] {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+/* Единое меню одной строкой: все 16 пунктов (как на сайте). При сужении
+   окна кегль плавно уменьшается (clamp, паддинги и гэп — в em), ниже
+   порога читаемости строка прокручивается по горизонтали, но не
+   переносится. */
+.nav-main {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 0 32px 12px;
+}
+
+.nav-main::-webkit-scrollbar {
+  display: none;
+}
+
+.nav-main > nav {
+  flex: 1;
+  min-width: 0;
+}
+
+.nav-main .nav-list {
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  font-size: clamp(9.5px, 0.8vw + 3.5px, 13px);
+  gap: 0.25em;
+}
+
+.nav-main .nav-list a {
+  padding: 0.3em 0.5em;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .site-header-inner,
+  .nav-main {
+    padding-inline: 16px;
+  }
+
+  /* На телефоне верх шапки складывается в стек: бренд, поиск. */
+  .site-header-inner {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .site-search input {
+    flex: 1;
+    width: auto;
+  }
+}
+
+/* --- Содержимое приложения ------------------------------------------- */
+
+.site-main {
+  flex-grow: 1;
+  padding: 32px;
+}
 
 section {
   background: #fff;
@@ -147,8 +295,12 @@ table.data tbody tr.clickable { cursor: pointer; }
 .footer a { color: var(--accent); text-decoration: none; }
 .footer a:hover { text-decoration: underline; }
 
+@media (max-width: 768px) {
+  h1 { font-size: 32px; }
+}
+
 @media (max-width: 720px) {
-  .lab-badge, .q-badge { display: inline-block; margin: 6px 0 0; }
+  .q-badge { display: inline-block; margin: 6px 0 0; }
   table.data { font-size: 13px; }
   table.data th, table.data td { padding: 6px 6px; }
 }
