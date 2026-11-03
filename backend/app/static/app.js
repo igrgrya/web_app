@@ -65,9 +65,8 @@ function rowHtml(item) {
   </tr>`;
 }
 
-function renderCatalog(items, statusText) {
+function renderCatalog(items) {
   catalogBody.innerHTML = items.map(rowHtml).join("");
-  if (statusText) catalogStatus.textContent = statusText;
 }
 
 function fillFilterOnce(items) {
@@ -93,7 +92,7 @@ async function loadCatalog() {
   try {
     const items = await api("/api/instruments", catalogParams());
     if (request !== catalogRequest) return;
-    renderCatalog(items, `Каталог: ${items.length} инструментов. Сортировка: ${state.sort} ${state.direction === "asc" ? "▲" : "▼"} (SQL выполняется на сервере).`);
+    renderCatalog(items);
     highlightSortedColumn();
     fillFilterOnce(items);
   } catch (err) {
@@ -109,7 +108,7 @@ async function runSearch() {
   try {
     const items = await api("/api/search", { ...catalogParams(), q, limit: 100 });
     if (request !== catalogRequest) return;
-    renderCatalog(items, `Поиск «${q}» (Q2, ILIKE на сервере): найдено ${items.length}.`);
+    renderCatalog(items);
     highlightSortedColumn();
   } catch (err) {
     if (request !== catalogRequest) return;
@@ -314,9 +313,103 @@ document.querySelector("#losers").addEventListener("click", (e) => {
   if (row) openPriceChart(Number(row.dataset.id));
 });
 
+/* ---------------- Информеры в шапке (как на сайте) ---------------- */
+
+/* Запрос JSON с таймаутом: не даём виджету «висеть», если сервис
+   недоступен (например, заблокирован провайдером). */
+async function fetchJSON(url, timeoutMs) {
+  const options = {};
+  const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
+  const timer = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
+  if (controller) options.signal = controller.signal;
+  try {
+    const response = await fetch(url, options);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return await response.json();
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
+/* Подбор иконки по коду погоды WMO (open-meteo). */
+function weatherIcon(code) {
+  if (code >= 95) return "⛈";
+  if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return "🌧";
+  if ((code >= 71 && code <= 77) || code === 85 || code === 86) return "❄";
+  if (code <= 1) return "☀";
+  if (code === 2) return "🌤";
+  if (code <= 48) return "☁";
+  return "🌡";
+}
+
+async function initWeather() {
+  const box = document.getElementById("weather-widget");
+  if (!box) return;
+  /* Основной источник — open-meteo, запасной — wttr.in. */
+  try {
+    const data = await fetchJSON("https://api.open-meteo.com/v1/forecast?latitude=55.0968&longitude=36.6103&current=temperature_2m,wind_speed_10m,weather_code&timezone=Europe/Moscow", 8000);
+    const current = data && data.current;
+    if (!current) throw new Error("no data");
+    box.innerHTML = `<span>${weatherIcon(current.weather_code)}</span> Обнинск: <strong>${current.temperature_2m} °C</strong>, ветер ${current.wind_speed_10m} м/с`;
+  } catch (err) {
+    const data = await fetchJSON("https://wttr.in/Obninsk?format=j1", 8000).catch(() => null);
+    const current = data && data.current_condition && data.current_condition[0];
+    if (!current) {
+      box.textContent = "Не удалось загрузить погоду.";
+      return;
+    }
+    box.innerHTML = `<span>☁</span> Обнинск: <strong>${current.temp_C} °C</strong>, ветер ${current.windspeedKmph} км/ч`;
+  }
+}
+
+async function initCurrency() {
+  const box = document.getElementById("currency-widget");
+  if (!box) return;
+  /* Основной источник — курс ЦБ РФ (доступен из России), запасной — open.er-api.com. */
+  const rubPerUnit = (valute, code) => {
+    const value = valute[code];
+    return value && typeof value.Value === "number" ? value.Value / (value.Nominal || 1) : null;
+  };
+  /* Стрелка изменения курса к предыдущему дню. */
+  const rateArrow = (valute, code) => {
+    const value = valute[code];
+    if (!value || typeof value.Value !== "number") return "";
+    const diff = value.Value - (value.Previous || value.Value);
+    if (diff > 0) return '<span class="rate-up">▲</span>';
+    if (diff < 0) return '<span class="rate-down">▼</span>';
+    return "";
+  };
+  try {
+    const data = await fetchJSON("https://www.cbr-xml-daily.ru/daily_json.js", 8000);
+    const valute = data && data.Valute;
+    if (!valute) throw new Error("no data");
+    const usd = rubPerUnit(valute, "USD");
+    const eur = rubPerUnit(valute, "EUR");
+    const cny = rubPerUnit(valute, "CNY");
+    if (usd === null) throw new Error("no data");
+    const date = data.Date ? new Date(data.Date).toLocaleDateString("ru-RU") : "";
+    box.innerHTML = `ЦБ РФ${date ? ` на ${date}` : ""}: ` +
+      `1 USD — <strong>${usd.toFixed(2)} ₽</strong>${rateArrow(valute, "USD")}, ` +
+      `1 EUR — <strong>${eur === null ? "—" : eur.toFixed(2) + " ₽"}</strong>${rateArrow(valute, "EUR")}, ` +
+      `1 CNY — <strong>${cny === null ? "—" : cny.toFixed(2) + " ₽"}</strong>${rateArrow(valute, "CNY")}`;
+  } catch (err) {
+    const data = await fetchJSON("https://open.er-api.com/v6/latest/USD", 8000).catch(() => null);
+    const rates = data && data.rates;
+    if (!rates || typeof rates.RUB !== "number") {
+      box.textContent = "Не удалось загрузить курсы валют.";
+      return;
+    }
+    box.innerHTML = `1 USD — <strong>${rates.RUB.toFixed(2)} ₽</strong>, ` +
+      `1 EUR — <strong>${(rates.RUB / rates.EUR).toFixed(2)} ₽</strong>, ` +
+      `1 CNY — <strong>${(rates.RUB / rates.CNY).toFixed(2)} ₽</strong>`;
+  }
+}
+
 /* ---------------- запуск ---------------- */
 
 loadCatalog();
 loadSectors().catch((err) => console.error("Q3:", err));
 loadMovers().catch((err) => console.error("Q4:", err));
 fillInstrumentPicker().catch((err) => console.error("Q5:", err));
+initWeather();
+initCurrency();

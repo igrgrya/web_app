@@ -14,8 +14,8 @@
      пункт меню «БД (лаб. №3)» активен). Приложение живёт на отдельном домене
      (Render), поэтому ссылки меню ведут на абсолютные адреса сайта:
      https://igrgrya.github.io/web_app/ — тот же SITE_URL, что в build.mjs.
-     Информеры погоды/курсов остаются только на страницах сайта: они питаются
-     скриптом site/app.js, которого у автономного приложения нет. -->
+     Информеры погоды и курсов заполняет app.js приложения — теми же
+     запросами (open-meteo / ЦБ РФ), что и на страницах сайта. -->
 <header class="site-header">
   <div class="site-header-inner">
     <a class="brand" href="https://igrgrya.github.io/web_app/index.html">Funds Lab</a>
@@ -23,6 +23,10 @@
       <input type="search" name="q" placeholder="Поиск по сайту…" aria-label="Поиск по сайту">
       <button type="submit">Найти</button>
     </form>
+    <div class="informers">
+      <div class="informer informer--weather" id="weather-widget">Погода: загрузка…</div>
+      <div class="informer informer--currency" id="currency-widget">Курсы валют: загрузка…</div>
+    </div>
   </div>
   <div class="nav-main">
     <nav aria-label="Основная навигация">
