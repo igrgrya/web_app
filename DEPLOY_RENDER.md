@@ -73,8 +73,8 @@ check-host.net в РФ).
 
 Ручной путь вместо blueprint (если что-то не так с render.yaml):
 **New + → Web Service** → репозиторий, ветка main → Runtime **Docker** →
-Region **Frankfurt** → Instance **Free** → переменная `DATABASE_URL` →
-**Create Web Service**.
+Region **Frankfurt** → Instance **Free** → Health Check Path
+`/api/health` → переменная `DATABASE_URL` → **Create Web Service**.
 
 ## 4. Наполнение БД (один раз, с локальной машины)
 
@@ -86,12 +86,27 @@ Region **Frankfurt** → Instance **Free** → переменная `DATABASE_UR
 Повторный запуск на непустой базе прерывается; `--force` пересоздаёт схему.
 URL с паролем — только аргумент командной строки, в файлы не попадает.
 
-## 5. Проверка
+## 5. Проверка (после сида)
 
+Главный индикатор — служебный маршрут, который пингует БД и возвращает
+объём данных:
+
+    curl https://funds-lab3.onrender.com/api/health
+    → {"status":"ok","database":"connected","instruments":18,"price_snapshots":558}
+
+- `instruments = 18, price_snapshots = 558` — сид выполнен ровно на ту
+  базу, что подключена в `DATABASE_URL`; `0/0` — база пустая (сид не
+  запускали или он ушёл в другую базу);
+- HTTP 500 вместо JSON — БД недоступна с сервиса: неверный `DATABASE_URL`
+  или в строке нет `sslmode=require`;
+- маршрут отвечает и до сида (`0/0`) — по нему Render помечает деплой
+  «Live» (`healthCheckPath: /api/health` в render.yaml).
+
+Остальное:
 - `https://funds-lab3.onrender.com/` — UI лабы: каталог, поиск, карточка
   инструмента, график цены;
 - `.../docs` — Swagger с запросами Q1–Q5;
-- `.../api/sectors/summary` — JSON агрегатов (значит, БД подключена).
+- `.../api/sectors/summary` — JSON агрегатов по секторам.
 
 ## 6. Обновления
 
@@ -133,5 +148,6 @@ URL с паролем — только аргумент командной ст�
   должен слушать `${PORT:-8000}`), либо указан не тот бранч.
 - Первый запрос после долгого простоя крутится 30–60 секунд: это сон
   free-инстанса, не ошибка — повторить запрос.
-- База пустая: сид не запускали или запускали не на ту базу — сверить URL
-  сида с `DATABASE_URL` сервиса.
+- `.../api/health` показывает `instruments = 0`: сид не запускали или
+  запускали не на ту базу — сверить URL сида с `DATABASE_URL` сервиса;
+  HTTP 500 вместо JSON — БД недоступна (пункт выше).
