@@ -25,6 +25,22 @@ function esc(value) {
   }[ch]));
 }
 
+/* Человекочитаемый текст ошибки API. detail — строка у наших HTTPException,
+   но массив объектов у ошибок валидации FastAPI (422): берём первое сообщение,
+   чтобы вместо него не показать «[object Object]». */
+function apiErrorMessage(status, body) {
+  const detail = body && body.detail;
+  if (typeof detail === "string" && detail) return detail;
+  if (Array.isArray(detail) && detail.length) {
+    const first = detail[0];
+    const field = Array.isArray(first.loc)
+      ? first.loc.filter((part) => part !== "query" && part !== "body").join(".")
+      : "";
+    return `Некорректный запрос${field ? ` (${field})` : ""}: ${first.msg ?? `HTTP ${status}`}`;
+  }
+  return `HTTP ${status}`;
+}
+
 async function api(path, params = {}) {
   const url = new URL(path, window.location.origin);
   for (const [key, value] of Object.entries(params)) {
@@ -33,7 +49,7 @@ async function api(path, params = {}) {
   const response = await fetch(url);
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
-    throw new Error(body.detail || `HTTP ${response.status}`);
+    throw new Error(apiErrorMessage(response.status, body));
   }
   return response.json();
 }
@@ -42,11 +58,21 @@ async function api(path, params = {}) {
 
 const catalogBody = document.querySelector("#catalog tbody");
 const catalogStatus = document.getElementById("catalog-status");
+const dataNote = document.getElementById("data-note");
 const fExchange = document.getElementById("f-exchange");
 const fSector = document.getElementById("f-sector");
 const fType = document.getElementById("f-type");
 const fQuery = document.getElementById("f-query");
 let catalogRequest = 0;
+
+/* Плашка «Учебные данные на …» — дата свежего снимка цен из ответа каталога:
+   история синтетическая, и пользователю важно видеть границу набора. */
+function setDataNote(items) {
+  const iso = items.find((item) => item.as_of_date)?.as_of_date;
+  if (!iso) return;
+  dataNote.hidden = false;
+  dataNote.textContent = `Учебные данные на ${new Date(iso).toLocaleDateString("ru-RU")}`;
+}
 
 function rowHtml(item) {
   const change = item.change_percent;
@@ -95,6 +121,8 @@ async function loadCatalog() {
     renderCatalog(items);
     highlightSortedColumn();
     fillFilterOnce(items);
+    setDataNote(items);
+    catalogStatus.textContent = ""; // успешная загрузка гасит прошлую ошибку
   } catch (err) {
     if (request !== catalogRequest) return;
     catalogStatus.textContent = `Ошибка: ${err.message}`;
@@ -104,12 +132,17 @@ async function loadCatalog() {
 async function runSearch() {
   const q = fQuery.value.trim();
   if (!q) { loadCatalog(); return; }
+  if (q.length > 100) {
+    catalogStatus.textContent = "Ошибка: поисковая строка длиннее 100 символов — сократите запрос.";
+    return;
+  }
   const request = ++catalogRequest;
   try {
     const items = await api("/api/search", { ...catalogParams(), q, limit: 100 });
     if (request !== catalogRequest) return;
     renderCatalog(items);
     highlightSortedColumn();
+    catalogStatus.textContent = "";
   } catch (err) {
     if (request !== catalogRequest) return;
     catalogStatus.textContent = `Ошибка: ${err.message}`;
@@ -250,14 +283,18 @@ async function openPriceChart(id) {
   document.getElementById("chart-section").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
+let chartRequest = 0;
+
 async function renderPriceChart() {
   const id = Number(chartInstrument.value);
   if (!id) return;
+  const request = ++chartRequest; // медленный ответ прошлого инструмента не должен перерисовать график
   try {
     const [card, series] = await Promise.all([
       api(`/api/instruments/${id}`),
       api(`/api/instruments/${id}/prices`, { days: chartDays.value }),
     ]);
+    if (request !== chartRequest) return;
 
     state.priceChart?.destroy();
     const prices = series.map((p) => p.price);
@@ -297,6 +334,7 @@ async function renderPriceChart() {
         · объём ${card.volume === null ? "—" : fmtNum.format(card.volume)}
       </p>`;
   } catch (err) {
+    if (request !== chartRequest) return;
     instrumentCard.textContent = `Ошибка: ${err.message}`;
   }
 }
