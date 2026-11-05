@@ -62,6 +62,7 @@
 
   <section id="catalog-section">
     <h2>Каталог инструментов <span class="q-badge">Q1: JOIN + фильтры + сортировка &middot; Q2: поиск</span></h2>
+    <p id="data-note" class="data-note" hidden></p>
     <div class="controls">
       <select id="f-exchange" aria-label="Биржа"><option value="">Все биржи</option></select>
       <select id="f-sector" aria-label="Сектор"><option value="">Все секторы</option></select>
@@ -72,25 +73,27 @@
         <option value="fund">Фонды</option>
         <option value="bond">Облигации</option>
       </select>
-      <input id="f-query" type="search" placeholder="Поиск по тикеру или названию…" aria-label="Поиск">
+      <input id="f-query" type="search" maxlength="100" placeholder="Поиск по тикеру или названию…" aria-label="Поиск">
       <button id="btn-reset" type="button">Сброс</button>
     </div>
-    <table id="catalog" class="data">
-      <thead>
-        <tr>
-          <th data-sort="ticker">Тикер</th>
-          <th data-sort="name">Название</th>
-          <th data-sort="type">Тип</th>
-          <th data-sort="exchange">Биржа</th>
-          <th data-sort="sector">Сектор</th>
-          <th data-sort="price" class="num">Цена</th>
-          <th data-sort="change" class="num">Изм., %</th>
-          <th data-sort="volume" class="num">Объём</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+    <div class="table-wrap">
+      <table id="catalog" class="data">
+        <thead>
+          <tr>
+            <th data-sort="ticker">Тикер</th>
+            <th data-sort="name">Название</th>
+            <th data-sort="type">Тип</th>
+            <th data-sort="exchange">Биржа</th>
+            <th data-sort="sector">Сектор</th>
+            <th data-sort="price" class="num">Цена</th>
+            <th data-sort="change" class="num">Изм., %</th>
+            <th data-sort="volume" class="num">Объём</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
     <p id="catalog-status" class="status" role="status"></p>
   </section>
 
@@ -98,10 +101,12 @@
     <h2>Агрегаты по секторам <span class="q-badge">Q3: GROUP BY + COUNT/AVG/SUM</span></h2>
     <div class="split">
       <div class="chart-box"><canvas id="sectors-chart" aria-label="Диаграмма числа инструментов по секторам"></canvas></div>
-      <table id="sectors-table" class="data">
-        <thead><tr><th>Сектор</th><th>Валюта</th><th class="num">Инстр.</th><th class="num">Ср. цена</th><th class="num">Сумм. объём</th></tr></thead>
-        <tbody></tbody>
-      </table>
+      <div class="table-wrap">
+        <table id="sectors-table" class="data">
+          <thead><tr><th>Сектор</th><th>Валюта</th><th class="num">Инстр.</th><th class="num">Ср. цена</th><th class="num">Сумм. объём</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
     </div>
   </section>
 
@@ -110,17 +115,21 @@
     <div class="split">
       <div>
         <h3 class="up">Рост ▲</h3>
-        <table id="gainers" class="data">
-          <thead><tr><th>Тикер</th><th>Название</th><th class="num">Цена</th><th class="num">Изм., %</th></tr></thead>
-          <tbody></tbody>
-        </table>
+        <div class="table-wrap">
+          <table id="gainers" class="data">
+            <thead><tr><th>Тикер</th><th>Название</th><th class="num">Цена</th><th class="num">Изм., %</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
       </div>
       <div>
         <h3 class="down">Падение ▼</h3>
-        <table id="losers" class="data">
-          <thead><tr><th>Тикер</th><th>Название</th><th class="num">Цена</th><th class="num">Изм., %</th></tr></thead>
-          <tbody></tbody>
-        </table>
+        <div class="table-wrap">
+          <table id="losers" class="data">
+            <thead><tr><th>Тикер</th><th>Название</th><th class="num">Цена</th><th class="num">Изм., %</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
       </div>
     </div>
   </section>

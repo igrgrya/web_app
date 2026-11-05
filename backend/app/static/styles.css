@@ -277,6 +277,13 @@ h3 { font-size: 15px; margin: 0 0 8px; }
 .controls button { cursor: pointer; }
 .controls button:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
 
+/* Таблицы на узких экранах не растягивают страницу: прокручивается
+   только контейнер таблицы, сам каркас остаётся в пределах вьюпорта. */
+.table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 table.data { width: 100%; border-collapse: collapse; font-size: 14px; }
 
 table.data th, table.data td {
@@ -307,6 +314,9 @@ table.data tbody tr.clickable { cursor: pointer; }
 .status { color: var(--muted); font-size: 13px; min-height: 1em; margin: 10px 0 0; }
 /* Строка статуса видна только при сообщении (сейчас — только ошибки). */
 .status:empty { display: none; }
+
+/* Плашка «Учебные данные на …» под заголовком каталога. */
+.data-note { color: var(--muted); font-size: 13px; margin: 0 0 12px; }
 
 .split { display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start; }
 .split > * { flex: 1 1 320px; min-width: 280px; }
@@ -345,8 +355,17 @@ table.data tbody tr.clickable { cursor: pointer; }
   h1 { font-size: 32px; }
 }
 
+/* Телефон: компактные отступы, блоки .split складываются в стек без
+   минимальной ширины, чтобы страница не вылезала за 360px. */
 @media (max-width: 720px) {
+  h1 { font-size: 26px; margin: 16px 0; }
+  .lead { font-size: 16px; }
+  .site-main { padding: 16px; }
+  section { padding: 14px 12px; margin-bottom: 16px; }
   .q-badge { display: inline-block; margin: 6px 0 0; }
   table.data { font-size: 13px; }
   table.data th, table.data td { padding: 6px 6px; }
+  .split { gap: 14px; }
+  .split > * { min-width: 0; flex-basis: 100%; }
+  .chart-box { height: 240px; }
 }

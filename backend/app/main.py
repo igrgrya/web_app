@@ -205,7 +205,12 @@ def sectors_summary(db: Session = Depends(get_db)):
 # Q4 ------------------------------------------------------------------------
 @app.get("/api/top-movers", tags=["Q4 — лидеры движения"])
 def top_movers(limit: int = Query(5, ge=1, le=18), db: Session = Depends(get_db)):
-    """Q4: топ-N роста и падения за последний день — ORDER BY + LIMIT."""
+    """Q4: топ-N роста и падения за последний день — ORDER BY + LIMIT.
+
+    Списки фильтруются по знаку изменения (рост строго > 0, падение строго
+    < 0): без фильтра при большом LIMIT список просто продолжался бы по
+    порядку, и в «лидерах роста» оказывались падающие инструменты.
+    """
     base = (
         select(Instrument, PriceSnapshot, Exchange, Sector)
         .join(PriceSnapshot, sa.and_(
@@ -216,8 +221,16 @@ def top_movers(limit: int = Query(5, ge=1, le=18), db: Session = Depends(get_db)
         .join(Sector, Instrument.sector_id == Sector.id, isouter=True)
         .options(contains_eager(Instrument.exchange), contains_eager(Instrument.sector))
     )
-    gainers = db.execute(base.order_by(PriceSnapshot.change_percent.desc(), Instrument.ticker).limit(limit)).all()
-    losers = db.execute(base.order_by(PriceSnapshot.change_percent.asc(), Instrument.ticker).limit(limit)).all()
+    gainers = db.execute(
+        base.where(PriceSnapshot.change_percent > 0)
+        .order_by(PriceSnapshot.change_percent.desc(), Instrument.ticker)
+        .limit(limit)
+    ).all()
+    losers = db.execute(
+        base.where(PriceSnapshot.change_percent < 0)
+        .order_by(PriceSnapshot.change_percent.asc(), Instrument.ticker)
+        .limit(limit)
+    ).all()
     return {
         "gainers": [_instrument_dto(i, s) for i, s, _e, _sec in gainers],
         "losers": [_instrument_dto(i, s) for i, s, _e, _sec in losers],
