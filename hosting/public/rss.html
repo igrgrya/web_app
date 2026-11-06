@@ -3,22 +3,24 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>RSS — Funds Lab</title>
-  <meta name="description" content="RSS-лента новостей Funds Lab — заглушка лабораторной работы №4.">
-  <meta name="keywords" content="RSS, лента новостей, подписка">
+  <title>Обмен данными: RSS (лаб. №4) — Funds Lab</title>
+  <meta name="description" content="Лабораторная работа №4 Funds Lab — обмен данными между приложениями: RSS 2.0-лента из БД, экспорт в CSV и ASCII с XML-тегами, объединенные новости из БД и внешних RSS-файлов.">
+  <meta name="keywords" content="RSS, обмен данными, XML, CSV, лабораторная работа 4, объединенные новости, экспорт">
   <meta name="author" content="Funds Lab">
-  <meta property="og:title" content="RSS — Funds Lab">
-  <meta property="og:description" content="RSS-лента новостей Funds Lab — заглушка лабораторной работы №4.">
+  <meta property="og:title" content="Обмен данными: RSS (лаб. №4) — Funds Lab">
+  <meta property="og:description" content="Лабораторная работа №4 Funds Lab — обмен данными между приложениями: RSS-лента из БД, экспорт в CSV и ASCII с XML-тегами, объединенные новости.">
   <meta property="og:type" content="website">
-  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=497971bb48">
-  <link rel="stylesheet" href="styles.css?v=7486414d54">
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg?v=497971bb48">
+  <link rel="stylesheet" href="/styles.css?v=7486414d54">
+  <link rel="stylesheet" href="/static/lab4.css?v=4">
+  <link rel="alternate" type="application/rss+xml" title="Funds Lab — новости рынка" href="/rss.xml">
 </head>
 <body data-page="rss">
   <div class="site-shell">
     <header class="site-header">
     <div class="site-header-inner">
-      <a class="brand" href="index.html">Funds Lab</a>
-      <form class="site-search" action="search.html" method="get" role="search">
+      <a class="brand" href="/index.html">Funds Lab</a>
+      <form class="site-search" action="/search.html" method="get" role="search">
         <input type="search" name="q" placeholder="Поиск по сайту…" aria-label="Поиск по сайту">
         <button type="submit">Найти</button>
       </form>
@@ -30,32 +32,135 @@
     <div class="nav-main">
       <button id="nav-toggle" class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">☰ Меню</button>
       <nav id="site-nav" aria-label="Основная навигация">
-        <ul class="nav-list"><li><a href="index.html">Главная</a></li><li><a href="news.html">Новости</a></li><li><a href="exchanges.html">Биржи</a></li><li><a href="history.html">История</a></li><li><a href="beginners.html">Новичку</a></li><li><a href="glossary.html">Глоссарий</a></li><li><a href="risks.html">Риски</a></li><li><a href="links.html">Ссылки</a></li><li><a href="contacts.html">Контакты</a></li><li><a href="about.html">О проекте</a></li><li><a href="search.html">Поиск</a></li><li><a href="forum.html">Форум</a></li><li><a href="services.html">Сервисы</a></li><li><a href="xml.html">XML (лаб. №2)</a></li><li><a href="db.html">БД (лаб. №3)</a></li><li><a href="rss.html" aria-current="page">RSS</a></li></ul>
+        <ul class="nav-list"><li><a href="/index.html">Главная</a></li><li><a href="/news.html">Новости</a></li><li><a href="/exchanges.html">Биржи</a></li><li><a href="/history.html">История</a></li><li><a href="/beginners.html">Новичку</a></li><li><a href="/glossary.html">Глоссарий</a></li><li><a href="/risks.html">Риски</a></li><li><a href="/links.html">Ссылки</a></li><li><a href="/contacts.html">Контакты</a></li><li><a href="/about.html">О проекте</a></li><li><a href="/search.html">Поиск</a></li><li><a href="/forum.html">Форум</a></li><li><a href="/services.html">Сервисы</a></li><li><a href="/xml.html">XML (лаб. №2)</a></li><li><a href="/db.html">БД (лаб. №3)</a></li><li><a href="/rss.html" aria-current="page">RSS</a></li></ul>
       </nav>
     </div>
   </header>
     <main class="site-main">
-      <h1>RSS-лента</h1>
-      <p class="lead">Лента новостей сайта в формате RSS позволит подписываться на обновления «Последних новостей» через любой RSS-ридер.</p>
+      <h1>Обмен данными: RSS-лента и форматы экспорта</h1>
+      <p class="lead">Лабораторная работа №4 — «Организация обмена данными между приложениями». Приложение извлекает новости из базы данных и отдает их другим приложениям в форматах обмена (CSV, XML, ASCII с XML-тегами), а также загружает внешний RSS-файл из Интернета и объединяет его с новостями БД на странице «Объединенные новости».</p>
 
-      <h2>Как это будет работать</h2>
-      <ul>
-        <li>При сборке сайта будет генерироваться файл <code>rss.xml</code> с последними новостями каталога.</li>
-        <li>В заголовке страниц появится ссылка <code>&lt;link rel="alternate" type="application/rss+xml"&gt;</code>.</li>
-        <li>Адрес ленты: <code>rss.xml</code> — её можно добавить в любой агрегатор новостей.</li>
-      </ul>
+      <nav class="toc" aria-label="Содержание страницы">
+        <h2>Содержание</h2>
+        <ul>
+          <li><a href="#stages">Этапы работы</a></li>
+          <li><a href="#rss-format">Структура формата RSS 2.0</a></li>
+          <li><a href="#formats">Форматы обмена (форма отчетности)</a></li>
+          <li><a href="#exchange">Внешний RSS и объединенные новости</a></li>
+          <li><a href="#import">Импорт внешних новостей в БД</a></li>
+          <li><a href="#feed">Лента сайта</a></li>
+        </ul>
+      </nav>
 
-      <p class="muted">Страница-заглушка: лента будет реализована в лабораторной работе №4.</p>
+      <section id="stages">
+        <h2>Этапы работы</h2>
+        <ol class="steps-list">
+          <li>Изучить протокол передачи новостных данных RSS (см. следующий раздел).</li>
+          <li>Разработать структуру формата передачи на основе XML — лента новостей в формате RSS 2.0.</li>
+          <li>Доработать приложение: извлечение новостей из БД в структуру формата обмена (эндпоинты ленты и экспортных форматов).</li>
+          <li>Произвести прикладную обработку файла: загрузить внешний RSS из Интернета, объединить его с новостями БД и загрузить разобранные записи в таблицу <code>imported_news</code>.</li>
+        </ol>
+      </section>
+
+      <section id="rss-format">
+        <h2>Структура формата RSS 2.0</h2>
+        <p>RSS (Really Simple Syndication) — формат обмена новостными данными: XML-документ, в котором канал <code>&lt;channel&gt;</code> содержит метаданные ленты и набор элементов <code>&lt;item&gt;</code> (новостей). Дата публикуется по стандарту RFC-822, все тексты экранируются по правилам XML.</p>
+        <pre class="lab4-pre">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;rss version="2.0"&gt;
+  &lt;channel&gt;                                  — канал: сама лента
+    &lt;title&gt;Funds Lab — новости рынка&lt;/title&gt;   — название ленты
+    &lt;link&gt;…news.html&lt;/link&gt;                    — сайт-источник
+    &lt;description&gt;Новости рынка…&lt;/description&gt;   — описание канала
+    &lt;language&gt;ru&lt;/language&gt;
+    &lt;lastBuildDate&gt;Mon, 20 Sep 2026 00:00:00 +0300&lt;/lastBuildDate&gt;
+    &lt;item&gt;                                     — элемент: одна новость
+      &lt;title&gt;Заголовок новости&lt;/title&gt;
+      &lt;link&gt;адрес новости на сайте&lt;/link&gt;
+      &lt;guid isPermaLink="true"&gt;уникальный идентификатор&lt;/guid&gt;
+      &lt;pubDate&gt;дата по RFC-822&lt;/pubDate&gt;
+      &lt;description&gt;текст новости&lt;/description&gt;
+      &lt;category&gt;тикер связанного инструмента&lt;/category&gt;
+    &lt;/item&gt;
+    …
+  &lt;/channel&gt;
+&lt;/rss&gt;</pre>
+      </section>
+
+      <section id="formats">
+        <h2>Форматы обмена (форма отчетности)</h2>
+        <p>Приложение представляет данные таблицы <code>news</code> в трех форматах для использования другими приложениями. Нажмите на формат, чтобы посмотреть его первые строки:</p>
+        <div class="lab4-actions">
+          <button type="button" data-lab4-format="csv">CSV — ASCII через разделитель со списком полей</button>
+          <button type="button" data-lab4-format="xml">XML-файл — RSS 2.0 из БД</button>
+          <button type="button" data-lab4-format="tagged">ASCII, оконтуренный XML-тегами</button>
+        </div>
+        <pre class="lab4-pre" id="lab4-format-pre">Здесь появится предпросмотр выбранного формата.</pre>
+        <table class="data-table">
+          <caption>Экспортные адреса приложения</caption>
+          <thead>
+            <tr>
+              <th scope="col">Формат</th>
+              <th scope="col">Что содержит</th>
+              <th scope="col">Адрес</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>ASCII через разделитель со списком полей (CSV)</td><td>Первая строка — список полей, далее записи с разделителем «;», кодировка UTF-8 с BOM</td><td><a href="/api/export/news.csv">/api/export/news.csv</a></td></tr>
+            <tr><td>XML-файл (RSS 2.0)</td><td>Новости БД в структуре канала RSS — для RSS-ридеров и агрегаторов</td><td><a href="/api/rss">/api/rss</a> (также <a href="/rss.xml">/rss.xml</a>)</td></tr>
+            <tr><td>ASCII-файл, оконтуренный XML-тегами</td><td>Плоский дамп таблицы: поля обрамлены тегами <code>&lt;record&gt;</code>, текст новости — сырой ASCII внутри CDATA</td><td><a href="/api/export/news.tagged.txt">/api/export/news.tagged.txt</a></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="exchange">
+        <h2>Внешний RSS и объединенные новости</h2>
+        <p class="lead">По схеме обмена из методички: приложение скачивает <strong>внешний RSS-файл</strong>, разделяет его на элементы и объединяет с новостями <strong>БД</strong> «Новости», вставляя результат в подготовленный web-шаблон.</p>
+
+        <div class="lab4-tools" id="lab4-tools">
+          <div class="lab4-actions">
+            <label>Источник
+              <select id="lab4-source" aria-label="Внешний RSS-источник"></select>
+            </label>
+            <label>Или произвольный адрес RSS
+              <input type="url" id="lab4-custom-url" placeholder="https://…/rss.xml">
+            </label>
+            <button type="button" id="lab4-fetch">Скачать и разобрать</button>
+            <button type="button" id="lab4-combine">Объединить с новостями БД</button>
+            <button type="button" id="lab4-open-page">Открыть страницу «Объединенные новости»</button>
+          </div>
+
+          <p class="lab4-status" id="lab4-status" role="status"></p>
+
+          <ul class="lab4-list card-list" id="lab4-external-list"></ul>
+          <div id="lab4-combined-wrap"></div>
+        </div>
+      </section>
+
+      <section id="import">
+        <h2>Импорт внешних новостей в БД</h2>
+        <p class="lead">Загрузка полученных данных в СУБД: разобранные записи внешнего фида сохраняются в таблицу <code>imported_news</code> (дубликаты отсекаются по паре «источник + идентификатор записи»).</p>
+        <div class="lab4-actions">
+          <button type="button" id="lab4-import">Импортировать 10 свежих записей фида</button>
+          <button type="button" id="lab4-imported-reload">Обновить список импортированного</button>
+        </div>
+        <div id="lab4-imported-wrap"></div>
+      </section>
+
+      <section id="feed">
+        <h2>Лента сайта</h2>
+        <p>Адрес ленты — <a href="/rss.xml">/rss.xml</a>: динамическая RSS 2.0-лента прямо из базы данных, поэтому подписчики всегда видят актуальные новости. Ленту можно добавить в любой RSS-ридер или агрегатор новостей. В заголовке каждой страницы есть <code>&lt;link rel="alternate" type="application/rss+xml"&gt;</code> — ридеры находят ленту автоматически.</p>
+      </section>
     </main>
     <footer class="site-footer">
     <nav aria-label="Дополнительные разделы">
-      <ul class="nav-list nav-list--footer"><li><a href="forum.html#guestbook">Гостевая книга</a></li><li><a href="services.html#poll">Опрос</a></li><li><a href="services.html#converter">Конвертер валют</a></li><li><a href="services.html#calculator">Инвестиционный калькулятор</a></li><li><a href="links.html">Ссылки</a></li><li><a href="services.html#calendar">Календарь событий</a></li><li><a href="services.html#stats">Статистика посещений</a></li></ul>
+      <ul class="nav-list nav-list--footer"><li><a href="/forum.html#guestbook">Гостевая книга</a></li><li><a href="/services.html#poll">Опрос</a></li><li><a href="/services.html#converter">Конвертер валют</a></li><li><a href="/services.html#calculator">Инвестиционный калькулятор</a></li><li><a href="/links.html">Ссылки</a></li><li><a href="/services.html#calendar">Календарь событий</a></li><li><a href="/services.html#stats">Статистика посещений</a></li></ul>
     </nav>
     <p class="visit-counter">Всего посещений сайта: <span data-visit-total>0</span></p>
     <p class="author-note">Учебный проект по дисциплине «Веб-программирование». Автор: студент группы БИЗ-Б23, Корнюшкин Игорь.</p>
   </footer>
   </div>
-  <script src="data.js?v=497971bb48"></script>
-  <script src="app.js?v=0fd3ed93f7"></script>
+  <script src="/data.js?v=497971bb48"></script>
+  <script src="/app.js?v=0fd3ed93f7"></script>
+  <script src="/static/lab4.js?v=4"></script>
 </body>
 </html>

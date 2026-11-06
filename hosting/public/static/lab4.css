@@ -1,0 +1,124 @@
+/* Funds Lab — стили интерактива лабораторной работы №4 (обмен данными).
+   Подключается на странице rss.html и на серверной странице
+   «Объединенные новости» (/lab4/combined.html). Базовая сетка, таблицы
+   и формы — общие стили сайта (styles.css). */
+
+/* Контейнер интерактива */
+.lab4-tools {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.lab4-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.lab4-actions button,
+.lab4-actions select,
+.lab4-actions input[type='url'] {
+  margin: 0;
+}
+
+/* Строка состояния (role=status) — пустая строка не занимает место */
+.lab4-status:empty {
+  display: none;
+}
+
+.lab4-status {
+  margin: 0 0 12px;
+  color: var(--muted, #556);
+  font-size: 14px;
+}
+
+.lab4-status.is-error {
+  color: #b3261e;
+  font-weight: 600;
+}
+
+/* Предпросмотр форматов обмена */
+.lab4-pre {
+  max-height: 320px;
+  overflow: auto;
+  background: #f5f6f8;
+  border: 1px solid #d9dde3;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 13px;
+  line-height: 1.45;
+  white-space: pre;
+  tab-size: 2;
+}
+
+/* Отметка источника записи */
+.lab4-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.lab4-badge--db {
+  background: #e3edff;
+  color: #1d4fb8;
+}
+
+.lab4-badge--ext {
+  background: #e8f6ec;
+  color: #1c7c3c;
+}
+
+/* Уведомление на серверной странице объединенных новостей */
+.lab4-notice {
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  border: 1px solid #e4c444;
+  background: #fdf6dd;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+/* Списки разобранных новостей */
+.lab4-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.lab4-list .lab4-item-title {
+  margin: 0;
+  font-weight: 600;
+}
+
+.lab4-list .lab4-item-meta {
+  margin: 2px 0 0;
+}
+
+.lab4-list p {
+  margin: 4px 0 0;
+}
+
+/* Таблица объединенных новостей: краткий текст под заголовком */
+.data-table td .muted {
+  margin: 4px 0 0;
+  font-size: 13px;
+}
+
+@media (max-width: 720px) {
+  .lab4-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .lab4-pre {
+    max-height: 240px;
+  }
+}
