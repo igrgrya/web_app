@@ -37,6 +37,8 @@ def main():
                 return
             key = str(target or source.relative_to(ROOT)).replace("\\", "/")
             content = source.read_bytes()
+            if source.suffix == ".sh":
+                content = content.replace(b"\r\n", b"\n")
             if transform and source.suffix in {".html", ".js", ".xml", ".txt", ".css"}:
                 content = public_text(key.removeprefix("web/"), content.decode("utf-8")).encode("utf-8")
             entries[key] = content
