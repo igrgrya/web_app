@@ -1,14 +1,15 @@
-"""ORM-модели четырёх таблиц db/schema.sql, используемых в лабораторной №3.
+"""ORM-модели таблиц db/schema.sql.
 
-Остальные таблицы схемы (news, forum, ratings и т.д.) — задел под лабу №4,
-здесь их не отображаем.
+Лабораторная №3 использует exchanges/sectors/instruments/price_snapshots;
+news — таблица ленты новостей, задействована в лабораторной №4 (обмен
+данными: RSS-лента, экспорт, объединение с внешними RSS-файлами).
 """
 
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Optional
 
-from sqlalchemy import BigInteger, Date, ForeignKey, Numeric, String, Text
+from sqlalchemy import BigInteger, Date, DateTime, ForeignKey, Numeric, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .database import Base
@@ -62,3 +63,17 @@ class PriceSnapshot(Base):
     # В схеме есть UNIQUE (instrument_id, as_of_date); на уровне ORM не дублируем.
 
     instrument: Mapped[Instrument] = relationship(back_populates="snapshots")
+
+
+class News(Base):
+    """Новостная лента сайта (лабораторная №4): RSS-лента и форматы экспорта."""
+
+    __tablename__ = "news"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    title: Mapped[str] = mapped_column(String(255))
+    body: Mapped[str] = mapped_column(Text)
+    published_at: Mapped[datetime] = mapped_column(DateTime)  # TIMESTAMP without TZ — трактуем как московское время
+    related_instrument_id: Mapped[Optional[int]] = mapped_column(ForeignKey("instruments.id"))
+
+    related_instrument: Mapped[Optional[Instrument]] = relationship(lazy="joined")

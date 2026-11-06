@@ -158,8 +158,11 @@ check("API: история несуществующего → 404", st == 404, s
 
 with urllib.request.urlopen(BASE + "/openapi.json", timeout=10) as r:
     spec = json.loads(r.read().decode())
-paths = [p for p in spec["paths"] if p.startswith("/api/")]
-check("OpenAPI: 7 API-путей в спецификации", len(paths) == 7, paths)
+paths = set(p for p in spec["paths"] if p.startswith("/api/"))
+lab3_paths = {"/api/instruments", "/api/search", "/api/sectors/summary", "/api/top-movers",
+              "/api/instruments/{instrument_id}", "/api/instruments/{instrument_id}/prices", "/api/health"}
+# С л.р. №4 в спецификации есть и другие /api/* (RSS, экспорт) — проверяем подмножество л.р. №3.
+check("OpenAPI: все пути Q1–Q5 л.р. №3 в спецификации", lab3_paths <= paths, sorted(lab3_paths - paths))
 
 ui_path = os.environ.get("LAB3_UI_PATH", "/")
 st, body = get(ui_path)

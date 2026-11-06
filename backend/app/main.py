@@ -1,12 +1,19 @@
-"""Funds Lab API — лабораторная работа №3 (FastAPI + SQLAlchemy + PostgreSQL).
+"""Funds Lab API — лабораторные работы №3 и №4 (FastAPI + SQLAlchemy + PostgreSQL).
 
-Пять типов запросов к БД (нумерация как в отчёте):
+Лабораторная №3 — пять типов запросов к БД (нумерация как в отчёте):
   Q1  GET /api/instruments           — каталог: JOIN 4 таблиц, фильтры, сортировка
   Q2  GET /api/search                — поиск по тикеру/названию (ILIKE, экранирование)
   Q3  GET /api/sectors/summary       — агрегаты по секторам (GROUP BY, COUNT/AVG/SUM)
   Q4  GET /api/top-movers            — лидеры роста и падения (ORDER BY + LIMIT)
   Q5  GET /api/instruments/{id}      — карточка инструмента
       GET /api/instruments/{id}/prices — история цен (данные линейного графика)
+
+Лабораторная №4 — обмен данными между приложениями (маршруты в lab4.py):
+  GET  /api/rss, /rss.xml          — RSS 2.0-лента из таблицы news (XML-файл)
+  GET  /api/export/news.csv        — CSV «;» со списком полей (ASCII с разделителем)
+  GET  /api/export/news.tagged.txt — ASCII-файл, оконтуренный XML-тегами
+  GET  /api/lab4/...               — внешний RSS, объединенные новости, импорт
+  GET  /lab4/combined.html         — страница «Объединенные новости»
 
 Актуальная цена — снимок с максимальной датой as_of_date (сид генерирует все
 ряды одним массивом, даты у инструментов совпадают).
@@ -26,6 +33,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session, contains_eager
 
 from .database import get_db
+from .lab4 import router as lab4_router
 from .models import Exchange, Instrument, PriceSnapshot, Sector
 
 PUBLIC_DIR = os.environ.get("FUNDS_PUBLIC_DIR")
@@ -33,8 +41,9 @@ PUBLIC_DIR = Path(PUBLIC_DIR).resolve() if PUBLIC_DIR else None
 
 app = FastAPI(
     title="Funds Lab API",
-    description="Веб-приложение с динамическим доступом к БД — лабораторная работа №3.",
-    version="1.0.0",
+    description="Веб-приложение с динамическим доступом к БД (лаб. №3) и обмен данными "
+                "в форматах RSS/XML/CSV (лаб. №4).",
+    version="1.1.0",
     docs_url=None if PUBLIC_DIR else "/docs",
     redoc_url=None if PUBLIC_DIR else "/redoc",
 )
@@ -282,6 +291,10 @@ def instrument_prices(
         }
         for d, p, c, v in reversed(rows)  # хронологический порядок для графика
     ]
+
+
+# Лабораторная №4: обмен данными (RSS, экспорт, внешние фиды, импорт).
+app.include_router(lab4_router)
 
 
 # Служебные маршруты и статика ----------------------------------------------

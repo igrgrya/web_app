@@ -77,12 +77,32 @@ CREATE TABLE price_snapshots (
 
 -- Новостная лента. related_instrument_id необязателен — не каждая
 -- новость привязана к конкретному инструменту.
+-- В лабораторной работе №4 эта таблица — источник RSS-ленты (/api/rss)
+-- и экспортных форматов обмена (CSV, ASCII+XML).
 CREATE TABLE news (
     id                   SERIAL PRIMARY KEY,
     title                VARCHAR(255) NOT NULL,
     body                 TEXT NOT NULL,
     published_at         TIMESTAMP NOT NULL DEFAULT now(),
     related_instrument_id INTEGER REFERENCES instruments(id)
+);
+
+-- Новости, загруженные из внешних RSS-файлов (лабораторная работа №4,
+-- этап «загрузить полученные данные в СУБД»). Уникальность (source_url, guid)
+-- защищает от повторного импорта той же новости.
+-- На уже развернутых инстансах таблица создается лениво самим приложением
+-- (CREATE TABLE IF NOT EXISTS в backend/app/lab4.py) — ручная миграция не нужна.
+CREATE TABLE imported_news (
+    id            SERIAL PRIMARY KEY,
+    source_url    TEXT NOT NULL,
+    source_title  TEXT NOT NULL DEFAULT '',
+    guid          TEXT NOT NULL,
+    title         TEXT NOT NULL,
+    link          TEXT NOT NULL DEFAULT '',
+    summary       TEXT NOT NULL DEFAULT '',
+    published_at  TIMESTAMP,
+    imported_at   TIMESTAMP NOT NULL DEFAULT now(),
+    UNIQUE (source_url, guid)
 );
 
 -- Каталог полезных внешних ссылок (сайты бирж, регуляторов, СМИ) —
