@@ -25,6 +25,9 @@ dir/
 # Local Sites checkout and publication archive
 /hosted-lab3/
 /lab3-site.tar.gz
+/deployment/
+/deploy/vendor/
+/deploy/site.json
 # Keep the cloud source manifest and instructions in GitHub
 !hosting/package.json
 !hosting/README.md

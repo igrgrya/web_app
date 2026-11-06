@@ -13,12 +13,14 @@
 """
 
 from datetime import date
+import os
 from pathlib import Path
 from typing import Optional
 
 import sqlalchemy as sa
 from fastapi import Depends, FastAPI, HTTPException, Query
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, contains_eager
@@ -26,13 +28,18 @@ from sqlalchemy.orm import Session, contains_eager
 from .database import get_db
 from .models import Exchange, Instrument, PriceSnapshot, Sector
 
+PUBLIC_DIR = os.environ.get("FUNDS_PUBLIC_DIR")
+PUBLIC_DIR = Path(PUBLIC_DIR).resolve() if PUBLIC_DIR else None
+
 app = FastAPI(
     title="Funds Lab API",
     description="Веб-приложение с динамическим доступом к БД — лабораторная работа №3.",
     version="1.0.0",
+    docs_url=None if PUBLIC_DIR else "/docs",
+    redoc_url=None if PUBLIC_DIR else "/redoc",
 )
 
-STATIC_DIR = Path(__file__).resolve().parent / "static"
+STATIC_DIR = PUBLIC_DIR / "static" if PUBLIC_DIR else Path(__file__).resolve().parent / "static"
 
 
 # --------------------------------------------------------------------------
@@ -288,10 +295,36 @@ def health(db: Session = Depends(get_db)):
             "instruments": instruments, "price_snapshots": snapshots}
 
 
-app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
-
-
 @app.get("/", include_in_schema=False)
 def index():
-    """Единственная страница приложения (UI на Chart.js)."""
-    return FileResponse(STATIC_DIR / "index.html")
+    """Полный сайт при публикации; автономная лабораторная при локальном запуске."""
+    return FileResponse((PUBLIC_DIR or STATIC_DIR) / "index.html")
+
+
+if PUBLIC_DIR:
+    @app.get("/docs", include_in_schema=False)
+    def local_docs():
+        return get_swagger_ui_html(
+            openapi_url="/openapi.json", title="Funds Lab API",
+            swagger_js_url="/static/vendor/swagger-ui-bundle.js",
+            swagger_css_url="/static/vendor/swagger-ui.css",
+            swagger_favicon_url="/assets/favicon.svg",
+            swagger_ui_parameters={"validatorUrl": None},
+        )
+
+    @app.get("/redoc", include_in_schema=False)
+    def docs_alias():
+        return RedirectResponse("/docs", status_code=308)
+
+    @app.get("/lab3", include_in_schema=False)
+    @app.get("/lab3/", include_in_schema=False)
+    @app.get("/lab3/index.html", include_in_schema=False)
+    @app.get("/static/index.html", include_in_schema=False)
+    def legacy_lab():
+        return RedirectResponse("/db.html", status_code=308)
+
+    # После API и служебных маршрутов: сайт не перехватывает запросы к БД.
+    app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+    app.mount("/", StaticFiles(directory=PUBLIC_DIR, html=True), name="website")
+else:
+    app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")

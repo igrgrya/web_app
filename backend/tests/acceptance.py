@@ -161,8 +161,9 @@ with urllib.request.urlopen(BASE + "/openapi.json", timeout=10) as r:
 paths = [p for p in spec["paths"] if p.startswith("/api/")]
 check("OpenAPI: 7 API-путей в спецификации", len(paths) == 7, paths)
 
-st, body = get("/")
-check("UI: / отдаёт HTML со всеми секциями", st==200 and all(s in body for s in ["Каталог инструментов","Агрегаты по секторам","Лидеры","Динамика цены"]), st)
+ui_path = os.environ.get("LAB3_UI_PATH", "/")
+st, body = get(ui_path)
+check(f"UI: {ui_path} отдаёт HTML со всеми секциями", st==200 and all(s in body for s in ["Каталог инструментов","Агрегаты по секторам","Лидеры","Динамика цены"]), st)
 for asset in ["/static/app.js", "/static/styles.css", "/static/vendor/chart.umd.min.js"]:
     st, _ = get(asset)
     check(f"UI: {asset} 200", st == 200, st)
