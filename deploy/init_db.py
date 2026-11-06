@@ -24,6 +24,9 @@ def main():
                 # PostgreSQL creates public in a new database; pg_dump 18 can
                 # include it again when explicitly exporting --schema=public.
                 sql = sql.replace("\nCREATE SCHEMA public;", "\nCREATE SCHEMA IF NOT EXISTS public;")
+                # The hosting provider owns the pre-existing public schema.
+                # Its descriptive comment is not part of the application's data.
+                sql = sql.replace("COMMENT ON SCHEMA public IS 'standard public schema';", "")
                 cursor.execute(sql)
             finally:
                 cursor.close()
