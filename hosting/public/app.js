@@ -876,3 +876,27 @@
     init()
   }
 })()
+
+;(function () {
+  'use strict'
+
+  // Главное меню на телефоне: кнопка «Меню» раскрывает вертикальный
+  // список. Флаг navToggleBound защищает от двойной привязки на
+  // db.html, где грузятся и этот файл, и /static/app.js лабы.
+  function initNavToggle() {
+    var toggle = document.getElementById('nav-toggle')
+    var navMain = document.querySelector('.nav-main')
+    if (!toggle || !navMain || navMain.dataset.navToggleBound) return
+    navMain.dataset.navToggleBound = '1'
+    toggle.addEventListener('click', function () {
+      var open = navMain.classList.toggle('nav-open')
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false')
+    })
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initNavToggle)
+  } else {
+    initNavToggle()
+  }
+})()

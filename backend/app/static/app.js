@@ -351,6 +351,20 @@ document.querySelector("#losers").addEventListener("click", (e) => {
   if (row) openPriceChart(Number(row.dataset.id));
 });
 
+/* ---------------- Меню шапки: на телефоне раскрывается кнопкой ---------------- */
+
+const navToggle = document.getElementById("nav-toggle");
+const navMainEl = document.querySelector(".nav-main");
+if (navToggle && navMainEl && !navMainEl.dataset.navToggleBound) {
+  /* Флаг нужен на /db.html целого сайта: там этот скрипт грузится вместе
+     с общим сайтом app.js, и меню должно раскрываться ровно один раз. */
+  navMainEl.dataset.navToggleBound = "1";
+  navToggle.addEventListener("click", () => {
+    const open = navMainEl.classList.toggle("nav-open");
+    navToggle.setAttribute("aria-expanded", String(open));
+  });
+}
+
 /* ---------------- Информеры в шапке (как на сайте) ---------------- */
 
 /* Запрос JSON с таймаутом: не даём виджету «висеть», если сервис

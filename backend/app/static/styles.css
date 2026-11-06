@@ -202,6 +202,63 @@ h1 {
   white-space: nowrap;
 }
 
+/* Кнопка «Меню» — только на телефоне (см. media-запрос ниже). */
+.nav-toggle {
+  display: none;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 7px 12px;
+  border: 1px solid var(--accent-border);
+  border-radius: 8px;
+  background: var(--accent-bg);
+  color: var(--accent);
+  cursor: pointer;
+}
+
+/* Телефон: меню схлопывается в кнопку и раскрывается вертикальным
+   списком на всю ширину — прокрутка строки на узком экране не нужна. */
+@media (max-width: 720px) {
+  .nav-main {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    overflow: visible;
+  }
+
+  .nav-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .nav-main > nav {
+    display: none;
+    flex: none;
+  }
+
+  .nav-main.nav-open > nav {
+    display: block;
+  }
+
+  .nav-main .nav-list {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    font-size: 14px;
+  }
+
+  .nav-main .nav-list a {
+    display: block;
+    padding: 9px 10px;
+    white-space: normal;
+  }
+
+  .nav-main .nav-list li + li {
+    border-top: 1px solid var(--line);
+  }
+}
+
 @media (max-width: 640px) {
   .site-header-inner,
   .nav-main {
