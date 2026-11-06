@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Funds Lab — новости рынка</title>
+    <link>https://igrgrya.github.io/web_app/news.html</link>
+    <description>Новости рынка фондов и акций из учебного сайта Funds Lab (лабораторная работа №4).</description>
+    <language>ru</language>
+    <lastBuildDate>Sun, 20 Sep 2026 00:00:00 +0300</lastBuildDate>
+    <atom:link href="https://igrgrya.github.io/web_app/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Сбербанк отчитался о рекордной прибыли</title>
+      <link>https://igrgrya.github.io/web_app/news.html#news-1</link>
+      <guid isPermaLink="true">https://igrgrya.github.io/web_app/news.html#news-1</guid>
+      <pubDate>Sun, 20 Sep 2026 00:00:00 +0300</pubDate>
+      <description>Банк опубликовал квартальную отчётность, превысив ожидания аналитиков рынка. Чистая прибыль выросла на фоне роста кредитного портфеля и комиссионных доходов.</description>
+    </item>
+    <item>
+      <title>Газпром объявил дивиденды</title>
+      <link>https://igrgrya.github.io/web_app/news.html#news-2</link>
+      <guid isPermaLink="true">https://igrgrya.github.io/web_app/news.html#news-2</guid>
+      <pubDate>Fri, 18 Sep 2026 00:00:00 +0300</pubDate>
+      <description>Совет директоров рекомендовал выплату дивидендов по итогам года. Финальное решение будет принято на годовом собрании акционеров.</description>
+    </item>
+    <item>
+      <title>Apple представила новый продукт</title>
+      <link>https://igrgrya.github.io/web_app/news.html#news-3</link>
+      <guid isPermaLink="true">https://igrgrya.github.io/web_app/news.html#news-3</guid>
+      <pubDate>Tue, 15 Sep 2026 00:00:00 +0300</pubDate>
+      <description>Компания анонсировала обновление линейки устройств на ежегодной презентации, включая улучшенные характеристики и новые функции.</description>
+    </item>
+    <item>
+      <title>S&amp;P 500 обновил исторический максимум</title>
+      <link>https://igrgrya.github.io/web_app/news.html#news-4</link>
+      <guid isPermaLink="true">https://igrgrya.github.io/web_app/news.html#news-4</guid>
+      <pubDate>Sat, 12 Sep 2026 00:00:00 +0300</pubDate>
+      <description>Индекс закрылся на новом рекордном уровне на фоне позитивной макроэкономической статистики и сильных корпоративных отчётов.</description>
+    </item>
+    <item>
+      <title>Обзор рынка: итоги недели</title>
+      <link>https://igrgrya.github.io/web_app/news.html#news-5</link>
+      <guid isPermaLink="true">https://igrgrya.github.io/web_app/news.html#news-5</guid>
+      <pubDate>Thu, 10 Sep 2026 00:00:00 +0300</pubDate>
+      <description>Общий обзор движения основных индексов и инструментов за прошедшую неделю: что выросло, что просело и почему.</description>
+    </item>
+  </channel>
+</rss>

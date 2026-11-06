@@ -29,6 +29,10 @@ const SRC = join(__dirname, 'src')
 
 const SITE_URL = process.env.SITE_URL || 'https://igrgrya.github.io/web_app/'
 
+/* Адрес развернутого приложения (FastAPI раздает сайт и API лабораторных
+   работ №3 и №4). Статические страницы ссылаются на него из разделов лаб. */
+const PROD_URL = 'https://fundslab.alwaysdata.net'
+
 // Версия ассетов (app.js/styles.css/data.js): меняется при изменении
 // содержимого, поэтому браузер не подхватит устаревший файл из кэша
 // GitHub Pages (иначе счётчик и другие правки "не применялись").
@@ -90,6 +94,49 @@ function buildCatalogXml(instruments, exchanges, sectors) {
 <catalog>
 ${rows}
 </catalog>
+`
+}
+
+/* RSS 2.0-лента из seed-новостей (лабораторная работа №4): статический файл
+   для хостинга без бэкенда (GitHub Pages). На развернутом приложении тот же
+   адрес /rss.xml отдает маршрут FastAPI — динамическую ленту из БД.
+   pubDate — RFC-822; даты seed заданы как YYYY-MM-DD, считаем их московскими. */
+const RFC_WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+const RFC_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+function rfc822(dateStr) {
+  const [y, m, d] = dateStr.split('-').map(Number)
+  const weekday = RFC_WEEKDAYS[new Date(Date.UTC(y, m - 1, d)).getUTCDay()]
+  return `${weekday}, ${String(d).padStart(2, '0')} ${RFC_MONTHS[m - 1]} ${y} 00:00:00 +0300`
+}
+
+function buildRssXml(news, siteUrl) {
+  const base = siteUrl  // с завершающим «/», как в sitemap.xml
+  const items = [...news]
+    .sort((a, b) => b.publishedAt.localeCompare(a.publishedAt))
+    .map((item) => `    <item>
+      <title>${esc(item.title)}</title>
+      <link>${base}news.html#news-${esc(item.id)}</link>
+      <guid isPermaLink="true">${base}news.html#news-${esc(item.id)}</guid>
+      <pubDate>${rfc822(item.publishedAt)}</pubDate>
+      <description>${esc(item.body)}</description>
+    </item>`)
+    .join('\n')
+  const lastBuild = rfc822(
+    [...news].sort((a, b) => b.publishedAt.localeCompare(a.publishedAt))[0].publishedAt,
+  )
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Funds Lab — новости рынка</title>
+    <link>${base}news.html</link>
+    <description>Новости рынка фондов и акций из учебного сайта Funds Lab (лабораторная работа №4).</description>
+    <language>ru</language>
+    <lastBuildDate>${lastBuild}</lastBuildDate>
+    <atom:link href="${base}rss.xml" rel="self" type="application/rss+xml"/>
+${items}
+  </channel>
+</rss>
 `
 }
 
@@ -185,6 +232,7 @@ function page({ id, title, description, keywords, body, extraScripts = '' }) {
   <meta property="og:type" content="website">
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=${ASSET_VERSION}">
   <link rel="stylesheet" href="styles.css?v=${ASSET_VERSION}">
+  <link rel="alternate" type="application/rss+xml" title="Funds Lab — новости рынка" href="rss.xml">
 </head>
 <body data-page="${esc(id)}">
   <div class="site-shell">
@@ -318,6 +366,7 @@ function homePage() {
           <h1>Funds Lab</h1>
           <p class="lab-link"><a href="xml.html">Лабораторная работа №2 — Каталог инструментов (XML + XSLT)</a></p>
           <p class="lab-link"><a href="db.html">Лабораторная работа №3 — Приложение с доступом к БД (FastAPI + PostgreSQL)</a></p>
+          <p class="lab-link"><a href="rss.html">Лабораторная работа №4 — Обмен данными: RSS-лента и форматы экспорта</a></p>
           <p class="lead">Учебный проект по дисциплине «Веб-программирование»: интерактивный сайт о фондах, акциях и биржах, с новостями рынка, биржами и сервисами для сообщества инвесторов.</p>
         </div>
       </div>
@@ -884,8 +933,9 @@ function aboutPage() {
         <ul>
           <li>Frontend: HTML5, CSS3, JavaScript (статические страницы)</li>
           <li>XML + XSLT — клиентское XSLT-преобразование (каталог инструментов)</li>
-          <li>Backend (лабораторная работа №3): FastAPI + SQLAlchemy, приложение запускается локально</li>
+          <li>Backend (лабораторные работы №3 и №4): FastAPI + SQLAlchemy</li>
           <li>База данных: PostgreSQL</li>
+          <li>Обмен данными (лабораторная работа №4): RSS 2.0, CSV, ASCII с XML-тегами</li>
         </ul>
       </section>
 
@@ -899,6 +949,7 @@ function aboutPage() {
           <li>Мировые часы и статус сессий бирж</li>
           <li>Каталог инструментов с сортировкой и фильтрами (XML + XSLT)</li>
           <li>Приложение с доступом к БД: каталог, поиск, агрегаты, графики цен (FastAPI + PostgreSQL)</li>
+          <li>Обмен данными: RSS-лента из БД, экспорт новостей в CSV и ASCII с XML-тегами, объединение с внешними RSS-файлами (лабораторная работа №4)</li>
           <li>Форум</li>
           <li>Гостевая книга</li>
           <li>Опрос</li>
@@ -911,12 +962,12 @@ function aboutPage() {
 
       <section id="plan">
         <h2>Структура сайта и план развития</h2>
-        <p>Сайт состоит из 10 статических страниц: Главная, Новости, Биржи, История бирж, Новичку, Глоссарий, Риски, Ссылки, Контакты, О проекте. Кроме статических, на сайте есть сервисные страницы (Поиск, Форум, Сервисы), каталог инструментов на XML + XSLT (лабораторная работа №2), страница лабораторной работы №3 с описанием приложения с доступом к БД, RSS-заглушка под лабораторную работу №4 и техническая страница 404.</p>
-        <p>Дальнейшее развитие — по лабораторным работам:</p>
+        <p>Сайт состоит из 10 статических страниц: Главная, Новости, Биржи, История бирж, Новичку, Глоссарий, Риски, Ссылки, Контакты, О проекте. Кроме статических, на сайте есть сервисные страницы (Поиск, Форум, Сервисы), каталог инструментов на XML + XSLT (лабораторная работа №2), страница лабораторной работы №3 с приложением с доступом к БД, раздел обмена данными RSS (лабораторная работа №4) и техническая страница 404.</p>
+        <p>Развитие — по лабораторным работам:</p>
         <ul>
           <li>№2 — каталог инструментов на XML + XSLT — выполнена;</li>
-          <li>№3 — приложение с доступом к БД (PostgreSQL + FastAPI, схема в db/schema.sql) — выполнена, приложение запускается локально (backend/start.bat);</li>
-          <li>№4 — RSS-лента из новостей БД.</li>
+          <li>№3 — приложение с доступом к БД (PostgreSQL + FastAPI, схема в db/schema.sql) — выполнена;</li>
+          <li>№4 — обмен данными между приложениями: RSS-лента из БД (/rss.xml), экспорт новостей в CSV и ASCII с XML-тегами, объединенные новости из БД и внешних RSS-файлов, импорт внешних новостей в таблицу imported_news — выполнена.</li>
         </ul>
       </section>
 
@@ -1085,25 +1136,103 @@ function dbPage() {
   })
 }
 
+/* --- Обмен данными: RSS и форматы экспорта (лабораторная работа №4) ---- */
+
+/* Страница лабораторной работы №4: описание обмена данными (протокол RSS,
+   форматы отчетности, схема объединения) и ссылки на развернутое приложение.
+   Интерактивная версия с загрузкой внешних RSS-фидов живет на хостинге:
+   ${PROD_URL}/rss.html. */
 function rssPage() {
-  const body = `      <h1>RSS-лента</h1>
-      <p class="lead">Лента новостей сайта в формате RSS позволит подписываться на обновления «Последних новостей» через любой RSS-ридер.</p>
+  const rssStructure = `&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;rss version="2.0"&gt;
+  &lt;channel&gt;                                  — канал: сама лента
+    &lt;title&gt;Funds Lab — новости рынка&lt;/title&gt;   — название ленты
+    &lt;link&gt;…news.html&lt;/link&gt;                    — сайт-источник
+    &lt;description&gt;Новости рынка…&lt;/description&gt;   — описание канала
+    &lt;language&gt;ru&lt;/language&gt;
+    &lt;lastBuildDate&gt;Mon, 20 Sep 2026 00:00:00 +0300&lt;/lastBuildDate&gt;
+    &lt;item&gt;                                     — элемент: одна новость
+      &lt;title&gt;Заголовок новости&lt;/title&gt;
+      &lt;link&gt;адрес новости на сайте&lt;/link&gt;
+      &lt;guid isPermaLink="true"&gt;уникальный идентификатор&lt;/guid&gt;
+      &lt;pubDate&gt;дата по RFC-822&lt;/pubDate&gt;
+      &lt;description&gt;текст новости&lt;/description&gt;
+      &lt;category&gt;тикер связанного инструмента&lt;/category&gt;
+    &lt;/item&gt;
+    …
+  &lt;/channel&gt;
+&lt;/rss&gt;`
 
-      <h2>Как это будет работать</h2>
-      <ul>
-        <li>При сборке сайта будет генерироваться файл <code>rss.xml</code> с последними новостями каталога.</li>
-        <li>В заголовке страниц появится ссылка <code>&lt;link rel="alternate" type="application/rss+xml"&gt;</code>.</li>
-        <li>Адрес ленты: <code>rss.xml</code> — её можно добавить в любой агрегатор новостей.</li>
-      </ul>
+  const body = `      <h1>Обмен данными: RSS-лента и форматы экспорта</h1>
+      <p class="lead">Лабораторная работа №4 — «Организация обмена данными между приложениями». Приложение извлекает новости из базы данных и отдает их другим приложениям в форматах обмена (CSV, XML, ASCII с XML-тегами), а также загружает внешний RSS-файл из Интернета и объединяет его с новостями БД.</p>
 
-      <p class="muted">Страница-заглушка: лента будет реализована в лабораторной работе №4.</p>`
+      <nav class="toc" aria-label="Содержание страницы">
+        <h2>Содержание</h2>
+        <ul>
+          <li><a href="#stages">Этапы работы</a></li>
+          <li><a href="#rss-format">Структура формата RSS 2.0</a></li>
+          <li><a href="#formats">Форматы обмена (форма отчетности)</a></li>
+          <li><a href="#combined">Объединенные новости</a></li>
+          <li><a href="#feed">Лента этого сайта</a></li>
+        </ul>
+      </nav>
+
+      <section id="stages">
+        <h2>Этапы работы</h2>
+        <ol class="steps-list">
+          <li>Изучить протокол передачи новостных данных RSS (см. следующий раздел).</li>
+          <li>Разработать структуру формата передачи на основе XML — лента новостей в формате RSS 2.0.</li>
+          <li>Доработать приложение: извлечение новостей из БД в структуру формата обмена (эндпоинты ленты и экспортных форматов).</li>
+          <li>Произвести прикладную обработку файла: загрузить внешний RSS из Интернета, объединить его с новостями БД на странице «Объединенные новости» и загрузить разобранные записи в таблицу <code>imported_news</code>.</li>
+        </ol>
+      </section>
+
+      <section id="rss-format">
+        <h2>Структура формата RSS 2.0</h2>
+        <p>RSS (Really Simple Syndication) — формат обмена новостными данными: XML-документ, в котором канал <code>&lt;channel&gt;</code> содержит метаданные ленты и набор элементов <code>&lt;item&gt;</code> (новостей). Дата публикуется по стандарту RFC-822, все тексты экранируются по правилам XML.</p>
+        <pre><code>${rssStructure}</code></pre>
+      </section>
+
+      <section id="formats">
+        <h2>Форматы обмена (форма отчетности)</h2>
+        <p>Приложение представляет данные таблицы <code>news</code> в трех форматах для использования другими приложениями:</p>
+        <table class="data-table">
+          <caption>Экспортные адреса развернутого приложения</caption>
+          <thead>
+            <tr>
+              <th scope="col">Формат</th>
+              <th scope="col">Что содержит</th>
+              <th scope="col">Адрес</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>ASCII через разделитель со списком полей (CSV)</td><td>Первая строка — список полей, далее записи с разделителем «;», кодировка UTF-8 с BOM</td><td><a href="${PROD_URL}/api/export/news.csv" target="_blank" rel="noopener">${PROD_URL}/api/export/news.csv</a></td></tr>
+            <tr><td>XML-файл (RSS 2.0)</td><td>Новости БД в структуре канала RSS — для RSS-ридеров и агрегаторов</td><td><a href="${PROD_URL}/api/rss" target="_blank" rel="noopener">${PROD_URL}/api/rss</a> (также <a href="${PROD_URL}/rss.xml" target="_blank" rel="noopener">/rss.xml</a>)</td></tr>
+            <tr><td>ASCII-файл, оконтуренный XML-тегами</td><td>Плоский дамп таблицы: поля обрамлены тегами <code>&lt;record&gt;</code>, текст новости — сырой ASCII внутри CDATA</td><td><a href="${PROD_URL}/api/export/news.tagged.txt" target="_blank" rel="noopener">${PROD_URL}/api/export/news.tagged.txt</a></td></tr>
+          </tbody>
+        </table>
+        <p class="muted">Эндпоинты работают на развернутом приложении <a href="${PROD_URL}/">${PROD_URL}</a>. Интерактивная версия этой страницы — <a href="${PROD_URL}/rss.html">${PROD_URL}/rss.html</a>: предпросмотр форматов, выбор внешнего источника, импорт в БД.</p>
+      </section>
+
+      <section id="combined">
+        <h2>Объединенные новости</h2>
+        <p>По схеме обмена из методички приложение скачивает <strong>внешний RSS-файл</strong> (РБК, Lenta.ru, Интерфакс, ТАСС или произвольный адрес), разделяет его на элементы, объединяет их с новостями из <strong>БД</strong> (дедупликация по заголовку, сортировка по дате) и вставляет в подготовленный web-шаблон, генерируя страницу:</p>
+        <p><a href="${PROD_URL}/lab4/combined.html" target="_blank" rel="noopener">${PROD_URL}/lab4/combined.html — «Объединенные новости»</a></p>
+        <p class="muted">Разобранные внешние новости можно дополнительно загрузить в таблицу <code>imported_news</code> той же БД (POST-запрос из интерактивной версии страницы) — обмен данными замыкается в цикл: БД → форматы → внешний источник → снова БД.</p>
+      </section>
+
+      <section id="feed">
+        <h2>Лента этого сайта</h2>
+        <p>Адрес ленты — <a href="rss.xml" target="_blank" rel="noopener">rss.xml</a>: статический файл, сгенерированный вместе со страницами сайта. На развернутом приложении по тому же адресу отдается динамическая лента прямо из базы данных, поэтому подписчики всегда видят актуальные новости. Ленту можно добавить в любой RSS-ридер или агрегатор новостей.</p>
+        <p class="muted">Подписка: в заголовке каждой страницы есть <code>&lt;link rel="alternate" type="application/rss+xml"&gt;</code> — браузеры и ридеры находят ленту автоматически.</p>
+      </section>`
 
   register('rss', 'RSS', 'rss.html')
   return page({
     id: 'rss',
-    title: 'RSS',
-    description: 'RSS-лента новостей Funds Lab — заглушка лабораторной работы №4.',
-    keywords: 'RSS, лента новостей, подписка',
+    title: 'Обмен данными: RSS (лаб. №4)',
+    description: 'Лабораторная работа №4 Funds Lab — обмен данными между приложениями: RSS 2.0-лента из БД, экспорт в CSV и ASCII с XML-тегами, объединенные новости из БД и внешних RSS-файлов.',
+    keywords: 'RSS, обмен данными, XML, CSV, лабораторная работа 4, объединенные новости, экспорт',
     body,
   })
 }
@@ -1154,6 +1283,9 @@ function main() {
 
   /* XML-каталог для лабораторной работы №2 (детерминированный: без дат генерации). */
   writeOut('catalog.xml', buildCatalogXml(instruments, exchanges, sectors))
+
+  /* RSS-лента для лабораторной работы №4 (детерминированная: даты — из seed-новостей). */
+  writeOut('rss.xml', buildRssXml(news, SITE_URL))
 
   /* Данные для клиентских сервисов. */
   const data = {
