@@ -170,7 +170,13 @@
   async function loadImported() {
     const container = byId("lab4-imported-wrap");
     try {
-      const rows = await api("/api/lab4/imported?limit=10");
+      const data = await api("/api/lab4/imported?limit=10");
+      const rows = Array.isArray(data) ? data : data.items || [];
+      if (data && data.notice) {
+        // Импорт отключён на этом хостинге (read-only БД): показываем пояснение.
+        container.innerHTML = `<p class="lab4-notice">${esc(data.notice)}</p>`;
+        return;
+      }
       if (!rows.length) {
         container.innerHTML = '<p class="muted">Таблица imported_news пуста — выполните импорт.</p>';
         return;

@@ -70,6 +70,26 @@ DEFAULT_SOURCE = EXTERNAL_SOURCES[0]
 
 router = APIRouter(tags=["ЛР4 — обмен данными"])
 
+IMPORT_READ_ONLY_NOTICE = (
+    "Импорт внешних новостей на этом хостинге отключён: у пользователя БД нет прав "
+    "на запись (read-only). Выдайте права на таблицу imported_news — раздел "
+    "«Лабораторная работа №4» в DEPLOY_ALWAYSDATA.md. Остальные разделы работы функционируют."
+)
+
+
+def _base_url(request: Request) -> str:
+    """Абсолютный адрес сайта для ссылок в RSS и на страницах лабораторной.
+
+    За HTTPS-прокси хостинга uvicorn видит соединение как http, и ссылки
+    получаются http://… — учитываем X-Forwarded-Proto. Доверяем заголовку
+    только в сторону повышения до https, понижение схемы не допускаем.
+    """
+    base = str(request.base_url)
+    proto = request.headers.get("x-forwarded-proto", "").split(",")[0].strip()
+    if proto == "https" and base.startswith("http://"):
+        return "https://" + base[len("http://"):]
+    return base
+
 
 # --------------------------------------------------------------------------
 # Модель таблицы импорта («загрузить полученные данные в СУБД», этап 4)
@@ -101,10 +121,30 @@ _import_table_lock = threading.Lock()
 
 def _ensure_import_table() -> None:
     """Идемпотентное создание imported_news (проверка каждый раз — дешева
-    и переживает пересоздание таблицы между запросами)."""
+    и переживает пересоздание таблицы между запросами).
+
+    На хостинге пользователь БД может быть read-only: тогда CREATE TABLE
+    запрещён, и импорт честно отвечает 503 с пояснением вместо падения 500
+    (таблицу создаёт администратор по DDL из db/schema.sql — см. DEPLOY).
+    """
     with _import_table_lock:
         if not sa.inspect(engine).has_table(NewsImported.__tablename__):
-            NewsImported.__table__.create(engine)
+            try:
+                NewsImported.__table__.create(engine)
+            except sa.exc.DBAPIError as exc:
+                raise HTTPException(status_code=503, detail=IMPORT_READ_ONLY_NOTICE) from exc
+
+
+def _is_read_only_error(exc: sa.exc.DBAPIError) -> bool:
+    """Отказ прав записи (read-only транзакция / permission denied), а не баг."""
+    original = getattr(exc, "orig", None)
+    code = getattr(original, "pgcode", None)
+    text = str(original or exc).lower()
+    return (
+        code in {"42501", "25006"}            # insufficient_privilege / read_only_sql_transaction
+        or "read-only" in text
+        or "permission denied" in text
+    )
 
 
 # --------------------------------------------------------------------------
@@ -376,7 +416,7 @@ def rss_feed(request: Request, db: Session = Depends(get_db)):
     На проде этот же документ доступен по адресу /rss.xml — адрес,
     который указан в <link rel="alternate"> всех страниц сайта.
     """
-    return Response(content=_render_rss(db, str(request.base_url)),
+    return Response(content=_render_rss(db, _base_url(request)),
                     media_type="application/rss+xml; charset=utf-8")
 
 
@@ -384,7 +424,7 @@ def rss_feed(request: Request, db: Session = Depends(get_db)):
 def rss_feed_alias(request: Request, db: Session = Depends(get_db)):
     """Единый адрес ленты: на GitHub Pages это статический файл из сборки,
     на проде — маршрут FastAPI, который всегда отдает актуальные данные из БД."""
-    return Response(content=_render_rss(db, str(request.base_url)),
+    return Response(content=_render_rss(db, _base_url(request)),
                     media_type="application/rss+xml; charset=utf-8")
 
 
@@ -574,7 +614,7 @@ def combined_news(
     """
     source_url = _resolve_source(url, source)
     feed = _load_feed(source_url)
-    items = _combine(_db_to_items(db, str(request.base_url)), _feed_to_items(feed, source_url), limit)
+    items = _combine(_db_to_items(db, _base_url(request)), _feed_to_items(feed, source_url), limit)
     db_count = sum(1 for i in items if i["source_type"] == "db")
     return {
         "sources": [
@@ -601,28 +641,34 @@ def import_external(
     _ensure_import_table()
 
     inserted = skipped = 0
-    for item in _feed_to_items(feed, source_url)[:limit]:
-        exists = db.execute(
-            select(NewsImported.id).where(
-                NewsImported.source_url == source_url,
-                NewsImported.guid == item["guid"],
-            )
-        ).first()
-        if exists:
-            skipped += 1
-            continue
-        db.add(NewsImported(
-            source_url=source_url,
-            source_title=feed["title"],
-            guid=item["guid"][:2048],
-            title=item["title"],
-            link=item["link"][:2048],
-            summary=item["summary"],
-            published_at=item["_published"].astimezone(MOSCOW_TZ).replace(tzinfo=None)
-                         if item["_published"] else None,
-        ))
-        inserted += 1
-    db.commit()
+    try:
+        for item in _feed_to_items(feed, source_url)[:limit]:
+            exists = db.execute(
+                select(NewsImported.id).where(
+                    NewsImported.source_url == source_url,
+                    NewsImported.guid == item["guid"],
+                )
+            ).first()
+            if exists:
+                skipped += 1
+                continue
+            db.add(NewsImported(
+                source_url=source_url,
+                source_title=feed["title"],
+                guid=item["guid"][:2048],
+                title=item["title"],
+                link=item["link"][:2048],
+                summary=item["summary"],
+                published_at=item["_published"].astimezone(MOSCOW_TZ).replace(tzinfo=None)
+                             if item["_published"] else None,
+            ))
+            inserted += 1
+        db.commit()
+    except sa.exc.DBAPIError as exc:
+        db.rollback()
+        if _is_read_only_error(exc):
+            raise HTTPException(status_code=503, detail=IMPORT_READ_ONLY_NOTICE) from exc
+        raise
 
     total = db.execute(select(sa.func.count(NewsImported.id))).scalar_one()
     return {
@@ -640,25 +686,34 @@ def imported_news(
     limit: int = Query(50, ge=1, le=200),
     db: Session = Depends(get_db),
 ):
-    _ensure_import_table()
+    """Список импортированного. Если таблица недоступна (read-only БД хостинга
+    без прав на CREATE), отдаём пустой список с пояснением — страница лабы
+    продолжает работать, а не падает ошибкой на первом запросе."""
+    try:
+        _ensure_import_table()
+    except HTTPException:
+        return {"items": [], "import_available": False, "notice": IMPORT_READ_ONLY_NOTICE}
     stmt = (
         select(NewsImported)
         .order_by(NewsImported.imported_at.desc(), NewsImported.id.desc())
         .limit(limit)
     )
-    return [
-        {
-            "id": row.id,
-            "source_title": row.source_title,
-            "source_url": row.source_url,
-            "title": row.title,
-            "link": row.link,
-            "summary": row.summary,
-            "published_at": row.published_at.isoformat() if row.published_at else None,
-            "imported_at": row.imported_at.isoformat() if row.imported_at else None,
-        }
-        for row in db.scalars(stmt).all()
-    ]
+    return {
+        "import_available": True,
+        "items": [
+            {
+                "id": row.id,
+                "source_title": row.source_title,
+                "source_url": row.source_url,
+                "title": row.title,
+                "link": row.link,
+                "summary": row.summary,
+                "published_at": row.published_at.isoformat() if row.published_at else None,
+                "imported_at": row.imported_at.isoformat() if row.imported_at else None,
+            }
+            for row in db.scalars(stmt).all()
+        ],
+    }
 
 
 # --------------------------------------------------------------------------
@@ -775,7 +830,7 @@ def combined_page(
 ):
     """Готовая HTML-страница «Объединенные новости»: подготовленный web-шаблон,
     в который приложение вставляет элементы из БД и внешнего RSS-файла."""
-    base = str(request.base_url).rstrip("/")
+    base = _base_url(request).rstrip("/")
     source_url = _resolve_source(url, source)
     try:
         feed = _load_feed(source_url)

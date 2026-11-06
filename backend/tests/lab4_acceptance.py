@@ -78,6 +78,15 @@ if rss_ok:
 status2, xml_alias = get("/rss.xml", raw=True)
 check("RSS: /rss.xml отвечает 200 тем же документом", status2 == 200 and xml_alias == rss_body)
 
+# за HTTPS-прокси (X-Forwarded-Proto) ссылки ленты повышаются до https://
+req = urllib.request.Request(BASE + "/api/rss", headers={"X-Forwarded-Proto": "https"})
+with urllib.request.urlopen(req, timeout=60) as r:
+    proxied = r.read()
+proxied_links = [it.findtext("link") or "" for it in ET.fromstring(proxied).findall(".//item")]
+check("RSS: X-Forwarded-Proto: https делает ссылки https://",
+      proxied_links and all(link.startswith("https://") for link in proxied_links),
+      proxied_links[0] if proxied_links else "-")
+
 # ---------- 2. CSV (ASCII через разделитель со списком полей) ----------
 status, csv_head = get("/api/export/news.csv")
 lines = csv_head.strip().splitlines()
@@ -217,7 +226,10 @@ if status == 200:
     check("IMPORT: счетчик таблицы соответствует вставленному", second["total_in_table"] >= first["inserted"])
 
 status, imp_body = get("/api/lab4/imported?limit=50")
-check("IMPORTED: список импортированного отдается", status == 200 and len(json.loads(imp_body)) > 0)
+imp_data = json.loads(imp_body) if status == 200 else {}
+check("IMPORTED: список импортированного отдается",
+      status == 200 and imp_data.get("import_available") is True and len(imp_data.get("items", [])) > 0,
+      f"HTTP {status}")
 check("IMPORTED: повторный импорт через другой источник увеличивает таблицу", True, "проверено по IMPORT выше")
 
 # ---------- 8. Страница «Объединенные новости» ----------
