@@ -193,6 +193,45 @@ ZIP — только способ доставки файлов. Он не до�
 Таблица `imported_news` создается приложением сама (идемпотентный
 CREATE TABLE при первом обращении), ручная миграция БД при обновлении сайта
 не требуется; в `db/schema.sql` её DDL добавлен для новых установок.
+
+### Права на запись для импорта (обязательно перед показом преподавателю)
+
+Пользователь приложения `fundslab_app` на опубликованном сервисе переключен
+в **read only** — этап «загрузить полученные данные в СУБД» лабораторной №4
+без дополнительных прав завершится ошибкой прав. Решение — один раз выдать
+права только на таблицу импорта, не снимая read-only с остальных таблиц:
+
+1. В панели alwaysdata откройте **Databases → PostgreSQL**, выберите базу
+   `fundslab_funds` и веб-консоль (**Console**), либо подключитесь `psql`
+   через **Remote access** (данные подключения — в панели).
+2. Выполняйте SQL **от имени администратора базы** (владельца аккаунта),
+   не `fundslab_app`:
+
+   ```sql
+   CREATE TABLE IF NOT EXISTS imported_news (
+       id            SERIAL PRIMARY KEY,
+       source_url    TEXT NOT NULL,
+       source_title  TEXT NOT NULL DEFAULT '',
+       guid          TEXT NOT NULL,
+       title         TEXT NOT NULL,
+       link          TEXT NOT NULL DEFAULT '',
+       summary       TEXT NOT NULL DEFAULT '',
+       published_at  TIMESTAMP,
+       imported_at   TIMESTAMP NOT NULL DEFAULT now(),
+       UNIQUE (source_url, guid)
+   );
+   GRANT SELECT, INSERT ON imported_news TO fundslab_app;
+   GRANT USAGE, SELECT ON SEQUENCE imported_news_id_seq TO fundslab_app;
+   ```
+
+3. Проверка: на https://fundslab.alwaysdata.net/rss.html нажать
+   «Импортировать 10 свежих записей фида» — статус должен показать
+   «вставлено 10, дубликатов пропущено 0» (при повторе — «вставлено 0»).
+
+Если права не выданы, приложение не падает: `POST /api/lab4/import` отвечает
+503 с пояснением, список импортированного показывает уведомление, остальные
+разделы лабораторной №4 работают.
+
 Внешние источники бывают недоступны (например, некоторые блокируют серверных
 клиентов) — в этом случае API отдаёт понятную ошибку, а страница объединенных
 новостей показывает только новости БД с уведомлением.
