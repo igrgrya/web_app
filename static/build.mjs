@@ -1077,14 +1077,14 @@ function xmlPage() {
 
 /* --- Приложение с доступом к БД (лабораторная работа №3) -------------- */
 
-/* Страница лабораторной работы №3: само приложение (FastAPI + PostgreSQL)
-   размещено на бесплатном хостинге Render — https://funds-lab3.onrender.com */
+/* Страница лабораторной работы №3: сайт, приложение (FastAPI) и PostgreSQL
+   размещены в одном аккаунте alwaysdata — тот же PROD_URL, что у лаб. №4. */
 function dbPage() {
   const body = `      <h1>Лабораторная работа №3 — приложение с доступом к БД</h1>
       <p class="lead">Динамическое веб-приложение поверх базы данных PostgreSQL: каталог инструментов, поиск, агрегаты по секторам, лидеры торгового дня и графики динамики цен. Backend — FastAPI + SQLAlchemy, данные хранятся в PostgreSQL, фронтенд приложения построен на Chart.js.</p>
 
-      <p class="lab-link"><a href="https://funds-lab3.onrender.com/">Открыть приложение онлайн — https://funds-lab3.onrender.com</a></p>
-      <p class="muted">Приложение размещено на бесплатном хостинге Render. Интерактивная документация API — <a href="https://funds-lab3.onrender.com/docs">Swagger UI на /docs</a>. Инстанс бесплатный: после ~15 минут без трафика приложение «засыпает», первый запрос будит его за 30–60 секунд.</p>
+      <p class="lab-link"><a href="${PROD_URL}/db.html">Открыть приложение онлайн — ${PROD_URL}/db.html</a></p>
+      <p class="muted">Сайт, приложение и PostgreSQL размещены в одном бесплатном аккаунте alwaysdata. Интерактивная документация API — <a href="${PROD_URL}/docs">Swagger UI на /docs</a>, проверка подключения к БД — <a href="${PROD_URL}/api/health">/api/health</a>.</p>
 
       <h2>Типы запросов к базе данных</h2>
       <table class="data-table">
