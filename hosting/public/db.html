@@ -4,11 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Инструменты рынка — Funds Lab</title>
-  <meta name="description" content="Лабораторная работа №3 Funds Lab: веб-приложение с динамическим доступом к D1 — Cloudflare Workers, каталог, поиск, агрегаты, графики цен.">
-  <meta name="keywords" content="база данных, D1, SQLAlchemy, Cloudflare Workers, лабораторная работа 3, графики">
+  <meta name="description" content="Лабораторная работа №3 Funds Lab: веб-приложение с динамическим доступом к PostgreSQL — FastAPI, каталог, поиск, агрегаты, графики цен.">
+  <meta name="keywords" content="база данных, PostgreSQL, SQLAlchemy, FastAPI, лабораторная работа 3, графики">
   <meta name="author" content="Funds Lab">
   <meta property="og:title" content="Приложение с доступом к БД — Funds Lab">
-  <meta property="og:description" content="Лабораторная работа №3 Funds Lab: веб-приложение с динамическим доступом к D1 — Cloudflare Workers, каталог, поиск, агрегаты, графики цен.">
+  <meta property="og:description" content="Лабораторная работа №3 Funds Lab: веб-приложение с динамическим доступом к PostgreSQL — FastAPI, каталог, поиск, агрегаты, графики цен.">
   <meta property="og:type" content="website">
   <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg?v=497971bb48">
   <link rel="stylesheet" href="/styles.css?v=7486414d54">
@@ -43,6 +43,7 @@
 
   <section id="catalog-section">
     <h2>Каталог инструментов</h2>
+    <p id="data-note" class="data-note" hidden></p>
     <div class="controls">
       <select id="f-exchange" aria-label="Биржа"><option value="">Все биржи</option></select>
       <select id="f-sector" aria-label="Сектор"><option value="">Все секторы</option></select>
@@ -53,7 +54,7 @@
         <option value="fund">Фонды</option>
         <option value="bond">Облигации</option>
       </select>
-      <input id="f-query" type="search" placeholder="Поиск по тикеру или названию…" aria-label="Поиск">
+      <input id="f-query" type="search" maxlength="100" placeholder="Поиск по тикеру или названию…" aria-label="Поиск">
       <button id="btn-reset" type="button">Сброс</button>
     </div>
     <div class="lab3-table-scroll"><table id="catalog" class="data">
@@ -113,6 +114,8 @@
       <select id="chart-days" aria-label="Период">
         <option value="10">10 торговых дней</option>
         <option value="30" selected>30 торговых дней</option>
+        <option value="90">90 торговых дней</option>
+        <option value="365">Все доступные дни</option>
       </select>
     </div>
     <div class="split">

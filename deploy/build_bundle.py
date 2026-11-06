@@ -46,14 +46,21 @@ def main():
     for source in ["backend/app", "backend/requirements.txt", "backend/tests", "db", "deploy", "frontend/src", "frontend/public", "frontend/index.html", "frontend/package.json", "frontend/package-lock.json", "frontend/vite.config.js", "static", "Dockerfile", ".dockerignore", "DEPLOY_ALWAYSDATA.md"]:
         add(source)
     add("hosting/public", "web", transform=True)
-    # Preserve the latest API-client fixes from the original FastAPI app.
+    # Копия клиента лабы №3 в hosting/public синхронизирована с backend/app/static;
+    # перезапись оставлена как страховка от рассинхронизации копий.
     entries["web/static/app.js"] = (ROOT / "backend/app/static/app.js").read_bytes()
+    # Патчи страниц лабы №3 (data-note, maxlength) перенесены в исходники
+    # hosting/public; здесь остаются идемпотентными — сработают, только если
+    # правки исходников когда-нибудь откатят.
     for page in ["web/db.html", "web/lab3/index.html"]:
         html = entries[page].decode("utf-8")
-        html = html.replace('<input id="f-query" type="search"', '<input id="f-query" type="search" maxlength="100"')
-        html = html.replace('<div class="controls">', '<p id="data-note" class="data-note" hidden></p><div class="controls">', 1)
+        if 'id="data-note"' not in html:
+            html = html.replace('<div class="controls">', '<p id="data-note" class="data-note" hidden></p><div class="controls">', 1)
+        if 'maxlength="100"' not in html:
+            html = html.replace('<input id="f-query" type="search"', '<input id="f-query" type="search" maxlength="100"')
         entries[page] = html.encode("utf-8")
-    entries["web/static/integrated.css"] += b'\n.lab3-tools .status:empty {display:none}\n.lab3-tools .data-note {color:var(--muted);font-size:13px;margin:0 0 12px}\n'
+    if b".lab3-tools .data-note" not in entries["web/static/integrated.css"]:
+        entries["web/static/integrated.css"] += b'\n.lab3-tools .status:empty {display:none}\n.lab3-tools .data-note {color:var(--muted);font-size:13px;margin:0 0 12px}\n'
     if args.snapshot:
         entries["db/migration.sql"] = args.snapshot.read_bytes()
     # All API documentation assets are local; no browser CDN dependency.

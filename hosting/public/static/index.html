@@ -3,20 +3,67 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Funds Lab — приложение лабораторной работы №3</title>
+<title>Приложение с доступом к БД (лаб. №3) — Funds Lab</title>
 <link rel="stylesheet" href="/static/styles.css">
 </head>
-<body>
+<body data-page="db">
 
-<header class="topbar">
-  <div class="brand">Funds Lab <span class="lab-badge">Лабораторная работа №3</span></div>
-  <p class="tagline">Веб-приложение с динамическим доступом к БД &middot; FastAPI + SQLAlchemy + PostgreSQL</p>
+<div class="site-shell">
+
+<!-- Шапка — та же, что у страниц основного сайта (генератор static/build.mjs,
+     пункт меню «БД (лаб. №3)» активен). Приложение живёт на отдельном домене
+     (Render), поэтому ссылки меню ведут на абсолютные адреса сайта:
+     https://igrgrya.github.io/web_app/ — тот же SITE_URL, что в build.mjs.
+     Информеры погоды и курсов заполняет app.js приложения — теми же
+     запросами (open-meteo / ЦБ РФ), что и на страницах сайта. -->
+<header class="site-header">
+  <div class="site-header-inner">
+    <a class="brand" href="https://igrgrya.github.io/web_app/index.html">Funds Lab</a>
+    <form class="site-search" action="https://igrgrya.github.io/web_app/search.html" method="get" role="search">
+      <input type="search" name="q" placeholder="Поиск по сайту…" aria-label="Поиск по сайту">
+      <button type="submit">Найти</button>
+    </form>
+    <div class="informers">
+      <div class="informer informer--weather" id="weather-widget">Погода: загрузка…</div>
+      <div class="informer informer--currency" id="currency-widget">Курсы валют: загрузка…</div>
+    </div>
+  </div>
+  <div class="nav-main">
+    <button id="nav-toggle" class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">☰ Меню</button>
+    <nav id="site-nav" aria-label="Основная навигация">
+      <ul class="nav-list">
+        <li><a href="https://igrgrya.github.io/web_app/index.html">Главная</a></li>
+        <li><a href="https://igrgrya.github.io/web_app/news.html">Новости</a></li>
+        <li><a href="https://igrgrya.github.io/web_app/exchanges.html">Биржи</a></li>
+        <li><a href="https://igrgrya.github.io/web_app/history.html">История</a></li>
+        <li><a href="https://igrgrya.github.io/web_app/beginners.html">Новичку</a></li>
+        <li><a href="https://igrgrya.github.io/web_app/glossary.html">Глоссарий</a></li>
+        <li><a href="https://igrgrya.github.io/web_app/risks.html">Риски</a></li>
+        <li><a href="https://igrgrya.github.io/web_app/links.html">Ссылки</a></li>
+        <li><a href="https://igrgrya.github.io/web_app/contacts.html">Контакты</a></li>
+        <li><a href="https://igrgrya.github.io/web_app/about.html">О проекте</a></li>
+        <li><a href="https://igrgrya.github.io/web_app/search.html">Поиск</a></li>
+        <li><a href="https://igrgrya.github.io/web_app/forum.html">Форум</a></li>
+        <li><a href="https://igrgrya.github.io/web_app/services.html">Сервисы</a></li>
+        <li><a href="https://igrgrya.github.io/web_app/xml.html">XML (лаб. №2)</a></li>
+        <li><a href="https://igrgrya.github.io/web_app/db.html" aria-current="page">БД (лаб. №3)</a></li>
+        <li><a href="https://igrgrya.github.io/web_app/rss.html">RSS</a></li>
+      </ul>
+    </nav>
+  </div>
 </header>
 
-<main>
+<main class="site-main">
+
+  <h1>Лабораторная работа №3 — приложение с доступом к БД</h1>
+  <p class="lead">Веб-приложение с динамическим доступом к базе данных: каталог инструментов,
+  поиск, агрегаты по секторам, лидеры торгового дня и графики динамики цен.
+  Backend — FastAPI + SQLAlchemy, СУБД — PostgreSQL, графики — Chart.js.
+  Описание запросов Q1–Q5 — на странице <a href="https://igrgrya.github.io/web_app/db.html">«БД (лаб. №3)»</a> основного сайта.</p>
 
   <section id="catalog-section">
     <h2>Каталог инструментов <span class="q-badge">Q1: JOIN + фильтры + сортировка &middot; Q2: поиск</span></h2>
+    <p id="data-note" class="data-note" hidden></p>
     <div class="controls">
       <select id="f-exchange" aria-label="Биржа"><option value="">Все биржи</option></select>
       <select id="f-sector" aria-label="Сектор"><option value="">Все секторы</option></select>
@@ -27,25 +74,27 @@
         <option value="fund">Фонды</option>
         <option value="bond">Облигации</option>
       </select>
-      <input id="f-query" type="search" placeholder="Поиск по тикеру или названию…" aria-label="Поиск">
+      <input id="f-query" type="search" maxlength="100" placeholder="Поиск по тикеру или названию…" aria-label="Поиск">
       <button id="btn-reset" type="button">Сброс</button>
     </div>
-    <table id="catalog" class="data">
-      <thead>
-        <tr>
-          <th data-sort="ticker">Тикер</th>
-          <th data-sort="name">Название</th>
-          <th data-sort="type">Тип</th>
-          <th data-sort="exchange">Биржа</th>
-          <th data-sort="sector">Сектор</th>
-          <th data-sort="price" class="num">Цена</th>
-          <th data-sort="change" class="num">Изм., %</th>
-          <th data-sort="volume" class="num">Объём</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+    <div class="table-wrap">
+      <table id="catalog" class="data">
+        <thead>
+          <tr>
+            <th data-sort="ticker">Тикер</th>
+            <th data-sort="name">Название</th>
+            <th data-sort="type">Тип</th>
+            <th data-sort="exchange">Биржа</th>
+            <th data-sort="sector">Сектор</th>
+            <th data-sort="price" class="num">Цена</th>
+            <th data-sort="change" class="num">Изм., %</th>
+            <th data-sort="volume" class="num">Объём</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
     <p id="catalog-status" class="status" role="status"></p>
   </section>
 
@@ -53,10 +102,12 @@
     <h2>Агрегаты по секторам <span class="q-badge">Q3: GROUP BY + COUNT/AVG/SUM</span></h2>
     <div class="split">
       <div class="chart-box"><canvas id="sectors-chart" aria-label="Диаграмма числа инструментов по секторам"></canvas></div>
-      <table id="sectors-table" class="data">
-        <thead><tr><th>Сектор</th><th>Валюта</th><th class="num">Инстр.</th><th class="num">Ср. цена</th><th class="num">Сумм. объём</th></tr></thead>
-        <tbody></tbody>
-      </table>
+      <div class="table-wrap">
+        <table id="sectors-table" class="data">
+          <thead><tr><th>Сектор</th><th>Валюта</th><th class="num">Инстр.</th><th class="num">Ср. цена</th><th class="num">Сумм. объём</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
     </div>
   </section>
 
@@ -65,17 +116,21 @@
     <div class="split">
       <div>
         <h3 class="up">Рост ▲</h3>
-        <table id="gainers" class="data">
-          <thead><tr><th>Тикер</th><th>Название</th><th class="num">Цена</th><th class="num">Изм., %</th></tr></thead>
-          <tbody></tbody>
-        </table>
+        <div class="table-wrap">
+          <table id="gainers" class="data">
+            <thead><tr><th>Тикер</th><th>Название</th><th class="num">Цена</th><th class="num">Изм., %</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
       </div>
       <div>
         <h3 class="down">Падение ▼</h3>
-        <table id="losers" class="data">
-          <thead><tr><th>Тикер</th><th>Название</th><th class="num">Цена</th><th class="num">Изм., %</th></tr></thead>
-          <tbody></tbody>
-        </table>
+        <div class="table-wrap">
+          <table id="losers" class="data">
+            <thead><tr><th>Тикер</th><th>Название</th><th class="num">Цена</th><th class="num">Изм., %</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
       </div>
     </div>
   </section>
@@ -87,6 +142,8 @@
       <select id="chart-days" aria-label="Период">
         <option value="10">10 торговых дней</option>
         <option value="30" selected>30 торговых дней</option>
+        <option value="90">90 торговых дней</option>
+        <option value="365">Все доступные дни</option>
       </select>
     </div>
     <div class="split">
@@ -100,8 +157,10 @@
 <footer class="footer">
   Funds Lab &middot; лабораторная работа №3 &middot;
   API-документация: <a href="/docs">/docs</a> (Swagger UI) &middot;
-  <a href="https://igrgrya.github.io/web_app/">на сайт</a>
+  <a href="https://igrgrya.github.io/web_app/db.html">страница лабораторной на сайте</a>
 </footer>
+
+</div>
 
 <script src="/static/vendor/chart.umd.min.js"></script>
 <script src="/static/app.js"></script>

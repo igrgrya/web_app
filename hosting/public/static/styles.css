@@ -1,48 +1,232 @@
-/* Funds Lab — приложение лабораторной работы №3. Стили в духе основного сайта. */
+/* Funds Lab — приложение лабораторной работы №3.
+   Шапка и каркас страницы повторяют основной сайт (static/src/styles.css),
+   чтобы страница приложения открывалась как остальные страницы сайта;
+   расцветки интерфейса приложения — свои. */
 
 :root {
   --accent: #2563eb;
   --accent-dark: #1d4ed8;
+  --accent-bg: rgba(37, 99, 235, 0.09);   /* подсветка активного пункта меню */
+  --accent-border: rgba(37, 99, 235, 0.4);
   --up: #16a34a;
   --down: #dc2626;
-  --text: #1f2937;
+  --text: #475569;      /* базовый цвет текста — как на сайте */
+  --text-h: #0f172a;    /* заголовки */
   --muted: #6b7280;
   --line: #e5e7eb;
-  --bg: #f8fafc;
+  --border: #d8e1ec;    /* рамки шапки/каркаса — как на сайте */
+  --panel: #ffffff;
+  --bg: #f6f9fd;        /* фон страницы — как на сайте */
+  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
 }
 
 * { box-sizing: border-box; }
 
 body {
   margin: 0;
-  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-family: var(--sans);
   color: var(--text);
   background: var(--bg);
   line-height: 1.5;
 }
 
-.topbar {
-  background: #fff;
-  border-bottom: 1px solid var(--line);
-  padding: 16px 24px;
+a { color: var(--accent); }
+
+/* Каркас страницы сайта: центральная колонка с боковыми рамками. */
+.site-shell {
+  width: 1126px;
+  max-width: 100%;
+  margin: 0 auto;
+  border-inline: 1px solid var(--border);
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
 }
 
-.brand { font-size: 22px; font-weight: 700; }
+h1 {
+  font-size: 44px;
+  letter-spacing: -1px;
+  margin: 24px 0;
+  font-weight: 600;
+  color: var(--text-h);
+  line-height: 118%;
+}
 
-.lab-badge {
+.lead {
+  color: var(--text);
+  max-width: 75ch;
+  font-size: 19px;
+  margin-bottom: 16px;
+}
+
+/* --- Шапка и навигация (перенос из static/src/styles.css) ------------ */
+
+.site-header {
+  border-bottom: 1px solid var(--border);
+  /* на сайте базовые 18px, здесь страница приложения компактнее */
+  font-size: 18px;
+}
+
+.site-header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 14px 32px;
+}
+
+.brand {
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--text-h);
+  text-decoration: none;
+}
+
+.brand:hover { text-decoration: underline; }
+
+.site-search {
+  display: flex;
+  gap: 6px;
+}
+
+.site-search input {
+  font: inherit;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--text-h);
+  min-width: 0;
+  width: 220px;
+}
+
+.site-search button {
+  font: inherit;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--accent-border);
+  background: var(--accent-bg);
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.informers {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  justify-content: flex-end;
+  gap: 6px;
+  flex-wrap: nowrap;
+}
+
+.informer {
+  border-radius: 10px;
+  padding: 5px 10px;
   font-size: 13px;
   font-weight: 600;
-  color: #fff;
-  background: var(--accent);
-  border-radius: 999px;
-  padding: 2px 12px;
-  margin-left: 8px;
-  vertical-align: 2px;
 }
 
-.tagline { margin: 4px 0 0; color: var(--muted); font-size: 14px; }
+.informer strong { font-size: 14px; }
 
-main { max-width: 1180px; margin: 0 auto; padding: 24px 16px 8px; }
+/* Курсовой информер — самый длинный: сжимается первым (текст переносится
+   внутри пилюли), чтобы верх шапки не переезжал на новую строку. */
+.informer--currency { min-width: 0; }
+
+.informer--weather {
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+  color: #0c4a6e;
+}
+
+.informer--currency {
+  background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+  color: #14532d;
+}
+
+.rate-up { color: var(--up); }
+.rate-down { color: var(--down); }
+
+.nav-list {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-list a {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 6px;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.nav-list a:hover,
+.nav-list a[aria-current='page'] {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+/* Главное меню схлопывается в кнопку «☰ Меню» на всех устройствах:
+   список раскрывается вертикально по клику (класс nav-open на .nav-main). */
+.nav-main {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  overflow: visible;
+  padding: 0 32px 12px;
+}
+
+.nav-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 7px 14px;
+  border: 1px solid var(--accent-border);
+  border-radius: 8px;
+  background: var(--accent-bg);
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.nav-main > nav {
+  display: none;
+  flex: none;
+  align-self: stretch;
+}
+
+.nav-main.nav-open > nav {
+  display: block;
+}
+
+.nav-main .nav-list {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  font-size: 14px;
+}
+
+.nav-main .nav-list a {
+  display: block;
+  padding: 9px 10px;
+  white-space: normal;
+}
+
+.nav-main .nav-list li + li {
+  border-top: 1px solid var(--line);
+}
+
+/* --- Содержимое приложения ------------------------------------------- */
+
+.site-main {
+  flex-grow: 1;
+  padding: 32px;
+}
 
 section {
   background: #fff;
@@ -85,6 +269,13 @@ h3 { font-size: 15px; margin: 0 0 8px; }
 .controls button { cursor: pointer; }
 .controls button:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
 
+/* Таблицы на узких экранах не растягивают страницу: прокручивается
+   только контейнер таблицы, сам каркас остаётся в пределах вьюпорта. */
+.table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 table.data { width: 100%; border-collapse: collapse; font-size: 14px; }
 
 table.data th, table.data td {
@@ -113,6 +304,11 @@ table.data tbody tr.clickable { cursor: pointer; }
 .cell-down { color: var(--down); font-weight: 600; }
 
 .status { color: var(--muted); font-size: 13px; min-height: 1em; margin: 10px 0 0; }
+/* Строка статуса видна только при сообщении (сейчас — только ошибки). */
+.status:empty { display: none; }
+
+/* Плашка «Учебные данные на …» под заголовком каталога. */
+.data-note { color: var(--muted); font-size: 13px; margin: 0 0 12px; }
 
 .split { display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start; }
 .split > * { flex: 1 1 320px; min-width: 280px; }
@@ -147,8 +343,21 @@ table.data tbody tr.clickable { cursor: pointer; }
 .footer a { color: var(--accent); text-decoration: none; }
 .footer a:hover { text-decoration: underline; }
 
+@media (max-width: 768px) {
+  h1 { font-size: 32px; }
+}
+
+/* Телефон: компактные отступы, блоки .split складываются в стек без
+   минимальной ширины, чтобы страница не вылезала за 360px. */
 @media (max-width: 720px) {
-  .lab-badge, .q-badge { display: inline-block; margin: 6px 0 0; }
+  h1 { font-size: 26px; margin: 16px 0; }
+  .lead { font-size: 16px; }
+  .site-main { padding: 16px; }
+  section { padding: 14px 12px; margin-bottom: 16px; }
+  .q-badge { display: inline-block; margin: 6px 0 0; }
   table.data { font-size: 13px; }
   table.data th, table.data td { padding: 6px 6px; }
+  .split { gap: 14px; }
+  .split > * { min-width: 0; flex-basis: 100%; }
+  .chart-box { height: 240px; }
 }
