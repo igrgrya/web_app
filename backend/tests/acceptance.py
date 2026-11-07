@@ -182,6 +182,166 @@ for suffix in ["sort=DROP", "direction=sideways", "instrument_type=crypto"]:
     st, d = get("/api/search?q=a&" + suffix)
     check("API: поиск отклоняет " + suffix, st == (400 if suffix.startswith("sort=") else 422))
 
+# ---------- Ввод данных: CRUD + сведения о БД (правка к л.р. №4) ----------
+# Все операции выполняются над тестовым инструментом ZZTEST и в конце
+# удаляются через API (страховка — прямой DELETE в БД), эталонные 18/558
+# возвращаются. Проверки, чувствительные к якорю данных, выше уже отработали.
+
+import datetime as _dt
+
+def send(method, path, payload=None):
+    data = None if payload is None else json.dumps(payload).encode("utf-8")
+    req = urllib.request.Request(BASE + path, data=data, method=method,
+                                 headers={"Content-Type": "application/json"} if data else {})
+    try:
+        with urllib.request.urlopen(req, timeout=10) as r:
+            body = r.read().decode("utf-8")
+            try: parsed = json.loads(body)
+            except Exception: parsed = body
+            return r.status, parsed
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8")
+        try: parsed = json.loads(body)
+        except Exception: parsed = body
+        return e.code, parsed
+
+TEST_TICKER = "ZZTEST"
+today_iso = _dt.date.today().isoformat()
+future_iso = (_dt.date.today() + _dt.timedelta(days=10)).isoformat()
+
+st, created = send("POST", "/api/instruments", {
+    "ticker": TEST_TICKER.lower(),  # сервер нормализует в верхний регистр
+    "name": "Тестовый инструмент CRUD",
+    "instrument_type": "stock",
+    "exchange": "MOEX",
+    "sector": "Технологии",
+    "currency": "rub",
+    "listed_date": today_iso,
+    "description": "Создан приёмочным тестом, будет удалён",
+})
+check("CRUD: POST инструмента → 201, тикер и валюта нормализованы",
+      st == 201 and created.get("ticker") == "ZZTEST" and created.get("currency") == "RUB", f"{st}, {created}")
+test_id = created.get("id") if st == 201 else None
+
+st, cat2 = get("/api/instruments")
+check("CRUD: новый инструмент виден в каталоге (19 строк)",
+      st == 200 and isinstance(cat2, list) and len(cat2) == 19 and any(r["ticker"] == "ZZTEST" for r in cat2),
+      f"{st}, {len(cat2) if isinstance(cat2, list) else '?'}")
+
+st, dup = send("POST", "/api/instruments", {"ticker": "ZZTEST", "name": "Дубль", "instrument_type": "stock"})
+check("CRUD: дубль тикера → 409 с пояснением", st == 409 and "уже существует" in str(dup.get("detail")), f"{st}, {dup}")
+
+st, bad_ref = send("POST", "/api/instruments",
+                   {"ticker": "ZZBAD", "name": "Нет биржи", "instrument_type": "stock", "exchange": "NOSUCH"})
+check("CRUD: неизвестная биржа → 400", st == 400 and "Неизвестная биржа" in str(bad_ref.get("detail")), f"{st}, {bad_ref}")
+
+st, bad_type = send("POST", "/api/instruments", {"ticker": "ZZBAD", "name": "Плохой тип", "instrument_type": "crypto"})
+check("CRUD: неверный тип → 422", st == 422, st)
+
+st, bad_ticker = send("POST", "/api/instruments", {"ticker": "ПЛОХ!", "name": "Паттерн тикера", "instrument_type": "stock"})
+check("CRUD: тикер вне [A-Za-z0-9.-] → 422", st == 422, st)
+
+if test_id:
+    st, upd = send("PUT", f"/api/instruments/{test_id}", {"name": "Тестовый инструмент v2", "sector": "Финансы"})
+    check("CRUD: PUT инструмента → 200, изменения сохранены",
+          st == 200 and upd.get("name") == "Тестовый инструмент v2" and upd.get("sector") == "Финансы", f"{st}, {upd}")
+    st, card = get(f"/api/instruments/{test_id}")
+    check("CRUD: карточка отражает правку", st == 200 and card.get("name") == "Тестовый инструмент v2", st)
+else:
+    check("CRUD: PUT инструмента", False, "тестовый инструмент не создан")
+st, _ = send("PUT", "/api/instruments/999", {"name": "Нет такого"})
+check("CRUD: PUT несуществующего → 404", st == 404, st)
+
+if test_id:
+    st, snap = send("POST", f"/api/instruments/{test_id}/prices",
+                    {"as_of_date": today_iso, "price": 101.5, "change_percent": 1.25, "volume": 125000})
+    check("CRUD: POST снимка цены → 201",
+          st == 201 and snap.get("date") == today_iso and snap.get("price") == 101.5, f"{st}, {snap}")
+    st, dup_snap = send("POST", f"/api/instruments/{test_id}/prices", {"as_of_date": today_iso, "price": 100})
+    check("CRUD: снимок на ту же дату → 409", st == 409 and "уже существует" in str(dup_snap.get("detail")), f"{st}, {dup_snap}")
+    st, fut = send("POST", f"/api/instruments/{test_id}/prices", {"as_of_date": future_iso, "price": 100})
+    check("CRUD: дата в будущем → 400", st == 400 and "будущ" in str(fut.get("detail")), f"{st}, {fut}")
+    st, neg = send("POST", f"/api/instruments/{test_id}/prices", {"as_of_date": future_iso, "price": -5})
+    check("CRUD: отрицательная цена → 422", st == 422, st)
+    st, zero = send("POST", f"/api/instruments/{test_id}/prices", {"as_of_date": future_iso, "price": 0})
+    check("CRUD: нулевая цена → 422", st == 422, st)
+    st, neg_vol = send("POST", f"/api/instruments/{test_id}/prices", {"as_of_date": future_iso, "price": 10, "volume": -1})
+    check("CRUD: отрицательный объём → 422", st == 422, st)
+    st, noinst = send("POST", "/api/instruments/999/prices", {"as_of_date": today_iso, "price": 10})
+    check("CRUD: снимок несуществующего инструмента → 404", st == 404, st)
+
+    st, hist = get(f"/api/instruments/{test_id}/prices")
+    check("CRUD: история тестового инструмента — 1 точка на сегодня",
+          st == 200 and len(hist) == 1 and hist[0]["date"] == today_iso and hist[0]["price"] == 101.5, f"{st}, {hist}")
+    st, upd_snap = send("PUT", f"/api/instruments/{test_id}/prices/{today_iso}", {"price": 102.75, "volume": 126000})
+    check("CRUD: PUT снимка → 200", st == 200 and upd_snap.get("price") == 102.75, f"{st}, {upd_snap}")
+    st, hist2 = get(f"/api/instruments/{test_id}/prices")
+    check("CRUD: история отражает правку цены", st == 200 and hist2 and hist2[-1]["price"] == 102.75, f"{st}, {hist2}")
+    st, cat3 = get("/api/instruments")
+    zz = next((r for r in cat3 if r["ticker"] == "ZZTEST"), None)
+    check("CRUD: каталог показывает свежую цену тестового инструмента", zz is not None and zz["price"] == 102.75, zz)
+    st, no_snap = send("PUT", f"/api/instruments/{test_id}/prices/{future_iso}", {"price": 1})
+    check("CRUD: PUT несуществующего снимка → 404", st == 404, st)
+    st, del_snap = send("DELETE", f"/api/instruments/{test_id}/prices/{today_iso}")
+    check("CRUD: DELETE снимка → 200", st == 200 and del_snap.get("deleted") == today_iso, f"{st}, {del_snap}")
+    st, hist3 = get(f"/api/instruments/{test_id}/prices")
+    check("CRUD: после DELETE история пуста", st == 200 and hist3 == [], f"{st}, {hist3}")
+else:
+    for name in ["POST снимка цены", "дубль даты → 409", "будущая дата → 400",
+                 "PUT снимка", "DELETE снимка"]:
+        check(f"CRUD: {name}", False, "тестовый инструмент не создан")
+
+st, info = get("/api/db-info")
+check("СВЕДЕНИЯ: /api/db-info 200, ключи на месте",
+      st == 200 and isinstance(info, dict) and all(k in info for k in (
+          "dbms", "version", "version_full", "database", "db_user", "server_time", "tables", "can_write")),
+      f"{st}, {sorted(info) if isinstance(info, dict) else '?'}")
+check("СВЕДЕНИЯ: СУБД PostgreSQL", st == 200 and info.get("dbms") == "PostgreSQL"
+      and str(info.get("version", "")).startswith("PostgreSQL"), info.get("version"))
+tbl = {t["name"]: t for t in info.get("tables", [])} if isinstance(info, dict) else {}
+check("СВЕДЕНИЯ: 6 таблиц с числом записей",
+      set(tbl) == {"exchanges", "sectors", "instruments", "price_snapshots", "news", "imported_news"}
+      and all(t.get("rows") is not None for t in tbl.values()), sorted(tbl))
+check("СВЕДЕНИЯ: размер таблиц указан", bool(tbl) and all(t.get("size_bytes", 0) > 0 for t in tbl.values()),
+      {k: v.get("size_bytes") for k, v in tbl.items()})
+check("СВЕДЕНИЯ: instruments.rows = 19 (тестовый ещё жив)", tbl.get("instruments", {}).get("rows") == 19, tbl.get("instruments"))
+cw = info.get("can_write", {}) if isinstance(info, dict) else {}
+check("СВЕДЕНИЯ: права записи — 3 ключа, приложение может писать",
+      set(cw) == {"instruments", "price_snapshots", "imported_news"}
+      and cw.get("instruments") is True and cw.get("price_snapshots") is True, cw)
+
+st, del_inst = send("DELETE", f"/api/instruments/{test_id}")
+check("CRUD: DELETE инструмента → 200", st == 200 and del_inst.get("deleted") == test_id, f"{st}, {del_inst}")
+st, after_del = get(f"/api/instruments/{test_id}")
+check("CRUD: после DELETE карточка → 404", st == 404, st)
+st, del_again = send("DELETE", f"/api/instruments/{test_id}")
+check("CRUD: повторный DELETE → 404", st == 404, st)
+st, del_sber = send("DELETE", "/api/instruments/1")
+check("CRUD: DELETE инструмента из новостей (SBER) → 409", st == 409, f"{st}, {del_sber}")
+
+crud_paths = {"/api/instruments", "/api/instruments/{instrument_id}",
+              "/api/instruments/{instrument_id}/prices",
+              "/api/instruments/{instrument_id}/prices/{as_of_date}", "/api/db-info"}
+st, spec2 = get("/openapi.json")
+check("OpenAPI: пути CRUD и db-info в спецификации",
+      st == 200 and crud_paths <= set(spec2.get("paths", {})), sorted(crud_paths - set(spec2.get("paths", {}))))
+
+# Страховочная очистка в обход API (каскад стирает снимки тестового инструмента).
+try:
+    url2 = make_url(DATABASE_URL)
+    with psycopg2.connect(**url2.translate_connect_args(username="user", database="dbname")) as conn2:
+        with conn2.cursor() as c2:
+            c2.execute("DELETE FROM instruments WHERE ticker IN ('ZZTEST', 'ZZBAD')")
+    cleaned = True
+except Exception as e:
+    cleaned = False
+    print(f"  [WARN] очистка тестовых данных: {e}")
+check("ОЧИСТКА: тестовый инструмент удалён из БД", cleaned, "")
+
+st, h = get("/api/health")
+check("ОЧИСТКА: эталон возвращён — 18 инструментов, 558 снимков",
+      st == 200 and h.get("instruments") == 18 and h.get("price_snapshots") == 558, h)
+
 fails = [r for r in results if not r[1]]
 print(f"ИТОГ: {len(results)-len(fails)}/{len(results)} проверок пройдено")
 for name, ok, detail in results:

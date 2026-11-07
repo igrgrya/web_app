@@ -140,3 +140,30 @@
    с патчем сборки бандла, deploy/build_bundle.py). */
 .lab3-tools .status:empty {display:none}
 .lab3-tools .data-note {color:var(--muted);font-size:13px;margin:0 0 12px}
+
+/* --- Ввод данных (CRUD) и сведения о БД — правка к лабораторной №4.
+   Синхронизировано с backend/app/static/styles.css (скоуп .lab3-tools). --- */
+.lab3-tools { --accent-bg: rgba(37, 99, 235, 0.09); --accent-border: rgba(37, 99, 235, 0.4); --text-h: #0f172a; }
+.lab3-tools .section-hint { color: var(--muted); font-size: 13px; margin: 0 0 12px; }
+.lab3-tools .status.status-ok { color: var(--up); }
+.lab3-tools .status.status-err { color: var(--down); }
+.lab3-tools .input-card { flex: 1 1 380px; }
+.lab3-tools .crud-form { display: flex; flex-direction: column; gap: 9px; }
+.lab3-tools .crud-form label { display: flex; flex-direction: column; gap: 3px; font-size: 13px; font-weight: 600; color: var(--text); }
+.lab3-tools .crud-form input, .lab3-tools .crud-form select, .lab3-tools .crud-form textarea { font: inherit; font-size: 14px; font-weight: 400; padding: 6px 9px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--text); width: 100%; min-width: 0; }
+.lab3-tools .crud-form input:disabled { background: var(--bg); color: var(--muted); }
+.lab3-tools .form-actions { display: flex; gap: 8px; margin-top: 2px; }
+.lab3-tools .form-actions button { font: inherit; font-size: 14px; padding: 7px 16px; border-radius: 8px; border: 1px solid var(--accent-border); background: var(--accent); color: #fff; cursor: pointer; }
+.lab3-tools .form-actions button[type="button"] { background: #fff; color: var(--text); border-color: var(--line); }
+.lab3-tools .form-actions button:hover { filter: brightness(0.94); }
+.lab3-tools .btn-mini { font: inherit; font-size: 13px; padding: 3px 8px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--text); cursor: pointer; }
+.lab3-tools .btn-mini:hover { border-color: var(--accent-border); background: var(--accent-bg); }
+.lab3-tools .row-actions { white-space: nowrap; }
+.lab3-tools .row-actions .btn-mini { margin-left: 4px; }
+.lab3-tools .row-actions .btn-chart { margin-right: 4px; }
+.lab3-tools .dbinfo-list { margin: 10px 0 0; }
+.lab3-tools .dbinfo-list div { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; border-bottom: 1px dashed var(--line); padding: 6px 0; }
+.lab3-tools .dbinfo-list dt { color: var(--muted); font-size: 13px; }
+.lab3-tools .dbinfo-list dd { margin: 0; font-weight: 600; color: var(--text-h); font-size: 14px; text-align: right; overflow-wrap: anywhere; }
+.lab3-tools .dbinfo-privs { list-style: none; margin: 8px 0 0; padding: 0; font-size: 14px; }
+.lab3-tools .dbinfo-privs li { padding: 4px 0; }

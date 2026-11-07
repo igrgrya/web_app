@@ -343,6 +343,108 @@ table.data tbody tr.clickable { cursor: pointer; }
 .footer a { color: var(--accent); text-decoration: none; }
 .footer a:hover { text-decoration: underline; }
 
+/* --- Ввод данных (CRUD) и сведения о БД — правка к лабораторной №4 ----- */
+
+.section-hint { color: var(--muted); font-size: 13px; margin: 0 0 12px; }
+
+/* Строки статуса форм: успех — зелёный, ошибка — красный (пустая скрыта). */
+.status.status-ok { color: var(--up); }
+.status.status-err { color: var(--down); }
+
+/* Формы ввода: вертикальный стек «подпись сверху, поле ниже». */
+.input-card { flex: 1 1 380px; }
+
+.crud-form { display: flex; flex-direction: column; gap: 9px; }
+
+.crud-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.crud-form input, .crud-form select, .crud-form textarea {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  padding: 6px 9px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--text);
+  width: 100%;
+  min-width: 0;
+}
+
+.crud-form input:disabled { background: var(--bg); color: var(--muted); }
+
+.form-actions { display: flex; gap: 8px; margin-top: 2px; }
+
+.form-actions button {
+  font: inherit;
+  font-size: 14px;
+  padding: 7px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--accent-border);
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+}
+
+.form-actions button[type="button"] {
+  background: #fff;
+  color: var(--text);
+  border-color: var(--line);
+}
+
+.form-actions button:hover { filter: brightness(0.94); }
+
+/* Мини-кнопки ✏/🗑 в строках таблиц (инструменты и снимки цен). */
+.btn-mini {
+  font: inherit;
+  font-size: 13px;
+  padding: 3px 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.btn-mini:hover { border-color: var(--accent-border); background: var(--accent-bg); }
+
+.row-actions { white-space: nowrap; }
+.row-actions .btn-mini { margin-left: 4px; }
+.row-actions .btn-chart { margin-right: 4px; }
+
+/* Сведения о БД: список параметров слева, таблицы и права справа. */
+.dbinfo-list { margin: 10px 0 0; }
+
+.dbinfo-list div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  border-bottom: 1px dashed var(--line);
+  padding: 6px 0;
+}
+
+.dbinfo-list dt { color: var(--muted); font-size: 13px; }
+
+.dbinfo-list dd {
+  margin: 0;
+  font-weight: 600;
+  color: var(--text-h);
+  font-size: 14px;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.dbinfo-privs { list-style: none; margin: 8px 0 0; padding: 0; font-size: 14px; }
+.dbinfo-privs li { padding: 4px 0; }
+
 @media (max-width: 768px) {
   h1 { font-size: 32px; }
 }

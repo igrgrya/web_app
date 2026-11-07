@@ -12,7 +12,7 @@
   <meta property="og:type" content="website">
   <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg?v=497971bb48">
   <link rel="stylesheet" href="/styles.css?v=7486414d54">
-<link rel="stylesheet" href="/static/integrated.css?v=3">
+<link rel="stylesheet" href="/static/integrated.css?v=4">
 </head>
 <body data-page="db">
   <div class="site-shell">
@@ -37,7 +37,7 @@
   </header>
     <main class="site-main">
       <h1>Инструменты рынка</h1>
-      <p class="lead">Каталог, поиск и графики котировок — лабораторная работа №3.</p>
+      <p class="lead">Каталог, поиск, ввод данных и графики котировок — лабораторная работа №3.</p>
       <p class="muted">Учебные данные. Выберите фильтры или нажмите на инструмент, чтобы посмотреть историю цены.</p>
       <div class="lab3-tools">
 
@@ -57,6 +57,9 @@
       <input id="f-query" type="search" maxlength="100" placeholder="Поиск по тикеру или названию…" aria-label="Поиск">
       <button id="btn-reset" type="button">Сброс</button>
     </div>
+    <p class="section-hint">Поиск по одному атрибуту — подстрока тикера или названия
+    (одно поле) либо один фильтр; поиск по двум атрибутам — любые два и более критерия
+    одновременно, например «сектор + подстрока» или «биржа + тип».</p>
     <div class="lab3-table-scroll"><table id="catalog" class="data">
       <thead>
         <tr>
@@ -74,6 +77,90 @@
       <tbody></tbody>
     </table></div>
     <p id="catalog-status" class="status" role="status"></p>
+  </section>
+
+  <section id="input-section">
+    <h2>Ввод данных</h2>
+    <p id="write-permission-note" class="data-note" hidden></p>
+    <div class="split">
+      <div class="card input-card">
+        <h3 id="instrument-form-title">Добавить инструмент</h3>
+        <form id="instrument-form" class="crud-form" autocomplete="off">
+          <label>Тикер
+            <input id="i-ticker" name="ticker" maxlength="20" required
+                   pattern="[A-Za-z0-9.\-]+" placeholder="GAZP">
+          </label>
+          <label>Название
+            <input id="i-name" name="name" maxlength="255" required placeholder="Газпром">
+          </label>
+          <label>Тип
+            <select id="i-type" name="instrument_type">
+              <option value="stock">Акция</option>
+              <option value="etf">ETF</option>
+              <option value="fund">Фонд</option>
+              <option value="bond">Облигация</option>
+            </select>
+          </label>
+          <label>Биржа
+            <select id="i-exchange" name="exchange"><option value="">— не указана —</option></select>
+          </label>
+          <label>Сектор
+            <select id="i-sector" name="sector"><option value="">— не указан —</option></select>
+          </label>
+          <label>Валюта
+            <input id="i-currency" name="currency" maxlength="10" value="RUB" required>
+          </label>
+          <label>Дата листинга
+            <input id="i-listed" name="listed_date" type="date">
+          </label>
+          <label>Описание
+            <textarea id="i-description" name="description" maxlength="2000" rows="3"></textarea>
+          </label>
+          <div class="form-actions">
+            <button type="submit" id="btn-instrument-submit">Добавить</button>
+            <button type="button" id="btn-instrument-cancel" hidden>Отмена</button>
+          </div>
+        </form>
+        <p id="instrument-status" class="status" role="status"></p>
+      </div>
+      <div class="card input-card">
+        <h3>Котировки: добавить, изменить, удалить</h3>
+        <form id="price-form" class="crud-form" autocomplete="off">
+          <label>Инструмент
+            <select id="p-instrument" name="instrument_id" required></select>
+          </label>
+          <label>Дата
+            <input id="p-date" name="as_of_date" type="date" required>
+          </label>
+          <label>Цена
+            <input id="p-price" name="price" type="number" min="0.0001"
+                   max="9999999999" step="0.0001" required placeholder="250.50">
+          </label>
+          <label>Изменение, %
+            <input id="p-change" name="change_percent" type="number" min="-9999.99"
+                   max="9999.99" step="0.01" placeholder="1.25">
+          </label>
+          <label>Объём
+            <input id="p-volume" name="volume" type="number" min="0" step="1" placeholder="125000">
+          </label>
+          <div class="form-actions">
+            <button type="submit" id="btn-price-submit">Добавить</button>
+            <button type="button" id="btn-price-cancel" hidden>Отмена</button>
+          </div>
+        </form>
+        <p id="price-status" class="status" role="status"></p>
+        <p class="section-hint">Снимки выбранного инструмента (последние 10):
+        ✏ — изменить значения за дату, 🗑 — удалить точку из истории.</p>
+        <div class="lab3-table-scroll"><table id="snapshots" class="data">
+          <thead>
+            <tr><th>Дата</th><th class="num">Цена</th><th class="num">Изм., %</th>
+                <th class="num">Объём</th><th></th></tr>
+          </thead>
+          <tbody></tbody>
+        </table></div>
+        <p id="snapshots-status" class="status" role="status"></p>
+      </div>
+    </div>
   </section>
 
   <section id="sectors-section">
@@ -124,6 +211,11 @@
     </div>
   </section>
 
+  <section id="dbinfo-section">
+    <h2>Сведения о БД</h2>
+    <div id="dbinfo-card" class="card">Загрузка сведений о БД…</div>
+  </section>
+
 </div>
     </main>
     <footer class="site-footer">
@@ -137,6 +229,6 @@
   <script src="/data.js?v=497971bb48"></script>
   <script src="/app.js?v=0fd3ed93f7"></script>
 <script src="/static/vendor/chart.umd.min.js"></script>
-<script src="/static/app.js?v=3"></script>
+<script src="/static/app.js?v=6"></script>
 </body>
 </html>

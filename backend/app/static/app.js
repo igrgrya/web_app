@@ -54,6 +54,22 @@ async function api(path, params = {}) {
   return response.json();
 }
 
+/* POST/PUT/DELETE с JSON-телом (ввод данных — правка к лаб. №4); текст ошибки
+   разбирается так же, как у GET: строка detail или массив 422 от FastAPI.
+   Уведомление read-only (503) приходит строкой detail и показывается как есть. */
+async function apiSend(method, path, body) {
+  const response = await fetch(new URL(path, window.location.origin), {
+    method,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) {
+    const payload = await response.json().catch(() => ({}));
+    throw new Error(apiErrorMessage(response.status, payload));
+  }
+  return response.json();
+}
+
 /* ---------------- Q1: каталог + Q2: поиск ---------------- */
 
 const catalogBody = document.querySelector("#catalog tbody");
@@ -87,7 +103,9 @@ function rowHtml(item) {
     <td class="num">${item.price === null ? "—" : fmtPrice.format(item.price)} ${esc(item.currency ?? "")}</td>
     ${changeCell}
     <td class="num">${item.volume === null ? "—" : fmtNum.format(item.volume)}</td>
-    <td><button class="btn-chart" data-id="${item.id}" data-ticker="${esc(item.ticker)}">График</button></td>
+    <td class="row-actions"><button class="btn-chart" data-id="${item.id}" data-ticker="${esc(item.ticker)}">График</button>
+    <button class="btn-mini btn-edit" data-id="${item.id}" title="Изменить инструмент">✏</button>
+    <button class="btn-mini btn-delete" data-id="${item.id}" title="Удалить инструмент">🗑</button></td>
   </tr>`;
 }
 
@@ -101,6 +119,9 @@ function fillFilterOnce(items) {
   const sectors = [...new Set(items.map((i) => i.sector).filter(Boolean))].sort();
   for (const code of exchanges) fExchange.add(new Option(code, code));
   for (const name of sectors) fSector.add(new Option(name, name));
+  /* Те же справочники нужны форме ввода инструмента (i-exchange / i-sector). */
+  for (const code of exchanges) iExchange.add(new Option(code, code));
+  for (const name of sectors) iSector.add(new Option(name, name));
 }
 
 function catalogParams() {
@@ -198,6 +219,16 @@ document.getElementById("btn-reset").addEventListener("click", () => {
 });
 
 catalogBody.addEventListener("click", (event) => {
+  /* Кнопки CRUD перехватываем раньше открытия графика: клик по строке —
+     график, клик по ✏/🗑 — правка или удаление инструмента. */
+  if (event.target.closest(".btn-edit")) {
+    startInstrumentEdit(Number(event.target.closest("[data-id]").dataset.id));
+    return;
+  }
+  if (event.target.closest(".btn-delete")) {
+    deleteInstrument(Number(event.target.closest("[data-id]").dataset.id));
+    return;
+  }
   const row = event.target.closest("tr[data-id]");
   if (row) openPriceChart(Number(row.dataset.id));
 });
@@ -270,11 +301,22 @@ async function loadMovers() {
 const chartInstrument = document.getElementById("chart-instrument");
 const chartDays = document.getElementById("chart-days");
 const instrumentCard = document.getElementById("instrument-card");
+const pInstrument = document.getElementById("p-instrument");
 
-async function fillInstrumentPicker() {
+/* Пикеры инструмента: график (Q5) и форма ввода котировок (правка к лаб. №4)
+   заполняются одним запросом каталога; выбор пользователя сохраняется. */
+async function fillInstrumentPickers() {
   const items = await api("/api/instruments", { sort: "ticker" });
-  chartInstrument.innerHTML = items.map((i) =>
+  const html = items.map((i) =>
     `<option value="${i.id}">${esc(i.ticker)} — ${esc(i.name)}</option>`).join("");
+  const keepChart = chartInstrument.value;
+  chartInstrument.innerHTML = html;
+  if (keepChart) chartInstrument.value = keepChart;
+  const keepPrice = pInstrument.value;
+  pInstrument.innerHTML = html;
+  if (keepPrice && [...pInstrument.options].some((o) => o.value === keepPrice)) {
+    pInstrument.value = keepPrice;
+  }
 }
 
 async function openPriceChart(id) {
@@ -350,6 +392,346 @@ document.querySelector("#losers").addEventListener("click", (e) => {
   const row = e.target.closest("tr[data-id]");
   if (row) openPriceChart(Number(row.dataset.id));
 });
+
+/* ---------------- Ввод данных: CRUD (правка к лаб. №4) ---------------- */
+
+const instrumentForm = document.getElementById("instrument-form");
+const instrumentFormTitle = document.getElementById("instrument-form-title");
+const iTicker = document.getElementById("i-ticker");
+const iName = document.getElementById("i-name");
+const iType = document.getElementById("i-type");
+const iExchange = document.getElementById("i-exchange");
+const iSector = document.getElementById("i-sector");
+const iCurrency = document.getElementById("i-currency");
+const iListed = document.getElementById("i-listed");
+const iDescription = document.getElementById("i-description");
+const btnInstrumentSubmit = document.getElementById("btn-instrument-submit");
+const btnInstrumentCancel = document.getElementById("btn-instrument-cancel");
+const instrumentStatus = document.getElementById("instrument-status");
+
+const priceForm = document.getElementById("price-form");
+const pDate = document.getElementById("p-date");
+const pPrice = document.getElementById("p-price");
+const pChange = document.getElementById("p-change");
+const pVolume = document.getElementById("p-volume");
+const btnPriceSubmit = document.getElementById("btn-price-submit");
+const btnPriceCancel = document.getElementById("btn-price-cancel");
+const priceStatus = document.getElementById("price-status");
+const snapshotsBody = document.querySelector("#snapshots tbody");
+const snapshotsStatus = document.getElementById("snapshots-status");
+
+const writePermissionNote = document.getElementById("write-permission-note");
+const dbInfoCard = document.getElementById("dbinfo-card");
+
+let editingInstrumentId = null;   // id инструмента в режиме правки
+let editingSnapshotDate = null;   // дата снимка в режиме правки
+
+/* Строка статуса: ok — зелёная, err — красная, пустая — скрыта (.status:empty). */
+function setStatus(el, message, kind) {
+  el.textContent = message;
+  el.classList.toggle("status-ok", kind === "ok");
+  el.classList.toggle("status-err", kind === "err");
+}
+
+function ruDate(iso) {
+  return new Date(iso).toLocaleDateString("ru-RU");
+}
+
+function todayIso() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+/* Справочники бирж/секторов формы ввода наполняются в fillFilterOnce()
+   из первого ответа каталога — те же значения, что у фильтров. */
+
+/* После успешной записи обновляем всё, что зависит от данных. */
+async function refreshAfterWrite() {
+  loadCatalog();
+  loadSectors().catch((err) => console.error("Q3:", err));
+  loadMovers().catch((err) => console.error("Q4:", err));
+  try {
+    await fillInstrumentPickers();
+    await loadSnapshots();
+    await loadDbInfo();
+  } catch (err) {
+    console.error("CRUD refresh:", err);
+  }
+}
+
+/* --- Инструменты: создать / изменить / удалить --- */
+
+function resetInstrumentForm() {
+  editingInstrumentId = null;
+  instrumentForm.reset();
+  instrumentFormTitle.textContent = "Добавить инструмент";
+  btnInstrumentSubmit.textContent = "Добавить";
+  btnInstrumentCancel.hidden = true;
+  /* Статус не трогаем — сообщение об успешной операции должно остаться. */
+}
+
+async function startInstrumentEdit(id) {
+  try {
+    const card = await api(`/api/instruments/${id}`);
+    editingInstrumentId = id;
+    instrumentFormTitle.textContent = `Изменить инструмент ${card.ticker}`;
+    iTicker.value = card.ticker;
+    iName.value = card.name;
+    iType.value = card.type;
+    iExchange.value = card.exchange ?? "";
+    iSector.value = card.sector ?? "";
+    iCurrency.value = card.currency ?? "RUB";
+    iListed.value = card.listed_date ?? "";
+    iDescription.value = card.description ?? "";
+    btnInstrumentSubmit.textContent = "Сохранить";
+    btnInstrumentCancel.hidden = false;
+    setStatus(instrumentStatus, `Редактирование ${card.ticker} — заполните поля и нажмите «Сохранить»`, "ok");
+    document.getElementById("input-section").scrollIntoView({ behavior: "smooth", block: "start" });
+  } catch (err) {
+    setStatus(instrumentStatus, `Ошибка: ${err.message}`, "err");
+  }
+}
+
+async function deleteInstrument(id) {
+  try {
+    const card = await api(`/api/instruments/${id}`);
+    /* Каскадное удаление истории цен заложено в схеме (ON DELETE CASCADE) —
+       предупреживаем явно. Инструменты из новостей БД не даст удалить (409). */
+    if (!confirm(`Удалить инструмент ${card.ticker} — ${card.name}?\nБудет удалена и вся история его цен.`)) return;
+    const result = await apiSend("DELETE", `/api/instruments/${id}`);
+    setStatus(instrumentStatus,
+      `Удалён ${result.ticker}; вместе с ним удалено снимков цен: ${result.cascade_price_snapshots}`, "ok");
+    if (editingInstrumentId === id) resetInstrumentForm();
+    await refreshAfterWrite();
+  } catch (err) {
+    setStatus(instrumentStatus, `Ошибка: ${err.message}`, "err");
+  }
+}
+
+instrumentForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const payload = {
+    ticker: iTicker.value.trim(),
+    name: iName.value.trim(),
+    instrument_type: iType.value,
+    exchange: iExchange.value || null,
+    sector: iSector.value || null,
+    currency: iCurrency.value.trim() || "RUB",
+    listed_date: iListed.value || null,
+    description: iDescription.value.trim() || null,
+  };
+  try {
+    if (editingInstrumentId) {
+      const saved = await apiSend("PUT", `/api/instruments/${editingInstrumentId}`, payload);
+      setStatus(instrumentStatus, `Изменено: ${saved.ticker} — ${saved.name}`, "ok");
+      resetInstrumentForm();
+    } else {
+      const created = await apiSend("POST", "/api/instruments", payload);
+      setStatus(instrumentStatus, `Добавлен инструмент ${created.ticker} (id ${created.id}) — он уже в каталоге`, "ok");
+      instrumentForm.reset();
+    }
+    await refreshAfterWrite();
+  } catch (err) {
+    setStatus(instrumentStatus, `Ошибка: ${err.message}`, "err");
+  }
+});
+
+btnInstrumentCancel.addEventListener("click", () => {
+  resetInstrumentForm();
+  setStatus(instrumentStatus, "", "ok"); // отмена гасит сообщение о правке
+});
+
+/* --- Котировки: добавить / изменить / удалить снимок --- */
+
+let snapshotsRequest = 0; // свой счётчик гонки: быстрый ответ не должен перерисовать список
+
+async function loadSnapshots() {
+  const id = Number(pInstrument.value);
+  if (!id) { snapshotsBody.innerHTML = ""; return; }
+  const request = ++snapshotsRequest;
+  try {
+    const series = await api(`/api/instruments/${id}/prices`, { days: 10 });
+    if (request !== snapshotsRequest) return;
+    snapshotsBody.innerHTML = series.map(snapshotRowHtml).join("");
+    setStatus(snapshotsStatus, "", "ok");
+  } catch (err) {
+    if (request !== snapshotsRequest) return;
+    setStatus(snapshotsStatus, `Ошибка: ${err.message}`, "err");
+  }
+}
+
+function snapshotRowHtml(p) {
+  const change = p.change_percent;
+  const changeCell = change === null ? '<td class="num">—</td>' :
+    `<td class="num ${change >= 0 ? "cell-up" : "cell-down"}">${change >= 0 ? "+" : ""}${fmtNum.format(change)}</td>`;
+  return `<tr data-date="${p.date}">
+    <td>${esc(ruDate(p.date))}</td>
+    <td class="num">${fmtPrice.format(p.price)}</td>
+    ${changeCell}
+    <td class="num">${p.volume === null ? "—" : fmtNum.format(p.volume)}</td>
+    <td class="row-actions">
+      <button class="btn-mini btn-snap-edit" data-date="${p.date}" title="Изменить снимок">✏</button>
+      <button class="btn-mini btn-snap-delete" data-date="${p.date}" title="Удалить снимок">🗑</button>
+    </td>
+  </tr>`;
+}
+
+function resetPriceForm() {
+  editingSnapshotDate = null;
+  pDate.disabled = false;
+  /* form.reset() сбросил бы и пикер инструмента на первый вариант —
+     сохраняем выбор пользователя. Статус не трогаем: сообщение об
+     успешной операции должно остаться видимым после сброса полей. */
+  const keepInstrument = pInstrument.value;
+  priceForm.reset();
+  pInstrument.value = keepInstrument;
+  pDate.value = todayIso();
+  btnPriceSubmit.textContent = "Добавить";
+  btnPriceCancel.hidden = true;
+}
+
+async function startSnapshotEdit(dateIso) {
+  try {
+    const series = await api(`/api/instruments/${Number(pInstrument.value)}/prices`, { days: 365 });
+    const found = series.find((p) => p.date === dateIso);
+    if (!found) throw new Error("снимок не найден в истории");
+    editingSnapshotDate = dateIso;
+    pDate.value = dateIso;
+    pDate.disabled = true; // дата — ключ снимка, правим только значения
+    pPrice.value = found.price;
+    pChange.value = found.change_percent ?? "";
+    pVolume.value = found.volume ?? "";
+    btnPriceSubmit.textContent = "Сохранить";
+    btnPriceCancel.hidden = false;
+    setStatus(priceStatus, `Редактирование снимка за ${ruDate(dateIso)} — измените цену и нажмите «Сохранить»`, "ok");
+    pPrice.focus();
+  } catch (err) {
+    setStatus(priceStatus, `Ошибка: ${err.message}`, "err");
+  }
+}
+
+snapshotsBody.addEventListener("click", (event) => {
+  const editButton = event.target.closest(".btn-snap-edit");
+  if (editButton) { startSnapshotEdit(editButton.dataset.date); return; }
+  const deleteButton = event.target.closest(".btn-snap-delete");
+  if (deleteButton) deleteSnapshot(deleteButton.dataset.date);
+});
+
+async function deleteSnapshot(dateIso) {
+  const id = Number(pInstrument.value);
+  if (!id) return;
+  try {
+    if (!confirm(`Удалить снимок цены за ${ruDate(dateIso)}?\nТочка исчезнет из истории и графика.`)) return;
+    await apiSend("DELETE", `/api/instruments/${id}/prices/${dateIso}`);
+    setStatus(priceStatus, `Снимок за ${ruDate(dateIso)} удалён`, "ok");
+    if (editingSnapshotDate === dateIso) resetPriceForm();
+    await refreshAfterWrite();
+  } catch (err) {
+    setStatus(priceStatus, `Ошибка: ${err.message}`, "err");
+  }
+}
+
+priceForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const id = Number(pInstrument.value);
+  if (!id) { setStatus(priceStatus, "Ошибка: выберите инструмент", "err"); return; }
+  const values = {
+    price: Number(pPrice.value),
+    change_percent: pChange.value === "" ? null : Number(pChange.value),
+    volume: pVolume.value === "" ? null : Number(pVolume.value),
+  };
+  try {
+    if (editingSnapshotDate) {
+      const saved = await apiSend("PUT", `/api/instruments/${id}/prices/${editingSnapshotDate}`, values);
+      setStatus(priceStatus, `Снимок за ${ruDate(saved.date)} изменён: цена ${fmtPrice.format(saved.price)}`, "ok");
+      resetPriceForm();
+    } else {
+      const created = await apiSend("POST", `/api/instruments/${id}/prices`,
+        { as_of_date: pDate.value, ...values });
+      setStatus(priceStatus, `Добавлен снимок за ${ruDate(created.date)}: цена ${fmtPrice.format(created.price)}`, "ok");
+      resetPriceForm();
+    }
+    await refreshAfterWrite();
+  } catch (err) {
+    setStatus(priceStatus, `Ошибка: ${err.message}`, "err");
+  }
+});
+
+btnPriceCancel.addEventListener("click", resetPriceForm);
+pInstrument.addEventListener("change", () => {
+  resetPriceForm();
+  setStatus(priceStatus, "", "ok"); // смена инструмента гасит прошлое сообщение
+  loadSnapshots();
+});
+
+/* ---------------- Сведения о БД (правка к лаб. №4) ---------------- */
+
+function fmtBytes(bytes) {
+  if (bytes === null || bytes === undefined) return "—";
+  const units = ["Б", "КБ", "МБ", "ГБ"];
+  let value = bytes, unit = 0;
+  while (value >= 1024 && unit < units.length - 1) { value /= 1024; unit += 1; }
+  return `${fmtNum.format(Math.round(value * 10) / 10)} ${units[unit]}`;
+}
+
+function renderDbInfo(info) {
+  const rows = info.tables.map((t) => `
+    <tr><td>${esc(t.name)}</td>
+        <td class="num">${fmtNum.format(t.rows ?? 0)}</td>
+        <td class="num">${fmtBytes(t.size_bytes)}</td></tr>`).join("");
+  const priv = info.can_write;
+  const privRow = (ok, label) => `<li>${ok ? "✅" : "⛔"} ${esc(label)}</li>`;
+  dbInfoCard.innerHTML = `
+    <div class="split">
+      <div>
+        <h4>${esc(info.dbms)} ${esc(info.version)}</h4>
+        <p class="muted">${esc(info.version_full)}</p>
+        <dl class="dbinfo-list">
+          <div><dt>База данных</dt><dd>${esc(info.database)}</dd></div>
+          <div><dt>Пользователь БД</dt><dd>${esc(info.db_user)}</dd></div>
+          <div><dt>Время сервера</dt><dd>${esc(new Date(info.server_time).toLocaleString("ru-RU"))}</dd></div>
+        </dl>
+      </div>
+      <div>
+        <div class="table-wrap">
+          <table class="data">
+            <thead><tr><th>Таблица</th><th class="num">Записей</th><th class="num">Размер</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+        <h4>Права записи (INSERT)</h4>
+        <ul class="dbinfo-privs">
+          ${privRow(priv.instruments, "instruments — инструменты")}
+          ${privRow(priv.price_snapshots, "price_snapshots — котировки")}
+          ${privRow(priv.imported_news, "imported_news — импортированные новости")}
+        </ul>
+      </div>
+    </div>`;
+}
+
+function updateWritePermissionNote(info) {
+  const allowed = info.can_write.instruments && info.can_write.price_snapshots;
+  if (allowed) {
+    writePermissionNote.hidden = true;
+    writePermissionNote.textContent = "";
+    return;
+  }
+  writePermissionNote.hidden = false;
+  writePermissionNote.textContent = "У пользователя БД нет прав на запись в instruments/price_snapshots — "
+    + "операции ввода вернут уведомление read-only (остальные разделы работают). Права выдаются "
+    + "по инструкции «Права на запись для ввода данных» в DEPLOY_ALWAYSDATA.md; демонстрацию ввода "
+    + "можно выполнить на локальной копии приложения.";
+}
+
+async function loadDbInfo() {
+  try {
+    const info = await api("/api/db-info");
+    renderDbInfo(info);
+    updateWritePermissionNote(info);
+  } catch (err) {
+    dbInfoCard.textContent = `Ошибка: ${err.message}`;
+  }
+}
 
 /* ---------------- Меню шапки: на телефоне раскрывается кнопкой ---------------- */
 
@@ -462,6 +844,8 @@ async function initCurrency() {
 loadCatalog();
 loadSectors().catch((err) => console.error("Q3:", err));
 loadMovers().catch((err) => console.error("Q4:", err));
-fillInstrumentPicker().catch((err) => console.error("Q5:", err));
+fillInstrumentPickers().then(loadSnapshots).catch((err) => console.error("Q5:", err));
+loadDbInfo();
+pDate.value = todayIso(); // форма котировок: по умолчанию сегодня
 initWeather();
 initCurrency();
