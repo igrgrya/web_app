@@ -105,6 +105,13 @@
   <section id="input-section">
     <h2>Ввод данных <span class="q-badge">правка к лаб. №4: CRUD инструментов и котировок</span></h2>
     <p id="write-permission-note" class="data-note" hidden></p>
+    <div class="admin-key-row">
+      <label for="admin-key">Ключ записи (X-Admin-Key):</label>
+      <input id="admin-key" type="password" autocomplete="off"
+             placeholder="значение FUNDS_ADMIN_KEY сервера">
+      <button type="button" id="btn-key-save">Сохранить ключ</button>
+      <span id="key-status" class="status" role="status"></span>
+    </div>
     <div class="split">
       <div class="card input-card">
         <h3 id="instrument-form-title">Добавить инструмент</h3>

@@ -58,9 +58,12 @@ async function api(path, params = {}) {
    разбирается так же, как у GET: строка detail или массив 422 от FastAPI.
    Уведомление read-only (503) приходит строкой detail и показывается как есть. */
 async function apiSend(method, path, body) {
+  const headers = { "Content-Type": "application/json" };
+  const key = adminKey();
+  if (key) headers["X-Admin-Key"] = key; // запись защищена ключом сервера (ревью, п.1): без него 401
   const response = await fetch(new URL(path, window.location.origin), {
     method,
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify(body),
   });
   if (!response.ok) {
@@ -68,6 +71,12 @@ async function apiSend(method, path, body) {
     throw new Error(apiErrorMessage(response.status, payload));
   }
   return response.json();
+}
+
+/* Ключ записи хранится в localStorage браузера и подставляется в заголовок
+   X-Admin-Key всех операций ввода (поле «Ключ записи» в разделе ввода). */
+function adminKey() {
+  try { return localStorage.getItem("fundsAdminKey") || ""; } catch { return ""; }
 }
 
 /* ---------------- Q1: каталог + Q2: поиск ---------------- */
@@ -381,6 +390,14 @@ async function renderPriceChart() {
   }
 }
 
+/* Панель графика без выбранного инструмента (удалён из БД или ещё не выбран):
+   холст и карточка сбрасываются, чтобы не показывать устаревшие данные. */
+function clearChartPanel() {
+  state.priceChart?.destroy();
+  state.priceChart = null;
+  instrumentCard.innerHTML = "Выберите инструмент в таблице или списке выше.";
+}
+
 chartInstrument.addEventListener("change", renderPriceChart);
 chartDays.addEventListener("change", renderPriceChart);
 
@@ -424,7 +441,9 @@ const writePermissionNote = document.getElementById("write-permission-note");
 const dbInfoCard = document.getElementById("dbinfo-card");
 
 let editingInstrumentId = null;   // id инструмента в режиме правки
-let editingSnapshotDate = null;   // дата снимка в режиме правки
+let editingSnapshot = null;       // пара «инструмент + дата» снимка в режиме правки
+let snapshotEditRequest = 0;      // загрузка снимка: устаревший ответ не заполняет форму
+let instrumentEditRequest = 0;    // загрузка карточки правки: аналогично
 
 /* Строка статуса: ok — зелёная, err — красная, пустая — скрыта (.status:empty). */
 function setStatus(el, message, kind) {
@@ -445,7 +464,9 @@ function todayIso() {
 /* Справочники бирж/секторов формы ввода наполняются в fillFilterOnce()
    из первого ответа каталога — те же значения, что у фильтров. */
 
-/* После успешной записи обновляем всё, что зависит от данных. */
+/* После успешной записи обновляем всё, что зависит от данных, включая
+   открытый график и карточку (ревью, пункт 5): правка или удаление цены,
+   удаление инструмента не должны оставлять на экране прежние данные. */
 async function refreshAfterWrite() {
   loadCatalog();
   loadSectors().catch((err) => console.error("Q3:", err));
@@ -453,6 +474,13 @@ async function refreshAfterWrite() {
   try {
     await fillInstrumentPickers();
     await loadSnapshots();
+    const stillThere = chartInstrument.value &&
+      [...chartInstrument.options].some((o) => o.value === chartInstrument.value);
+    if (stillThere) {
+      renderPriceChart().catch((err) => console.error("Q5 refresh:", err));
+    } else {
+      clearChartPanel(); // инструмент на графике удалён — панель сбрасывается
+    }
     await loadDbInfo();
   } catch (err) {
     console.error("CRUD refresh:", err);
@@ -471,8 +499,10 @@ function resetInstrumentForm() {
 }
 
 async function startInstrumentEdit(id) {
+  const request = ++instrumentEditRequest; // клик по другой строке отменяет предыдущую загрузку
   try {
     const card = await api(`/api/instruments/${id}`);
+    if (request !== instrumentEditRequest) return;
     editingInstrumentId = id;
     instrumentFormTitle.textContent = `Изменить инструмент ${card.ticker}`;
     iTicker.value = card.ticker;
@@ -577,7 +607,8 @@ function snapshotRowHtml(p) {
 }
 
 function resetPriceForm() {
-  editingSnapshotDate = null;
+  editingSnapshot = null;
+  snapshotEditRequest++; // идущая загрузка правки больше не заполнит форму
   pDate.disabled = false;
   /* form.reset() сбросил бы и пикер инструмента на первый вариант —
      сохраняем выбор пользователя. Статус не трогаем: сообщение об
@@ -591,11 +622,19 @@ function resetPriceForm() {
 }
 
 async function startSnapshotEdit(dateIso) {
+  const id = Number(pInstrument.value);
+  if (!id) return;
+  const request = ++snapshotEditRequest;
+  editingSnapshot = null;
   try {
-    const series = await api(`/api/instruments/${Number(pInstrument.value)}/prices`, { days: 365 });
+    const series = await api(`/api/instruments/${id}/prices`, { days: 365 });
+    /* Ревью (пункт 2): пока грузился снимок, пользователь мог переключить
+       инструмент — устаревший ответ не должен включать режим правки, иначе
+       его цена ушла бы в выбранный после переключения инструмент. */
+    if (request !== snapshotEditRequest) return;
     const found = series.find((p) => p.date === dateIso);
     if (!found) throw new Error("снимок не найден в истории");
-    editingSnapshotDate = dateIso;
+    editingSnapshot = { instrumentId: id, date: dateIso }; // правим именно эту пару
     pDate.value = dateIso;
     pDate.disabled = true; // дата — ключ снимка, правим только значения
     pPrice.value = found.price;
@@ -606,6 +645,7 @@ async function startSnapshotEdit(dateIso) {
     setStatus(priceStatus, `Редактирование снимка за ${ruDate(dateIso)} — измените цену и нажмите «Сохранить»`, "ok");
     pPrice.focus();
   } catch (err) {
+    if (request !== snapshotEditRequest) return;
     setStatus(priceStatus, `Ошибка: ${err.message}`, "err");
   }
 }
@@ -624,7 +664,7 @@ async function deleteSnapshot(dateIso) {
     if (!confirm(`Удалить снимок цены за ${ruDate(dateIso)}?\nТочка исчезнет из истории и графика.`)) return;
     await apiSend("DELETE", `/api/instruments/${id}/prices/${dateIso}`);
     setStatus(priceStatus, `Снимок за ${ruDate(dateIso)} удалён`, "ok");
-    if (editingSnapshotDate === dateIso) resetPriceForm();
+    if (editingSnapshot?.date === dateIso) resetPriceForm();
     await refreshAfterWrite();
   } catch (err) {
     setStatus(priceStatus, `Ошибка: ${err.message}`, "err");
@@ -635,14 +675,23 @@ priceForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const id = Number(pInstrument.value);
   if (!id) { setStatus(priceStatus, "Ошибка: выберите инструмент", "err"); return; }
+  /* Ревью (пункт 2): правка привязана к паре «инструмент + дата». Если
+     инструмент в пикере уже другой — сохранение отклоняется, чужой снимок
+     не перезаписывается. PUT идёт по зафиксированной паре, а не по пикеру. */
+  if (editingSnapshot && id !== editingSnapshot.instrumentId) {
+    setStatus(priceStatus, "Ошибка: инструмент изменился во время правки — выберите снимок заново", "err");
+    resetPriceForm();
+    return;
+  }
   const values = {
     price: Number(pPrice.value),
     change_percent: pChange.value === "" ? null : Number(pChange.value),
     volume: pVolume.value === "" ? null : Number(pVolume.value),
   };
   try {
-    if (editingSnapshotDate) {
-      const saved = await apiSend("PUT", `/api/instruments/${id}/prices/${editingSnapshotDate}`, values);
+    if (editingSnapshot) {
+      const saved = await apiSend("PUT",
+        `/api/instruments/${editingSnapshot.instrumentId}/prices/${editingSnapshot.date}`, values);
       setStatus(priceStatus, `Снимок за ${ruDate(saved.date)} изменён: цена ${fmtPrice.format(saved.price)}`, "ok");
       resetPriceForm();
     } else {
@@ -679,8 +728,19 @@ function renderDbInfo(info) {
     <tr><td>${esc(t.name)}</td>
         <td class="num">${fmtNum.format(t.rows ?? 0)}</td>
         <td class="num">${fmtBytes(t.size_bytes)}</td></tr>`).join("");
-  const priv = info.can_write;
-  const privRow = (ok, label) => `<li>${ok ? "✅" : "⛔"} ${esc(label)}</li>`;
+  /* Права по операциям (ревью, пункт 6): INSERT без UPDATE/DELETE или без
+     секвенции даёт лишь часть CRUD — показываем каждую операцию отдельно. */
+  const w = info.write || {};
+  const mark = (ok) => (ok ? "✅" : "⛔");
+  const privCells = (p) => p
+    ? `<td>${mark(p.insert)}</td><td>${mark(p.update)}</td><td>${mark(p.delete)}</td><td>${mark(p.sequence)}</td>`
+    : '<td colspan="4" class="num">—</td>';
+  const importedInsert = typeof w.imported_news_insert === "boolean"
+    ? `<td>${mark(w.imported_news_insert)}</td><td colspan="3" class="num">—</td>`
+    : '<td colspan="4" class="num">—</td>';
+  const roNote = w.read_only_transaction
+    ? '<p class="status status-err">БД работает в режиме read-only (default_transaction_read_only) — запись отклоняется даже при наличии прав.</p>'
+    : "";
   dbInfoCard.innerHTML = `
     <div class="split">
       <div>
@@ -699,28 +759,46 @@ function renderDbInfo(info) {
             <tbody>${rows}</tbody>
           </table>
         </div>
-        <h4>Права записи (INSERT)</h4>
-        <ul class="dbinfo-privs">
-          ${privRow(priv.instruments, "instruments — инструменты")}
-          ${privRow(priv.price_snapshots, "price_snapshots — котировки")}
-          ${privRow(priv.imported_news, "imported_news — импортированные новости")}
-        </ul>
+        <h4>Права на запись (по операциям)</h4>
+        <div class="table-wrap">
+          <table class="data dbinfo-privs">
+            <thead><tr><th>Таблица</th><th>Добавление</th><th>Изменение</th><th>Удаление</th><th>Секвенция id</th></tr></thead>
+            <tbody>
+              <tr><td>instruments</td>${privCells(w.instruments)}</tr>
+              <tr><td>price_snapshots</td>${privCells(w.price_snapshots)}</tr>
+              <tr><td>imported_news (импорт)</td>${importedInsert}</tr>
+            </tbody>
+          </table>
+        </div>
+        ${roNote}
       </div>
     </div>`;
 }
 
 function updateWritePermissionNote(info) {
-  const allowed = info.can_write.instruments && info.can_write.price_snapshots;
-  if (allowed) {
-    writePermissionNote.hidden = true;
-    writePermissionNote.textContent = "";
-    return;
+  const w = info.write || {};
+  const notes = [];
+  if (info.can_write) {
+    if (info.write_auth_required) {
+      notes.push(adminKey()
+        ? "Запись защищена ключом сервера (X-Admin-Key): ключ сохранён в этом браузере, операции ввода будут проходить с ним."
+        : "Запись защищена ключом сервера: введите FUNDS_ADMIN_KEY в поле «Ключ записи» выше — без него операции ввода вернут 401.");
+    } else {
+      notes.push("Защита записи выключена: переменная FUNDS_ADMIN_KEY на сервере не задана, "
+        + "записывать через API может любой. Задайте ключ на сервере до выдачи прав на публичном "
+        + "хостинге — первый шаг в разделе «Права на запись для ввода данных» DEPLOY_ALWAYSDATA.md.");
+    }
+  } else if (w.read_only_transaction) {
+    notes.push("БД работает в режиме read-only (default_transaction_read_only) — операции ввода "
+      + "отклоняются даже при наличии прав у пользователя. Настройку проверяет администратор БД.");
+  } else {
+    const missing = Array.isArray(w.missing) ? w.missing.filter(Boolean).join("; ") : "";
+    notes.push("Полный CRUD недоступен: " + (missing || "нет прав на запись") + ". Права выдаются "
+      + "по инструкции «Права на запись для ввода данных» в DEPLOY_ALWAYSDATA.md; что именно "
+      + "разрешено — видно в таблице прав ниже. Демонстрацию ввода можно выполнить на локальной копии.");
   }
   writePermissionNote.hidden = false;
-  writePermissionNote.textContent = "У пользователя БД нет прав на запись в instruments/price_snapshots — "
-    + "операции ввода вернут уведомление read-only (остальные разделы работают). Права выдаются "
-    + "по инструкции «Права на запись для ввода данных» в DEPLOY_ALWAYSDATA.md; демонстрацию ввода "
-    + "можно выполнить на локальной копии приложения.";
+  writePermissionNote.textContent = notes.join(" ");
 }
 
 async function loadDbInfo() {
@@ -731,6 +809,23 @@ async function loadDbInfo() {
   } catch (err) {
     dbInfoCard.textContent = `Ошибка: ${err.message}`;
   }
+}
+
+/* Поле «Ключ записи»: значение FUNDS_ADMIN_KEY сервера хранится в localStorage
+   и автоматически подставляется в заголовок X-Admin-Key всех операций ввода. */
+const adminKeyInput = document.getElementById("admin-key");
+const btnKeySave = document.getElementById("btn-key-save");
+const keyStatus = document.getElementById("key-status");
+if (adminKeyInput && btnKeySave && keyStatus) {
+  try { adminKeyInput.value = adminKey(); } catch { /* localStorage недоступен */ }
+  btnKeySave.addEventListener("click", () => {
+    const value = adminKeyInput.value.trim();
+    try { localStorage.setItem("fundsAdminKey", value); } catch { /* приватный режим */ }
+    setStatus(keyStatus, value
+      ? "Ключ сохранён в этом браузере — он передаётся в заголовке X-Admin-Key."
+      : "Ключ очищен: если на сервере задан FUNDS_ADMIN_KEY, операции ввода вернут 401.", "ok");
+    loadDbInfo(); // предупреждение над формами перечитывает состояние ключа
+  });
 }
 
 /* ---------------- Меню шапки: на телефоне раскрывается кнопкой ---------------- */

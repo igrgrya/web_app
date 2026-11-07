@@ -165,5 +165,13 @@
 .lab3-tools .dbinfo-list div { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; border-bottom: 1px dashed var(--line); padding: 6px 0; }
 .lab3-tools .dbinfo-list dt { color: var(--muted); font-size: 13px; }
 .lab3-tools .dbinfo-list dd { margin: 0; font-weight: 600; color: var(--text-h); font-size: 14px; text-align: right; overflow-wrap: anywhere; }
-.lab3-tools .dbinfo-privs { list-style: none; margin: 8px 0 0; padding: 0; font-size: 14px; }
-.lab3-tools .dbinfo-privs li { padding: 4px 0; }
+.lab3-tools .dbinfo-privs { margin: 8px 0 0; font-size: 14px; }
+.lab3-tools .dbinfo-privs th, .lab3-tools .dbinfo-privs td { text-align: center; padding: 4px 8px; border-bottom: 1px dashed var(--line); font-weight: 400; }
+.lab3-tools .dbinfo-privs th { color: var(--muted); font-size: 12px; }
+.lab3-tools .dbinfo-privs td:first-child, .lab3-tools .dbinfo-privs th:first-child { text-align: left; }
+.lab3-tools .admin-key-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 0 0 14px; }
+.lab3-tools .admin-key-row label { font-weight: 600; font-size: 13px; }
+.lab3-tools .admin-key-row input { font: inherit; font-size: 14px; padding: 6px 9px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--text); min-width: 200px; max-width: 320px; }
+.lab3-tools .admin-key-row button { font: inherit; font-size: 13px; font-weight: 600; padding: 6px 12px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--text); cursor: pointer; }
+.lab3-tools .admin-key-row button:hover { border-color: var(--accent-border); background: var(--accent-bg); }
+.lab3-tools .admin-key-row .status { margin: 0; }

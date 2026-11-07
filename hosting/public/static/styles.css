@@ -442,8 +442,54 @@ table.data tbody tr.clickable { cursor: pointer; }
   overflow-wrap: anywhere;
 }
 
-.dbinfo-privs { list-style: none; margin: 8px 0 0; padding: 0; font-size: 14px; }
-.dbinfo-privs li { padding: 4px 0; }
+.dbinfo-privs { margin: 8px 0 0; font-size: 14px; }
+.dbinfo-privs th, .dbinfo-privs td {
+  text-align: center;
+  padding: 4px 8px;
+  border-bottom: 1px dashed var(--line);
+  font-weight: 400;
+}
+.dbinfo-privs th { color: var(--muted); font-size: 12px; }
+.dbinfo-privs td:first-child, .dbinfo-privs th:first-child { text-align: left; }
+
+/* Поле «Ключ записи»: значение FUNDS_ADMIN_KEY сервера — в заголовок X-Admin-Key. */
+.admin-key-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 0 0 14px;
+}
+
+.admin-key-row label { font-weight: 600; font-size: 13px; }
+
+.admin-key-row input {
+  font: inherit;
+  font-size: 14px;
+  padding: 6px 9px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--text);
+  min-width: 200px;
+  max-width: 320px;
+}
+
+.admin-key-row button {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.admin-key-row button:hover { border-color: var(--accent-border); background: var(--accent-bg); }
+
+.admin-key-row .status { margin: 0; }
 
 @media (max-width: 768px) {
   h1 { font-size: 32px; }

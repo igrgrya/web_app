@@ -247,6 +247,25 @@ if test_id:
           st == 200 and upd.get("name") == "Тестовый инструмент v2" and upd.get("sector") == "Финансы", f"{st}, {upd}")
     st, card = get(f"/api/instruments/{test_id}")
     check("CRUD: карточка отражает правку", st == 200 and card.get("name") == "Тестовый инструмент v2", st)
+    # Явный null у обязательного поля — ошибка ввода 422, а не IntegrityError 500
+    # на стороне БД (ревью, пункт 3); необязательные поля null-ом очищаются.
+    st, null_name = send("PUT", f"/api/instruments/{test_id}", {"name": None})
+    check("CRUD: PUT name=null → 422 (не 500)", st == 422, f"{st}, {null_name}")
+    st, null_cur = send("PUT", f"/api/instruments/{test_id}", {"currency": None})
+    check("CRUD: PUT currency=null → 422 (не 500)", st == 422, f"{st}, {null_cur}")
+    st, clear_desc = send("PUT", f"/api/instruments/{test_id}", {"description": None})
+    check("CRUD: PUT description=null → 200, необязательное очищено",
+          st == 200 and clear_desc.get("description") is None, f"{st}, {clear_desc}")
+    st, clear_sector = send("PUT", f"/api/instruments/{test_id}", {"sector": None})
+    check("CRUD: PUT sector=null → 200, сектор очищен",
+          st == 200 and clear_sector.get("sector") is None, f"{st}, {clear_sector}")
+    # Строки из одних пробелов не проходят (ревью, пункт 4).
+    st, ws_name = send("POST", "/api/instruments",
+                       {"ticker": "ZZWS", "name": "   ", "instrument_type": "stock"})
+    check("CRUD: название из одних пробелов → 422", st == 422, f"{st}, {ws_name}")
+    st, ws_cur = send("POST", "/api/instruments",
+                      {"ticker": "ZZWS", "name": "Валидно", "instrument_type": "stock", "currency": "   "})
+    check("CRUD: валюта из одних пробелов → 422", st == 422, f"{st}, {ws_cur}")
 else:
     check("CRUD: PUT инструмента", False, "тестовый инструмент не создан")
 st, _ = send("PUT", "/api/instruments/999", {"name": "Нет такого"})
@@ -282,10 +301,26 @@ if test_id:
     check("CRUD: каталог показывает свежую цену тестового инструмента", zz is not None and zz["price"] == 102.75, zz)
     st, no_snap = send("PUT", f"/api/instruments/{test_id}/prices/{future_iso}", {"price": 1})
     check("CRUD: PUT несуществующего снимка → 404", st == 404, st)
+    # Цена обязательна: явный null — 422, а не IntegrityError (ревью, пункт 3).
+    st, null_price = send("PUT", f"/api/instruments/{test_id}/prices/{today_iso}", {"price": None})
+    check("CRUD: PUT снимка с price=null → 422 (не 500)", st == 422, f"{st}, {null_price}")
+    st, null_post = send("POST", f"/api/instruments/{test_id}/prices", {"as_of_date": future_iso, "price": None})
+    check("CRUD: POST снимка с price=null → 422 (не 500)", st == 422, f"{st}, {null_post}")
     st, del_snap = send("DELETE", f"/api/instruments/{test_id}/prices/{today_iso}")
     check("CRUD: DELETE снимка → 200", st == 200 and del_snap.get("deleted") == today_iso, f"{st}, {del_snap}")
     st, hist3 = get(f"/api/instruments/{test_id}/prices")
     check("CRUD: после DELETE история пуста", st == 200 and hist3 == [], f"{st}, {hist3}")
+    # NUMERIC(14,4): цена, которая уместилась бы только округлением в ноль,
+    # и цена с лишней точностью отвергаются (422), минимум 0.0001 валиден
+    # (ревью, пункт 4).
+    st, tiny = send("POST", f"/api/instruments/{test_id}/prices", {"as_of_date": today_iso, "price": 0.00001})
+    check("CRUD: цена 0.00001 (округлилась бы в 0) → 422", st == 422, f"{st}, {tiny}")
+    st, prec = send("POST", f"/api/instruments/{test_id}/prices", {"as_of_date": today_iso, "price": 150.123456})
+    check("CRUD: цена с 6 знаками после запятой → 422", st == 422, f"{st}, {prec}")
+    st, min_ok = send("POST", f"/api/instruments/{test_id}/prices", {"as_of_date": today_iso, "price": 0.0001})
+    check("CRUD: минимальная цена 0.0001 → 201", st == 201 and min_ok.get("price") == 0.0001, f"{st}, {min_ok}")
+    st, del_min = send("DELETE", f"/api/instruments/{test_id}/prices/{today_iso}")
+    check("CRUD: минимальный снимок удалён", st == 200, f"{st}, {del_min}")
 else:
     for name in ["POST снимка цены", "дубль даты → 409", "будущая дата → 400",
                  "PUT снимка", "DELETE снимка"]:
@@ -294,7 +329,8 @@ else:
 st, info = get("/api/db-info")
 check("СВЕДЕНИЯ: /api/db-info 200, ключи на месте",
       st == 200 and isinstance(info, dict) and all(k in info for k in (
-          "dbms", "version", "version_full", "database", "db_user", "server_time", "tables", "can_write")),
+          "dbms", "version", "version_full", "database", "db_user", "server_time",
+          "tables", "can_write", "write", "write_auth_required")),
       f"{st}, {sorted(info) if isinstance(info, dict) else '?'}")
 check("СВЕДЕНИЯ: СУБД PostgreSQL", st == 200 and info.get("dbms") == "PostgreSQL"
       and str(info.get("version", "")).startswith("PostgreSQL"), info.get("version"))
@@ -305,10 +341,19 @@ check("СВЕДЕНИЯ: 6 таблиц с числом записей",
 check("СВЕДЕНИЯ: размер таблиц указан", bool(tbl) and all(t.get("size_bytes", 0) > 0 for t in tbl.values()),
       {k: v.get("size_bytes") for k, v in tbl.items()})
 check("СВЕДЕНИЯ: instruments.rows = 19 (тестовый ещё жив)", tbl.get("instruments", {}).get("rows") == 19, tbl.get("instruments"))
-cw = info.get("can_write", {}) if isinstance(info, dict) else {}
-check("СВЕДЕНИЯ: права записи — 3 ключа, приложение может писать",
-      set(cw) == {"instruments", "price_snapshots", "imported_news"}
-      and cw.get("instruments") is True and cw.get("price_snapshots") is True, cw)
+# Права по операциям (ревью, пункт 6): INSERT без UPDATE/DELETE или секвенции
+# даёт лишь часть CRUD — can_write теперь честный флаг полного доступа.
+check("СВЕДЕНИЯ: can_write=True (полный CRUD у владельца)", info.get("can_write") is True, info.get("can_write"))
+w = info.get("write", {}) if isinstance(info, dict) else {}
+_ops = ("select", "insert", "update", "delete", "sequence")
+check("СВЕДЕНИЯ: write.instruments — все операции и секвенция разрешены",
+      all(w.get("instruments", {}).get(op) is True for op in _ops), w.get("instruments"))
+check("СВЕДЕНИЯ: write.price_snapshots — все операции и секвенция разрешены",
+      all(w.get("price_snapshots", {}).get(op) is True for op in _ops), w.get("price_snapshots"))
+check("СВЕДЕНИЯ: write.missing пуст, imported_news_insert=True",
+      w.get("missing") == [] and w.get("imported_news_insert") is True, w.get("missing"))
+check("СВЕДЕНИЯ: write_auth_required=False (локальный сервер без ключа)",
+      info.get("write_auth_required") is False, info.get("write_auth_required"))
 
 st, del_inst = send("DELETE", f"/api/instruments/{test_id}")
 check("CRUD: DELETE инструмента → 200", st == 200 and del_inst.get("deleted") == test_id, f"{st}, {del_inst}")

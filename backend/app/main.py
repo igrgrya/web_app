@@ -19,6 +19,8 @@
   CRUD /api/instruments[...]                        — инструменты (POST/PUT/DELETE)
   CRUD /api/instruments/{id}/prices[/{as_of_date}]  — снимки цен (POST/PUT/DELETE)
   GET  /api/db-info        — сведения о БД: СУБД, версия, таблицы, права записи
+Операции записи защищены общим ключом сервера (заголовок X-Admin-Key, значение
+в переменной окружения FUNDS_ADMIN_KEY) — без ключа API отвечает 401.
 
 Актуальная цена — снимок каждого инструмента с его максимальной датой as_of_date
 (сид генерирует все ряды одним массивом, даты у инструментов совпадают).
@@ -26,18 +28,20 @@
 не сдвигает «якорь» и не прячет остальные инструменты из каталога.
 """
 
+import hmac
 import re
 from datetime import date
+from decimal import Decimal
 import os
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Annotated, Literal, Optional
 
 import sqlalchemy as sa
-from fastapi import Depends, FastAPI, HTTPException, Query
+from fastapi import Depends, FastAPI, Header, HTTPException, Query
 from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, contains_eager
 
@@ -52,7 +56,7 @@ app = FastAPI(
     title="Funds Lab API",
     description="Веб-приложение с динамическим доступом к БД (лаб. №3), обмен данными "
                 "в форматах RSS/XML/CSV (лаб. №4), ввод данных (CRUD) и сведения о БД.",
-    version="1.2.0",
+    version="1.3.0",
     docs_url=None if PUBLIC_DIR else "/docs",
     redoc_url=None if PUBLIC_DIR else "/redoc",
 )
@@ -329,6 +333,59 @@ _PRICE_MAX = 9_999_999_999
 _CHANGE_MAX = 9_999.99
 _VOLUME_MAX = 9_000_000_000_000
 
+# Авторизация записи (ревью, пункт 1): общее слово-ключ на стороне сервера.
+# Пока FUNDS_ADMIN_KEY не задан, запись открыта (удобно локально); на публичном
+# хостинге ключ обязателен — это первый шаг чек-листа в DEPLOY_ALWAYSDATA.md.
+ADMIN_KEY = os.environ.get("FUNDS_ADMIN_KEY", "").strip()
+
+
+def _require_admin_key(x_admin_key: Annotated[Optional[str], Header(alias="X-Admin-Key")] = None) -> None:
+    """Защита операций записи: если на сервере задан FUNDS_ADMIN_KEY, каждый
+    запрос CRUD обязан передать его в заголовке X-Admin-Key (иначе 401).
+    Чтение остаётся открытым. Сравнение — в постоянном времени."""
+    if not ADMIN_KEY:
+        return
+    if not x_admin_key or not hmac.compare_digest(
+            x_admin_key.encode("utf-8"), ADMIN_KEY.encode("utf-8")):
+        raise HTTPException(
+            status_code=401,
+            detail="Запись защищена ключом администратора: передайте значение переменной "
+                   "FUNDS_ADMIN_KEY в заголовке X-Admin-Key (на странице приложения — "
+                   "поле «Ключ записи»).")
+
+
+def _strip_required_str(value: Optional[str]) -> Optional[str]:
+    """Строка из одних пробелов не проходит (ревью, пункт 4). None пропускаем:
+    явный null разбирает эндпоинт (422 для обязательных полей, очистка для
+    необязательных)."""
+    if value is None:
+        return None
+    value = value.strip()
+    if not value:
+        raise ValueError("не может быть пустой строкой или состоять из пробелов")
+    return value
+
+
+def _strip_optional_str(value: Optional[str]) -> Optional[str]:
+    if value is None:
+        return None
+    return value.strip() or None
+
+
+def _check_price_places(value: Decimal) -> Decimal:
+    """NUMERIC(14,4) не хранит больше 4 знаков после запятой: цена, которая
+    уместилась бы только округлением в ноль (0.00001), отвергается здесь
+    (ревью, пункт 4), а не молча превращается в 0 на стороне БД."""
+    if -value.as_tuple().exponent > 4:
+        raise ValueError("цена — не больше 4 знаков после запятой (минимум 0.0001)")
+    return value
+
+
+def _check_change_places(value: Optional[Decimal]) -> Optional[Decimal]:
+    if value is not None and -value.as_tuple().exponent > 2:
+        raise ValueError("изменение — не больше 2 знаков после запятой")
+    return value
+
 
 class InstrumentCreate(BaseModel):
     ticker: str = Field(min_length=1, max_length=20, pattern=r"^[A-Za-z0-9.\-]+$",
@@ -341,9 +398,26 @@ class InstrumentCreate(BaseModel):
     description: Optional[str] = Field(None, max_length=2000)
     listed_date: Optional[date] = None
 
+    @field_validator("ticker", mode="before")
+    @classmethod
+    def _trim_ticker(cls, value):
+        return value.strip() if isinstance(value, str) else value
+
+    @field_validator("name", "currency")
+    @classmethod
+    def _no_blank(cls, value: Optional[str]) -> Optional[str]:
+        return _strip_required_str(value)
+
+    @field_validator("description")
+    @classmethod
+    def _trim_description(cls, value: Optional[str]) -> Optional[str]:
+        return _strip_optional_str(value)
+
 
 class InstrumentUpdate(BaseModel):
-    """Частичное изменение: None-поля и не переданные поля не трогаем."""
+    """Частичное изменение: не переданные поля не трогаем. Явный null для
+    обязательных полей отвергается (422, ревью пункт 3), для необязательных —
+    очищает значение."""
     ticker: Optional[str] = Field(None, min_length=1, max_length=20, pattern=r"^[A-Za-z0-9.\-]+$")
     name: Optional[str] = Field(None, min_length=1, max_length=255)
     instrument_type: Optional[Literal["stock", "etf", "fund", "bond"]] = None
@@ -353,19 +427,56 @@ class InstrumentUpdate(BaseModel):
     description: Optional[str] = Field(None, max_length=2000)
     listed_date: Optional[date] = None
 
+    @field_validator("ticker", mode="before")
+    @classmethod
+    def _trim_ticker(cls, value):
+        return value.strip() if isinstance(value, str) else value
+
+    @field_validator("name", "currency")
+    @classmethod
+    def _no_blank(cls, value: Optional[str]) -> Optional[str]:
+        return _strip_required_str(value)
+
+    @field_validator("description")
+    @classmethod
+    def _trim_description(cls, value: Optional[str]) -> Optional[str]:
+        return _strip_optional_str(value)
+
 
 class PriceCreate(BaseModel):
     as_of_date: date
-    price: float = Field(gt=0, le=_PRICE_MAX)
-    change_percent: Optional[float] = Field(None, ge=-_CHANGE_MAX, le=_CHANGE_MAX)
+    price: Decimal = Field(gt=0, le=_PRICE_MAX)
+    change_percent: Optional[Decimal] = Field(None, ge=-_CHANGE_MAX, le=_CHANGE_MAX)
     volume: Optional[int] = Field(None, ge=0, le=_VOLUME_MAX)
+
+    @field_validator("price")
+    @classmethod
+    def _price_places(cls, value: Decimal) -> Decimal:
+        return _check_price_places(value)
+
+    @field_validator("change_percent")
+    @classmethod
+    def _change_places(cls, value: Optional[Decimal]) -> Optional[Decimal]:
+        return _check_change_places(value)
 
 
 class PriceUpdate(BaseModel):
-    """Дата снимка неизменяема (это его ключ) — правим только значения."""
-    price: Optional[float] = Field(None, gt=0, le=_PRICE_MAX)
-    change_percent: Optional[float] = Field(None, ge=-_CHANGE_MAX, le=_CHANGE_MAX)
+    """Дата снимка неизменяема (это его ключ) — правим только значения.
+    Явный null у цены отвергается (обязательное поле), у изменения/объёма —
+    очищает необязательное значение."""
+    price: Optional[Decimal] = Field(None, gt=0, le=_PRICE_MAX)
+    change_percent: Optional[Decimal] = Field(None, ge=-_CHANGE_MAX, le=_CHANGE_MAX)
     volume: Optional[int] = Field(None, ge=0, le=_VOLUME_MAX)
+
+    @field_validator("price")
+    @classmethod
+    def _price_places(cls, value: Optional[Decimal]) -> Optional[Decimal]:
+        return None if value is None else _check_price_places(value)
+
+    @field_validator("change_percent")
+    @classmethod
+    def _change_places(cls, value: Optional[Decimal]) -> Optional[Decimal]:
+        return _check_change_places(value)
 
 
 def _write_http_error(exc: sa.exc.DBAPIError, unique_detail: Optional[str] = None,
@@ -426,7 +537,8 @@ def _price_dto(snap: PriceSnapshot) -> dict:
 
 
 @app.post("/api/instruments", tags=["Ввод данных (CRUD)"], status_code=201)
-def create_instrument(body: InstrumentCreate, db: Session = Depends(get_db)):
+def create_instrument(body: InstrumentCreate, db: Session = Depends(get_db),
+                      _: None = Depends(_require_admin_key)):
     """CRUD: добавить инструмент. Тикер уникален, справочники проверяются."""
     inst = Instrument(
         ticker=body.ticker.strip().upper(),
@@ -445,12 +557,22 @@ def create_instrument(body: InstrumentCreate, db: Session = Depends(get_db)):
 
 
 @app.put("/api/instruments/{instrument_id}", tags=["Ввод данных (CRUD)"])
-def update_instrument(instrument_id: int, body: InstrumentUpdate, db: Session = Depends(get_db)):
+def update_instrument(instrument_id: int, body: InstrumentUpdate, db: Session = Depends(get_db),
+                      _: None = Depends(_require_admin_key)):
     """CRUD: изменить инструмент — только переданные поля (PATCH-семантика)."""
     inst = db.get(Instrument, instrument_id)
     if inst is None:
         raise HTTPException(status_code=404, detail="Инструмент не найден")
     data = body.model_dump(exclude_unset=True)
+    # Явный null у обязательного поля — ошибка ввода (422), а не 500 от NOT NULL
+    # на стороне БД (ревью, пункт 3). Необязательные поля (биржа, сектор,
+    # описание, дата листинга) null-ом, наоборот, очищается.
+    blanked = sorted(key for key in ("ticker", "name", "instrument_type", "currency")
+                     if key in data and data[key] is None)
+    if blanked:
+        raise HTTPException(status_code=422, detail="Обязательные поля нельзя обнулить: "
+                            + ", ".join(blanked) + ". Null допустим только для необязательных "
+                              "полей (биржа, сектор, описание, дата листинга).")
     if data.get("ticker"):
         data["ticker"] = data["ticker"].strip().upper()
     if data.get("name"):
@@ -469,7 +591,8 @@ def update_instrument(instrument_id: int, body: InstrumentUpdate, db: Session = 
 
 
 @app.delete("/api/instruments/{instrument_id}", tags=["Ввод данных (CRUD)"])
-def delete_instrument(instrument_id: int, db: Session = Depends(get_db)):
+def delete_instrument(instrument_id: int, db: Session = Depends(get_db),
+                      _: None = Depends(_require_admin_key)):
     """CRUD: удалить инструмент. История цен стирается каскадно (ON DELETE CASCADE,
     db/schema.sql); инструмент, на который ссылаются новости/события, не удалить."""
     inst = db.get(Instrument, instrument_id)
@@ -499,7 +622,8 @@ def delete_instrument(instrument_id: int, db: Session = Depends(get_db)):
 
 
 @app.post("/api/instruments/{instrument_id}/prices", tags=["Ввод данных (CRUD)"], status_code=201)
-def create_price(instrument_id: int, body: PriceCreate, db: Session = Depends(get_db)):
+def create_price(instrument_id: int, body: PriceCreate, db: Session = Depends(get_db),
+                 _: None = Depends(_require_admin_key)):
     """CRUD: добавить снимок цены (уникален парой инструмент + дата)."""
     if db.get(Instrument, instrument_id) is None:
         raise HTTPException(status_code=404, detail="Инструмент не найден")
@@ -520,7 +644,7 @@ def create_price(instrument_id: int, body: PriceCreate, db: Session = Depends(ge
 
 @app.put("/api/instruments/{instrument_id}/prices/{as_of_date}", tags=["Ввод данных (CRUD)"])
 def update_price(instrument_id: int, as_of_date: date, body: PriceUpdate,
-                 db: Session = Depends(get_db)):
+                 db: Session = Depends(get_db), _: None = Depends(_require_admin_key)):
     """CRUD: исправить снимок цены на дату (цена, изменение, объём)."""
     snap = db.execute(select(PriceSnapshot).where(
         PriceSnapshot.instrument_id == instrument_id,
@@ -528,7 +652,14 @@ def update_price(instrument_id: int, as_of_date: date, body: PriceUpdate,
     )).scalar_one_or_none()
     if snap is None:
         raise HTTPException(status_code=404, detail="Снимок цены не найден")
-    for key, value in body.model_dump(exclude_unset=True).items():
+    data = body.model_dump(exclude_unset=True)
+    # Цена — обязательное значение: явный null это ошибка ввода (422), а не
+    # IntegrityError на стороне БД (ревью, пункт 3). Изменение/объём nullable:
+    # null очищает необязательное значение.
+    if data.get("price") is None and "price" in data:
+        raise HTTPException(status_code=422, detail="Цена обязательна: null не допускается. "
+                            "Null допустим только для необязательных полей (изменение, объём).")
+    for key, value in data.items():
         setattr(snap, key, value)
     _commit_writes(db)
     db.refresh(snap)
@@ -536,7 +667,8 @@ def update_price(instrument_id: int, as_of_date: date, body: PriceUpdate,
 
 
 @app.delete("/api/instruments/{instrument_id}/prices/{as_of_date}", tags=["Ввод данных (CRUD)"])
-def delete_price(instrument_id: int, as_of_date: date, db: Session = Depends(get_db)):
+def delete_price(instrument_id: int, as_of_date: date, db: Session = Depends(get_db),
+                 _: None = Depends(_require_admin_key)):
     """CRUD: удалить снимок цены — точка исчезает из истории и графика."""
     snap = db.execute(select(PriceSnapshot).where(
         PriceSnapshot.instrument_id == instrument_id,
@@ -568,8 +700,10 @@ def health(db: Session = Depends(get_db)):
 def db_info(db: Session = Depends(get_db)):
     """Сведения о БД: СУБД и версия, база, пользователь, объём таблиц и права записи.
 
-    Только SELECT — раздел безопасен на read-only-хостинге. Права определяются
-    без попытки записи: has_table_privilege(current_user, таблица, 'INSERT').
+    Только SELECT — раздел безопасен на read-only-хостинге. Права показываются
+    по операциям (SELECT/INSERT/UPDATE/DELETE + USAGE на секвенцию id) без
+    попытки записи: has_table_privilege / has_sequence_privilege (ревью, пункт 6:
+    INSERT без UPDATE/DELETE или без секвенции даёт лишь часть CRUD).
     """
     full_version, database, db_user, server_time = db.execute(sa.text(
         "SELECT version(), current_database(), current_user, now() AS server_time"
@@ -597,13 +731,54 @@ def db_info(db: Session = Depends(get_db)):
         tables.append({"name": "imported_news", "rows": imported_rows,
                        "size_bytes": int(imported_size)})
 
-    # to_regclass → NULL для отсутствующей таблицы, COALESCE → False.
+    # Права по операциям для обеих таблиц CRUD + секвенции id (INSERT без
+    # USAGE секвенции не работает — nextval запрещён). Секвенцию даёт
+    # pg_get_serial_sequence (SERIAL и IDENTITY); to_regclass/COALESCE —
+    # для ленивой imported_news.
     priv = db.execute(sa.text(
-        "SELECT has_table_privilege('instruments', 'INSERT') AS instruments, "
-        "       has_table_privilege('price_snapshots', 'INSERT') AS price_snapshots, "
+        "SELECT has_table_privilege('instruments', 'SELECT') AS i_select, "
+        "       has_table_privilege('instruments', 'INSERT') AS i_insert, "
+        "       has_table_privilege('instruments', 'UPDATE') AS i_update, "
+        "       has_table_privilege('instruments', 'DELETE') AS i_delete, "
+        "       CASE WHEN pg_get_serial_sequence('instruments', 'id') IS NULL THEN false "
+        "            ELSE has_sequence_privilege(pg_get_serial_sequence('instruments', 'id'), 'USAGE') END "
+        "           AS i_seq, "
+        "       has_table_privilege('price_snapshots', 'SELECT') AS p_select, "
+        "       has_table_privilege('price_snapshots', 'INSERT') AS p_insert, "
+        "       has_table_privilege('price_snapshots', 'UPDATE') AS p_update, "
+        "       has_table_privilege('price_snapshots', 'DELETE') AS p_delete, "
+        "       CASE WHEN pg_get_serial_sequence('price_snapshots', 'id') IS NULL THEN false "
+        "            ELSE has_sequence_privilege(pg_get_serial_sequence('price_snapshots', 'id'), 'USAGE') END "
+        "           AS p_seq, "
         "       COALESCE(has_table_privilege(to_regclass('imported_news'), 'INSERT'), false) "
-        "           AS imported_news"
+        "           AS imported_insert, "
+        "       current_setting('default_transaction_read_only') AS ro_default"
     )).one()
+    m = priv._mapping
+    op_ru = {"select": "чтение", "insert": "добавление",
+             "update": "изменение", "delete": "удаление"}
+    instruments = {op: bool(m[f"i_{op}"]) for op in op_ru}
+    instruments["sequence"] = bool(m["i_seq"])
+    price_snapshots = {op: bool(m[f"p_{op}"]) for op in op_ru}
+    price_snapshots["sequence"] = bool(m["p_seq"])
+    read_only_transaction = str(m["ro_default"]).lower() == "on"
+
+    # Полный CRUD доступен только когда есть всё: обе таблицы, все операции
+    # (включая USAGE секвенций) и БД не переведена в read-only настройкой.
+    full_crud = (all(instruments.values()) and all(price_snapshots.values())
+                 and not read_only_transaction)
+
+    missing = []
+    if read_only_transaction:
+        missing.append("БД работает в режиме read-only "
+                       "(default_transaction_read_only=on) — запись отклоняется даже при правах")
+    for table_name, privs in (("instruments", instruments),
+                              ("price_snapshots", price_snapshots)):
+        for op, ok in privs.items():
+            if not ok:
+                missing.append(f"нет права «{op_ru[op]}» на {table_name}"
+                               if op != "sequence"
+                               else f"нет права USAGE на секвенцию id {table_name}")
 
     return {
         "dbms": "PostgreSQL",
@@ -613,7 +788,15 @@ def db_info(db: Session = Depends(get_db)):
         "db_user": db_user,
         "server_time": server_time.isoformat(),
         "tables": tables,
-        "can_write": {key: bool(value) for key, value in priv._mapping.items()},
+        "write_auth_required": bool(ADMIN_KEY),
+        "can_write": full_crud,
+        "write": {
+            "read_only_transaction": read_only_transaction,
+            "instruments": instruments,
+            "price_snapshots": price_snapshots,
+            "imported_news_insert": bool(m["imported_insert"]),
+            "missing": missing,
+        },
     }
 
 
