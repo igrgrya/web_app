@@ -704,6 +704,9 @@ def db_info(db: Session = Depends(get_db)):
     по операциям (SELECT/INSERT/UPDATE/DELETE + USAGE на секвенцию id) без
     попытки записи: has_table_privilege / has_sequence_privilege (ревью, пункт 6:
     INSERT без UPDATE/DELETE или без секвенции даёт лишь часть CRUD).
+    Режим read-only берётся из фактического состояния текущей транзакции
+    (transaction_read_only); default_transaction_read_only возвращается
+    отдельно как настройка по умолчанию (ревью, пункт 4).
     """
     full_version, database, db_user, server_time = db.execute(sa.text(
         "SELECT version(), current_database(), current_user, now() AS server_time"
@@ -752,6 +755,7 @@ def db_info(db: Session = Depends(get_db)):
         "           AS p_seq, "
         "       COALESCE(has_table_privilege(to_regclass('imported_news'), 'INSERT'), false) "
         "           AS imported_insert, "
+        "       current_setting('transaction_read_only') AS ro_transaction, "
         "       current_setting('default_transaction_read_only') AS ro_default"
     )).one()
     m = priv._mapping
@@ -761,17 +765,22 @@ def db_info(db: Session = Depends(get_db)):
     instruments["sequence"] = bool(m["i_seq"])
     price_snapshots = {op: bool(m[f"p_{op}"]) for op in op_ru}
     price_snapshots["sequence"] = bool(m["p_seq"])
-    read_only_transaction = str(m["ro_default"]).lower() == "on"
+    # Ревью (п.4): read-only определяет фактическое состояние ТЕКУЩЕЙ транзакции
+    # (transaction_read_only). После SET TRANSACTION READ ONLY настройка
+    # default_transaction_read_only остаётся off, а запись уже отклонена —
+    # раньше can_write ошибочно вычислялся по настройке по умолчанию.
+    read_only_transaction = str(m["ro_transaction"]).lower() == "on"
+    read_only_default = str(m["ro_default"]).lower() == "on"
 
     # Полный CRUD доступен только когда есть всё: обе таблицы, все операции
-    # (включая USAGE секвенций) и БД не переведена в read-only настройкой.
+    # (включая USAGE секвенций) и текущая транзакция не read-only.
     full_crud = (all(instruments.values()) and all(price_snapshots.values())
                  and not read_only_transaction)
 
     missing = []
     if read_only_transaction:
         missing.append("БД работает в режиме read-only "
-                       "(default_transaction_read_only=on) — запись отклоняется даже при правах")
+                       "(transaction_read_only=on) — запись отклоняется даже при правах")
     for table_name, privs in (("instruments", instruments),
                               ("price_snapshots", price_snapshots)):
         for op, ok in privs.items():
@@ -792,6 +801,7 @@ def db_info(db: Session = Depends(get_db)):
         "can_write": full_crud,
         "write": {
             "read_only_transaction": read_only_transaction,
+            "read_only_default": read_only_default,
             "instruments": instruments,
             "price_snapshots": price_snapshots,
             "imported_news_insert": bool(m["imported_insert"]),

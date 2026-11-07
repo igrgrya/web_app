@@ -345,7 +345,9 @@ async function renderPriceChart() {
       api(`/api/instruments/${id}`),
       api(`/api/instruments/${id}/prices`, { days: chartDays.value }),
     ]);
-    if (request !== chartRequest) return;
+    /* Ревью (п.2): кроме счётчика запросов проверяем текущий выбор пикера —
+       панель могли очистить (инструмент удалён из БД), такой ответ не рисуем. */
+    if (request !== chartRequest || Number(chartInstrument.value) !== id) return;
 
     state.priceChart?.destroy();
     const prices = series.map((p) => p.price);
@@ -385,7 +387,7 @@ async function renderPriceChart() {
         · объём ${card.volume === null ? "—" : fmtNum.format(card.volume)}
       </p>`;
   } catch (err) {
-    if (request !== chartRequest) return;
+    if (request !== chartRequest || Number(chartInstrument.value) !== id) return;
     instrumentCard.textContent = `Ошибка: ${err.message}`;
   }
 }
@@ -393,6 +395,9 @@ async function renderPriceChart() {
 /* Панель графика без выбранного инструмента (удалён из БД или ещё не выбран):
    холст и карточка сбрасываются, чтобы не показывать устаревшие данные. */
 function clearChartPanel() {
+  /* Ревью (п.2): очистка отменяет актуальность и начатых ранее запросов графика —
+     их запоздалые ответы больше не вернут удалённый инструмент на панель. */
+  chartRequest++;
   state.priceChart?.destroy();
   state.priceChart = null;
   instrumentCard.innerHTML = "Выберите инструмент в таблице или списке выше.";
@@ -491,6 +496,9 @@ async function refreshAfterWrite() {
 
 function resetInstrumentForm() {
   editingInstrumentId = null;
+  /* Ревью (п.3): отмена правки гасит и идущую загрузку карточки — иначе её
+     запоздалый ответ снова включил бы режим редактирования после отмены. */
+  instrumentEditRequest++;
   instrumentForm.reset();
   instrumentFormTitle.textContent = "Добавить инструмент";
   btnInstrumentSubmit.textContent = "Добавить";
@@ -518,6 +526,8 @@ async function startInstrumentEdit(id) {
     setStatus(instrumentStatus, `Редактирование ${card.ticker} — заполните поля и нажмите «Сохранить»`, "ok");
     document.getElementById("input-section").scrollIntoView({ behavior: "smooth", block: "start" });
   } catch (err) {
+    /* Ревью (п.3): ошибка устаревшей загрузки не перебивает статус формы. */
+    if (request !== instrumentEditRequest) return;
     setStatus(instrumentStatus, `Ошибка: ${err.message}`, "err");
   }
 }
@@ -579,10 +589,13 @@ async function loadSnapshots() {
   const id = Number(pInstrument.value);
   if (!id) { snapshotsBody.innerHTML = ""; return; }
   const request = ++snapshotsRequest;
+  /* Ревью (п.1): при переключении инструмента старые строки исчезают сразу —
+     до прихода ответа таблица не предлагает снимки другого инструмента. */
+  snapshotsBody.innerHTML = "";
   try {
     const series = await api(`/api/instruments/${id}/prices`, { days: 10 });
     if (request !== snapshotsRequest) return;
-    snapshotsBody.innerHTML = series.map(snapshotRowHtml).join("");
+    snapshotsBody.innerHTML = series.map((p) => snapshotRowHtml(p, id)).join("");
     setStatus(snapshotsStatus, "", "ok");
   } catch (err) {
     if (request !== snapshotsRequest) return;
@@ -590,11 +603,13 @@ async function loadSnapshots() {
   }
 }
 
-function snapshotRowHtml(p) {
+function snapshotRowHtml(p, instrumentId) {
   const change = p.change_percent;
   const changeCell = change === null ? '<td class="num">—</td>' :
     `<td class="num ${change >= 0 ? "cell-up" : "cell-down"}">${change >= 0 ? "+" : ""}${fmtNum.format(change)}</td>`;
-  return `<tr data-date="${p.date}">
+  /* data-instrument на строке: кнопки удаления/правки проверяют, что инструмент
+     строки совпадает с текущим выбором (ревью, п.1 — гонка смены инструмента). */
+  return `<tr data-date="${p.date}" data-instrument="${instrumentId}">
     <td>${esc(ruDate(p.date))}</td>
     <td class="num">${fmtPrice.format(p.price)}</td>
     ${changeCell}
@@ -621,9 +636,16 @@ function resetPriceForm() {
   btnPriceCancel.hidden = true;
 }
 
-async function startSnapshotEdit(dateIso) {
+async function startSnapshotEdit(dateIso, rowInstrumentId) {
   const id = Number(pInstrument.value);
   if (!id) return;
+  /* Та же защита от устаревшей строки, что у удаления (ревью, п.1): снимок
+     чужого инструмента не открывается на правку. */
+  if (rowInstrumentId !== id) {
+    setStatus(priceStatus, "Ошибка: инструмент изменился — список котировок обновлён, повторите операцию", "err");
+    loadSnapshots();
+    return;
+  }
   const request = ++snapshotEditRequest;
   editingSnapshot = null;
   try {
@@ -651,15 +673,28 @@ async function startSnapshotEdit(dateIso) {
 }
 
 snapshotsBody.addEventListener("click", (event) => {
-  const editButton = event.target.closest(".btn-snap-edit");
-  if (editButton) { startSnapshotEdit(editButton.dataset.date); return; }
-  const deleteButton = event.target.closest(".btn-snap-delete");
-  if (deleteButton) deleteSnapshot(deleteButton.dataset.date);
+  const row = event.target.closest("tr[data-date]");
+  if (!row) return;
+  if (event.target.closest(".btn-snap-edit")) {
+    startSnapshotEdit(row.dataset.date, Number(row.dataset.instrument));
+    return;
+  }
+  if (event.target.closest(".btn-snap-delete")) {
+    deleteSnapshot(row.dataset.date, Number(row.dataset.instrument));
+  }
 });
 
-async function deleteSnapshot(dateIso) {
+async function deleteSnapshot(dateIso, rowInstrumentId) {
   const id = Number(pInstrument.value);
   if (!id) return;
+  /* Ревью (п.1): дата приходит из строки таблицы, инструмент — из пикера.
+     Пока список грузился, инструмент могли переключить: без проверки удаление
+     ушло бы выбранному инструменту с датой из строки чужого списка. */
+  if (rowInstrumentId !== id) {
+    setStatus(priceStatus, "Ошибка: инструмент изменился — список котировок обновлён, повторите операцию", "err");
+    loadSnapshots();
+    return;
+  }
   try {
     if (!confirm(`Удалить снимок цены за ${ruDate(dateIso)}?\nТочка исчезнет из истории и графика.`)) return;
     await apiSend("DELETE", `/api/instruments/${id}/prices/${dateIso}`);
@@ -738,9 +773,13 @@ function renderDbInfo(info) {
   const importedInsert = typeof w.imported_news_insert === "boolean"
     ? `<td>${mark(w.imported_news_insert)}</td><td colspan="3" class="num">—</td>`
     : '<td colspan="4" class="num">—</td>';
+  /* Ревью (п.4): read-only определяется фактической транзакцией
+     (transaction_read_only); настройка по умолчанию показывается отдельно. */
   const roNote = w.read_only_transaction
-    ? '<p class="status status-err">БД работает в режиме read-only (default_transaction_read_only) — запись отклоняется даже при наличии прав.</p>'
-    : "";
+    ? '<p class="status status-err">Текущая транзакция БД read-only (transaction_read_only=on) — запись отклоняется даже при наличии прав.</p>'
+    : (w.read_only_default
+      ? '<p class="status">Настройка default_transaction_read_only=on: новые транзакции открываются read-only, если явно не переопределены.</p>'
+      : "");
   dbInfoCard.innerHTML = `
     <div class="split">
       <div>
@@ -789,7 +828,7 @@ function updateWritePermissionNote(info) {
         + "хостинге — первый шаг в разделе «Права на запись для ввода данных» DEPLOY_ALWAYSDATA.md.");
     }
   } else if (w.read_only_transaction) {
-    notes.push("БД работает в режиме read-only (default_transaction_read_only) — операции ввода "
+    notes.push("БД работает в режиме read-only (transaction_read_only=on) — операции ввода "
       + "отклоняются даже при наличии прав у пользователя. Настройку проверяет администратор БД.");
   } else {
     const missing = Array.isArray(w.missing) ? w.missing.filter(Boolean).join("; ") : "";
